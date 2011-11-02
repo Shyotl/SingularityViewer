@@ -6364,11 +6364,9 @@
          </param>
       </layer>
 
-      <layer
-       name="facialhair"
-       global_color="hair_color">
-         <morph_mask
-          morph_name="Displace_Hair_Facial" />
+    <layer
+     name="facialhair"
+     global_color="hair_color">
 
          <texture
           tga_file="head_hair.tga"
@@ -7272,23 +7270,17 @@
       <layer
        name="upper_clothes">
          <texture
-          local_texture="upper_shirt" />
+       local_texture="upper_shirt" />
 
-         <morph_mask
-          morph_name="Displace_Loose_Upperbody" />
-
-         <morph_mask
-          morph_name="Shirtsleeve_flair" />
-
-         <param
-          id="803"
-          group="0"
-          wearable="shirt"
-          edit_group="colorpicker"
-          name="shirt_red"
-          value_min="0"
-          value_max="1"
-          value_default="1">
+      <param
+       id="803"
+       group="0"
+       wearable="shirt"
+       edit_group="colorpicker"
+       name="shirt_red"
+       value_min="0"
+       value_max="1"
+       value_default="1">
             <param_color>
                <value
                 color="0, 0, 0, 255" />
@@ -8340,19 +8332,7 @@
          <texture
           local_texture="lower_pants" />
 
-         <morph_mask
-          morph_name="Displace_Loose_Lowerbody" />
-
-         <morph_mask
-          morph_name="Leg_Pantflair" />
-
-         <morph_mask
-          morph_name="Low_Crotch" />
-
-         <morph_mask
-          morph_name="Leg_Longcuffs" />
-
-         <param
+      <param
           id="806"
           group="0"
           wearable="pants"
@@ -11843,6 +11823,38 @@
      value_max="1">
 	 <param_driver />
     </param>
-	</driver_parameters>
+
+  </driver_parameters>
+
+  <morph_masks>
+    <mask
+     morph_name="Displace_Hair_Facial"
+     body_region="head"
+     layer="facialhair" />
+    <mask
+     morph_name="Displace_Loose_Upperbody"
+     body_region="upper_body"
+     layer="upper_clothes" />
+    <mask
+     morph_name="Shirtsleeve_flair"
+     body_region="upper_body"
+     layer="upper_clothes" />
+    <mask
+     morph_name="Displace_Loose_Lowerbody"
+     body_region="lower_body"
+     layer="lower_pants" />
+    <mask
+     morph_name="Leg_Pantflair"
+     body_region="lower_body"
+     layer="lower_pants" />
+    <mask
+     morph_name="Low_Crotch"
+     body_region="lower_body"
+     layer="lower_pants" />
+    <mask
+     morph_name="Leg_Longcuffs"
+     body_region="lower_body"
+     layer="lower_pants" />
+  </morph_masks>
 </linden_avatar>
 

@@ -76,6 +76,7 @@ public:
 	~LLTexLayerInfo();
 
 	BOOL parseXml(LLXmlTreeNode* node);
+	BOOL createVisualParams(LLVOAvatar *avatar);
 	BOOL isUserSettable() { return mLocalTexture != -1;	}
 	S32  getLocalTexture() const { return mLocalTexture; }
 	BOOL getOnlyAlpha() const { return mUseLocalTextureAlphaOnly; }
@@ -634,6 +635,19 @@ BOOL LLTexLayerSetInfo::parseXml(LLXmlTreeNode* node)
 	return TRUE;
 }
 
+// creates visual params without generating layersets or layers
+void LLTexLayerSetInfo::createVisualParams(LLVOAvatar *avatar)
+{
+	//layer_info_list_t		mLayerInfoList;
+	for (layer_info_list_t::iterator layer_iter = mLayerInfoList.begin();
+		 layer_iter != mLayerInfoList.end();
+		 layer_iter++)
+	{
+		LLTexLayerInfo *layer_info = *layer_iter;
+		layer_info->createVisualParams(avatar);
+	}
+}
+
 //-----------------------------------------------------------------------------
 // LLTexLayerSet
 // An ordered set of texture layers that get composited into a single texture.
@@ -963,13 +977,14 @@ void LLTexLayerSet::renderAlphaMaskTextures(S32 x, S32 y, S32 width, S32 height,
 		{
 			LLTexLayerInterface* layer = *iter;
 			gGL.flush();
-			layer->blendAlphaTexture(x, y, width, height);
+			layer->blendAlphaTexture(x,y,width, height);
 			gGL.flush();
 		}
+		
 	}
-
+	
 	gGL.getTexUnit(0)->unbind(LLTexUnit::TT_TEXTURE);
-
+	
 	gGL.getTexUnit(0)->setTextureBlendType(LLTexUnit::TB_MULT);
 	gGL.setColorMask(true, true);
 	gGL.setSceneBlendType(LLRender::BT_ALPHA);
@@ -977,11 +992,7 @@ void LLTexLayerSet::renderAlphaMaskTextures(S32 x, S32 y, S32 width, S32 height,
 
 void LLTexLayerSet::applyMorphMask(U8* tex_data, S32 width, S32 height, S32 num_components)
 {
-	for( layer_list_t::iterator iter = mLayerList.begin(); iter != mLayerList.end(); iter++ )
-	{
-		LLTexLayerInterface* layer = *iter;
-		layer->applyMorphMask(tex_data, width, height, num_components);
-	}
+	mAvatar->applyMorphMask(tex_data, width, height, num_components, mBakedTexIndex);
 }
 
 BOOL LLTexLayerSet::isMorphValid() const
@@ -1008,7 +1019,6 @@ void LLTexLayerSet::invalidateMorphMasks()
 		}
 	}
 }
-
 
 
 //-----------------------------------------------------------------------------
@@ -1168,6 +1178,39 @@ BOOL LLTexLayerInfo::parseXml(LLXmlTreeNode* node)
 	return TRUE;
 }
 
+BOOL LLTexLayerInfo::createVisualParams(LLVOAvatar *avatar)
+{
+	BOOL success = TRUE;
+	for (param_color_info_list_t::iterator color_info_iter = mParamColorInfoList.begin();
+		 color_info_iter != mParamColorInfoList.end();
+		 color_info_iter++)
+	{
+		LLTexLayerParamColorInfo * color_info = *color_info_iter;
+		LLTexLayerParamColor* param_color = new LLTexLayerParamColor(avatar);
+		if (!param_color->setInfo(color_info, TRUE))
+		{
+			llwarns << "NULL TexLayer Color Param could not be added to visual param list. Deleting." << llendl;
+			delete param_color;
+			success = FALSE;
+		}
+	}
+
+	for (param_alpha_info_list_t::iterator alpha_info_iter = mParamAlphaInfoList.begin();
+		 alpha_info_iter != mParamAlphaInfoList.end();
+		 alpha_info_iter++)
+	{
+		LLTexLayerParamAlphaInfo * alpha_info = *alpha_info_iter;
+		LLTexLayerParamAlpha* param_alpha = new LLTexLayerParamAlpha(avatar);
+		if (!param_alpha->setInfo(alpha_info, TRUE))
+		{
+			llwarns << "NULL TexLayer Alpha Param could not be added to visual param list. Deleting." << llendl;
+			delete param_alpha;
+			success = FALSE;
+		}
+	}
+
+	return success;
+}
 
 LLTexLayerInterface::LLTexLayerInterface(LLTexLayerSet* const layer_set):
 	mTexLayerSet( layer_set ),
@@ -1240,41 +1283,9 @@ BOOL LLTexLayerInterface::setInfo(const LLTexLayerInfo *info  ) // This sets mIn
 			}*/
 			mParamAlphaList.push_back( param_alpha );
 		}
-		
-	LLTexLayerInfo::morph_name_list_t::const_iterator iter = getInfo()->mMorphNameList.begin();
-	for (; iter != getInfo()->mMorphNameList.end(); iter++)
-	{
-		// *FIX: we assume that the referenced visual param is a
-		// morph target, need a better way of actually looking
-		// this up.
-		LLPolyMorphTarget *morph_param;
-		const std::string &name = (iter->first);
-		morph_param = (LLPolyMorphTarget *)(getTexLayerSet()->getAvatar()->getVisualParam(name.c_str()));
-		if (morph_param)
-		{
-			BOOL invert = iter->second;
-			addMaskedMorph(morph_param, invert);
-		}
-	}
 	return TRUE;
 }
 
-void LLTexLayerInterface::applyMorphMask(U8* tex_data, S32 width, S32 height, S32 num_components)
-{
-	for( morph_list_t::iterator iter = mMaskedMorphs.begin();
-		 iter != mMaskedMorphs.end(); iter++ )
-	{
-		LLVOAvatar::LLMaskedMorph* maskedMorph = (LLVOAvatar::LLMaskedMorph*)(*iter);
-		maskedMorph->mMorphTarget->applyMask(tex_data, width, height, num_components, maskedMorph->mInvert);
-	}
-}
-
-void LLTexLayerInterface::addMaskedMorph(LLPolyMorphTarget* morph_target, BOOL invert)
-{
-	mMaskedMorphs.push_front((char*)new LLVOAvatar::LLMaskedMorph(morph_target, invert));
-	setHasMorph(!mMaskedMorphs.empty());
-}
-	
 /*virtual*/ void LLTexLayerInterface::requestUpdate()
 {
 	mTexLayerSet->requestUpdate();
@@ -1797,7 +1808,7 @@ BOOL LLTexLayer::renderMorphMasks(S32 x, S32 y, S32 width, S32 height, const LLC
 		getTexLayerSet()->getAvatar()->dirtyMesh();
 
 		mMorphMasksValid = TRUE;
-		applyMorphMask(alpha_data, width, height, 1);
+		getTexLayerSet()->applyMorphMask(alpha_data, width, height, 1);
 	}
 
 	return success;
@@ -1831,14 +1842,9 @@ void LLTexLayer::addAlphaMask(U8 *data, S32 originX, S32 originY, S32 width, S32
 
 BOOL LLTexLayer::isInvisibleAlphaMask() const
 {
-	const LLTexLayerInfo *info = getInfo();
-
-	if (info && info->mLocalTexture >= 0 && info->mLocalTexture < TEX_NUM_INDICES)
+	if (getUUID() == IMG_INVISIBLE)
 	{
-		if (mTexLayerSet->getAvatar()->getLocalTextureID((ETextureIndex)info->mLocalTexture) == IMG_INVISIBLE)
-		{
-			return TRUE;
-		}
+		return TRUE;
 	}
 
 	return FALSE;
@@ -1846,7 +1852,23 @@ BOOL LLTexLayer::isInvisibleAlphaMask() const
 
 LLUUID LLTexLayer::getUUID() const
 {
-	return mTexLayerSet->getAvatar()->getLocalTextureID((ETextureIndex)getInfo()->mLocalTexture);
+	const LLTexLayerInfo *info = getInfo();
+	if(!info)
+		return LLUUID::null;
+	LLUUID uuid;
+	if( info->mLocalTexture >= 0 && info->mLocalTexture < TEX_NUM_INDICES )
+	{
+		uuid = mTexLayerSet->getAvatar()->getLocalTextureID((ETextureIndex)info->mLocalTexture);
+	}
+	if( !info->mStaticImageFileName.empty() )
+	{
+			LLViewerTexture* tex = LLTexLayerStaticImageList::getInstance()->getTexture(getInfo()->mStaticImageFileName, getInfo()->mStaticImageIsMask);
+			if( tex )
+			{
+				uuid = tex->getID();
+			}
+	}
+	return uuid;
 }
 
 

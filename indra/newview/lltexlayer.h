@@ -86,8 +86,6 @@ public:
 	virtual void			setHasMorph(BOOL newval) 	{ mHasMorph = newval; }
 	BOOL					hasMorph() const			{ return mHasMorph; }
 	BOOL					isMorphValid() const		{ return mMorphMasksValid; }
-	void					addMaskedMorph(LLPolyMorphTarget* morph_target, BOOL invert);
-	void					applyMorphMask(U8* tex_data, S32 width, S32 height, S32 num_components);
 
 	void					requestUpdate();
 	virtual void			gatherAlphaMasks(U8 *data, S32 originX, S32 originY, S32 width, S32 height) = 0;
@@ -111,9 +109,6 @@ protected:
 	param_alpha_list_t		mParamAlphaList;
 	// 						mGlobalColor name stored in mInfo
 	// 						mFixedColor value stored in mInfo
-	
-	typedef std::deque<char *> morph_list_t;	//Hack.
-	morph_list_t			mMaskedMorphs;
 };
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -224,6 +219,7 @@ public:
 	LLTexLayerSetInfo();
 	~LLTexLayerSetInfo();
 	BOOL parseXml(LLXmlTreeNode* node);
+	void createVisualParams(LLVOAvatar *avatar);
 private:
 	std::string				mBodyRegion;
 	S32						mWidth;

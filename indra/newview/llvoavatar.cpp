@@ -845,6 +845,13 @@ LLVOAvatar::~LLVOAvatar()
 	{
 		deleteAndClear(mBakedTextureDatas[i].mTexLayerSet);
 		mBakedTextureDatas[i].mMeshes.clear();
+
+		for (morph_list_t::iterator iter2 = mBakedTextureDatas[i].mMaskedMorphs.begin();
+			 iter2 != mBakedTextureDatas[i].mMaskedMorphs.end(); iter2++)
+		{
+			LLMaskedMorph* masked_morph = (*iter2);
+			delete masked_morph;
+		}
 	}
 
 	std::for_each(mAttachmentPoints.begin(), mAttachmentPoints.end(), DeletePairedPointer());
@@ -1230,7 +1237,10 @@ void LLVOAvatar::initClass()
 	{
 		llerrs << "Error parsing skeleton node in avatar XML file: " << skeleton_path << llendl;
 	}
-
+	if (!sAvatarXmlInfo->parseXmlMorphNodes(root))
+	{
+		llerrs << "Error parsing skeleton node in avatar XML file: " << skeleton_path << llendl;
+	}
 	{
 		if (gSavedSettings.getBOOL("AscentUpdateTagsOnLoad"))
 		{
@@ -6016,45 +6026,36 @@ BOOL LLVOAvatar::loadAvatar()
 		llwarns << "avatar file: missing <layer_set> node" << llendl;
 		return FALSE;
 	}
-	else
+
+	if (sAvatarXmlInfo->mMorphMaskInfoList.empty())
 	{
-		LLVOAvatarXmlInfo::layer_info_list_t::iterator iter;
-		for (iter = sAvatarXmlInfo->mLayerInfoList.begin();
-			 iter != sAvatarXmlInfo->mLayerInfoList.end(); iter++)
+		llwarns << "avatar file: missing <morph_masks> node" << llendl;
+		return FALSE;
+	}
+
+	// avatar_lad.xml : <morph_masks>
+	for (LLVOAvatarXmlInfo::morph_info_list_t::iterator iter = sAvatarXmlInfo->mMorphMaskInfoList.begin();
+		 iter != sAvatarXmlInfo->mMorphMaskInfoList.end();
+		 ++iter)
+	{
+		LLVOAvatarXmlInfo::LLVOAvatarMorphInfo *info = *iter;
+
+		EBakedTextureIndex baked = LLVOAvatarDictionary::findBakedByRegionName(info->mRegion); 
+		if (baked != BAKED_NUM_INDICES)
+		{
+			LLPolyMorphTarget *morph_param;
+			const std::string *name = &info->mName;
+			morph_param = (LLPolyMorphTarget *)(getVisualParam(name->c_str()));
+			if (morph_param)
 			{
-				LLTexLayerSetInfo *info = *iter;
-			
-				LLTexLayerSet* layer_set = new LLTexLayerSet((LLVOAvatarSelf*)this );
-				if (layer_set && !layer_set->setInfo(info))
-				{
-					stop_glerror();
-					delete layer_set;
-					llwarns << "avatar file: layer_set->parseData() failed" << llendl;
-					return FALSE;
-				}
-				bool found_baked_entry = false;
-				for (LLVOAvatarDictionary::BakedTextures::const_iterator baked_iter = LLVOAvatarDictionary::getInstance()->getBakedTextures().begin();
-					 baked_iter != LLVOAvatarDictionary::getInstance()->getBakedTextures().end();
-					 baked_iter++)
-				{
-					const LLVOAvatarDictionary::BakedEntry *baked_dict = baked_iter->second;
-					if (layer_set && layer_set->isBodyRegion(baked_dict->mName))
-					{
-						mBakedTextureDatas[baked_iter->first].mTexLayerSet = layer_set;
-						layer_set->setBakedTexIndex(baked_iter->first);
-						found_baked_entry = true;
-						break;
-					}
-				}
-				if (layer_set && !found_baked_entry)
-				{
-					llwarns << "<layer_set> has invalid body_region attribute" << llendl;
-					delete layer_set;
-					return FALSE;
-				}
+				BOOL invert = info->mInvert;
+				addMaskedMorph(baked, morph_param, invert, info->mLayer);
 			}
 		}
-	
+
+	}
+
+	loadLayersets();	
 	
 	// avatar_lad.xml : <driver_parameters>
 	for (LLVOAvatarXmlInfo::driver_info_list_t::iterator iter = sAvatarXmlInfo->mDriverInfoList.begin();
@@ -6338,6 +6339,23 @@ BOOL LLVOAvatar::loadMeshNodes()
 	}
 
 	return TRUE;
+}
+
+//-----------------------------------------------------------------------------
+// loadLayerSets()
+//-----------------------------------------------------------------------------
+BOOL LLVOAvatar::loadLayersets()
+{
+	BOOL success = TRUE;
+	for (LLVOAvatarXmlInfo::layer_info_list_t::const_iterator layerset_iter = sAvatarXmlInfo->mLayerInfoList.begin();
+		 layerset_iter != sAvatarXmlInfo->mLayerInfoList.end(); 
+		 ++layerset_iter)
+	{
+		// Construct a layerset for each one specified in avatar_lad.xml and initialize it as such.
+		LLTexLayerSetInfo *layerset_info = *layerset_iter;
+		layerset_info->createVisualParams(this);
+	}
+	return success;
 }
 
 //-----------------------------------------------------------------------------
@@ -7519,6 +7537,59 @@ void LLVOAvatar::clearChat()
 	mChats.clear();
 }
 
+// adds a morph mask to the appropriate baked texture structure
+void LLVOAvatar::addMaskedMorph(EBakedTextureIndex index, LLPolyMorphTarget* morph_target, BOOL invert, std::string layer)
+{
+	if (index < BAKED_NUM_INDICES)
+	{
+		LLMaskedMorph *morph = new LLMaskedMorph(morph_target, invert, layer);
+		mBakedTextureDatas[index].mMaskedMorphs.push_front(morph);
+	}
+}
+
+// returns TRUE if morph masks are present and not valid for a given baked texture, FALSE otherwise
+BOOL LLVOAvatar::morphMaskNeedsUpdate(LLVOAvatarDefines::EBakedTextureIndex index)
+{
+	if (index >= BAKED_NUM_INDICES)
+	{
+		return FALSE;
+	}
+
+	if (!mBakedTextureDatas[index].mMaskedMorphs.empty())
+	{
+		if (isSelf())
+		{
+			LLTexLayerSet *layer_set = mBakedTextureDatas[index].mTexLayerSet;
+			if (layer_set)
+			{
+				return !layer_set->isMorphValid();
+			}
+		}
+		else
+		{
+			return FALSE;
+		}
+	}
+
+	return FALSE;
+}
+
+void LLVOAvatar::applyMorphMask(U8* tex_data, S32 width, S32 height, S32 num_components, LLVOAvatarDefines::EBakedTextureIndex index)
+{
+	if (index >= BAKED_NUM_INDICES)
+	{
+		llwarns << "invalid baked texture index passed to applyMorphMask" << llendl;
+		return;
+	}
+
+	for (morph_list_t::const_iterator iter = mBakedTextureDatas[index].mMaskedMorphs.begin();
+		 iter != mBakedTextureDatas[index].mMaskedMorphs.end(); ++iter)
+	{
+		const LLMaskedMorph* maskedMorph = (*iter);
+		maskedMorph->mMorphTarget->applyMask(tex_data, width, height, num_components, maskedMorph->mInvert);
+	}
+}
+
 //-----------------------------------------------------------------------------
 // releaseComponentTextures()
 // release any component texture UUIDs for which we have a baked texture
@@ -7990,8 +8061,6 @@ void LLVOAvatar::processAvatarAppearance( LLMessageSystem* mesgsys )
 		//releaseUnnecessaryTextures(); Commented out to ensure that users get the right client data -HgB
 	}
 
-	updateMeshTextures(); // enables updates for laysets without baked textures.
-
 	mSupportsPhysics = false;
 
 	// parse visual params
@@ -8303,7 +8372,7 @@ void LLVOAvatar::useBakedTexture( const LLUUID& id )
 			}
 			if (mBakedTextureDatas[i].mTexLayerSet)
 			{
-				mBakedTextureDatas[i].mTexLayerSet->destroyComposite();
+				//mBakedTextureDatas[i].mTexLayerSet->destroyComposite();
 			}
 			const LLVOAvatarDictionary::BakedEntry *baked_dict = LLVOAvatarDictionary::getInstance()->getBakedTexture((EBakedTextureIndex)i);
 			for (texture_vec_t::const_iterator local_tex_iter = baked_dict->mLocalTextures.begin();
@@ -8332,7 +8401,6 @@ void LLVOAvatar::useBakedTexture( const LLUUID& id )
 // static
 void LLVOAvatar::dumpArchetypeXML( void* )
 {
-	LLVOAvatar* avatar = gAgentAvatarp;
 	LLAPRFile outfile(gDirUtilp->getExpandedFilename(LL_PATH_CHARACTER, "new archetype.xml"), LL_APR_WB);
 	apr_file_t* file = outfile.getFileHandle() ;
 	if( !file )
@@ -8365,7 +8433,8 @@ void LLVOAvatar::dumpArchetypeXML( void* )
 		{
 			if( LLVOAvatarDictionary::getTEWearableType((ETextureIndex)te) == type )
 			{
-				LLViewerTexture* te_image = avatar->getTEImage((ETextureIndex)te);
+				// MULTIPLE_WEARABLES: extend to multiple wearables?
+				LLViewerTexture* te_image = ((LLVOAvatar *)(gAgentAvatarp))->getTEImage((ETextureIndex)te);
 				if( te_image )
 				{
 					std::string uuid_str;
@@ -8378,6 +8447,7 @@ void LLVOAvatar::dumpArchetypeXML( void* )
 	apr_file_printf( file, "\t</archetype>\n" );
 	apr_file_printf( file, "\n</linden_genepool>\n" );
 }
+
 
 void LLVOAvatar::setVisibilityRank(U32 rank)
 {
@@ -8515,6 +8585,7 @@ LLVOAvatar::LLVOAvatarXmlInfo::~LLVOAvatarXmlInfo()
 	deleteAndClear(mTexEyeColorInfo);
 	std::for_each(mLayerInfoList.begin(), mLayerInfoList.end(), DeletePointer());
 	std::for_each(mDriverInfoList.begin(), mDriverInfoList.end(), DeletePointer());
+	std::for_each(mMorphMaskInfoList.begin(), mMorphMaskInfoList.end(), DeletePointer());
 }
 
 //-----------------------------------------------------------------------------
@@ -8936,6 +9007,56 @@ BOOL LLVOAvatar::LLVOAvatarXmlInfo::parseXmlDriverNodes(LLXmlTreeNode* root)
 	return TRUE;
 }
 
+//-----------------------------------------------------------------------------
+// parseXmlDriverNodes(): parses <driver_parameters> nodes from XML tree
+//-----------------------------------------------------------------------------
+BOOL LLVOAvatar::LLVOAvatarXmlInfo::parseXmlMorphNodes(LLXmlTreeNode* root)
+{
+	LLXmlTreeNode* masks = root->getChildByName( "morph_masks" );
+	if( !masks )
+	{
+		return FALSE;
+	}
+
+	for (LLXmlTreeNode* grand_child = masks->getChildByName( "mask" );
+		 grand_child;
+		 grand_child = masks->getNextNamedChild())
+	{
+		LLVOAvatarMorphInfo* info = new LLVOAvatarMorphInfo();
+
+		static LLStdStringHandle name_string = LLXmlTree::addAttributeString("morph_name");
+		if (!grand_child->getFastAttributeString(name_string, info->mName))
+		{
+			llwarns << "No name supplied for morph mask." << llendl;
+			delete info;
+			continue;
+		}
+
+		static LLStdStringHandle region_string = LLXmlTree::addAttributeString("body_region");
+		if (!grand_child->getFastAttributeString(region_string, info->mRegion))
+		{
+			llwarns << "No region supplied for morph mask." << llendl;
+			delete info;
+			continue;
+		}
+
+		static LLStdStringHandle layer_string = LLXmlTree::addAttributeString("layer");
+		if (!grand_child->getFastAttributeString(layer_string, info->mLayer))
+		{
+			llwarns << "No layer supplied for morph mask." << llendl;
+			delete info;
+			continue;
+		}
+
+		// optional parameter. don't throw a warning if not present.
+		static LLStdStringHandle invert_string = LLXmlTree::addAttributeString("invert");
+		grand_child->getFastAttributeBOOL(invert_string, info->mInvert);
+
+		mMorphMaskInfoList.push_back(info);
+	}
+
+	return TRUE;
+}
 
 //virtual
 void LLVOAvatar::updateRegion(LLViewerRegion *regionp)

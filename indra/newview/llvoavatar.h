@@ -89,6 +89,7 @@ public:
 	friend class LLVOAvatarSelf;
 protected:
 	struct LLVOAvatarXmlInfo;
+	struct LLMaskedMorph;
 
 /********************************************************************************
  **                                                                            **
@@ -105,6 +106,7 @@ protected:
 	virtual				~LLVOAvatar();
 	BOOL				loadSkeletonNode();
 	BOOL				loadMeshNodes();
+	virtual BOOL		loadLayersets();
 
 /**                    Initialization
  **                                                                            **
@@ -416,6 +418,14 @@ private:
 	S32  		mNumInitFaces; //number of faces generated when creating the avatar drawable, does not inculde splitted faces due to long vertex buffer.
 
 	//--------------------------------------------------------------------
+	// Morph masks
+	//--------------------------------------------------------------------
+public:
+	BOOL 		morphMaskNeedsUpdate(LLVOAvatarDefines::EBakedTextureIndex index = LLVOAvatarDefines::BAKED_NUM_INDICES);
+	void 		addMaskedMorph(LLVOAvatarDefines::EBakedTextureIndex index, LLPolyMorphTarget* morph_target, BOOL invert, std::string layer);
+	void 		applyMorphMask(U8* tex_data, S32 width, S32 height, S32 num_components, LLVOAvatarDefines::EBakedTextureIndex index = LLVOAvatarDefines::BAKED_NUM_INDICES);
+
+	//--------------------------------------------------------------------
 	// Visibility
 	//--------------------------------------------------------------------
 protected:
@@ -531,6 +541,7 @@ protected:
 	virtual void	removeMissingBakedTextures();
 	void			useBakedTexture(const LLUUID& id);
 
+	typedef std::deque<LLMaskedMorph *> 	morph_list_t;
 	struct BakedTextureData
 	{
 		LLUUID								mLastTextureIndex;
@@ -541,6 +552,7 @@ protected:
 		U32									mMaskTexName;
 		// Stores pointers to the joint meshes that this baked texture deals with
 		std::vector< LLViewerJointMesh * > 	mMeshes;  // std::vector<LLViewerJointMesh> mJoints[i]->mMeshParts
+		morph_list_t						mMaskedMorphs;
 	};
 	typedef std::vector<BakedTextureData> 	bakedtexturedata_vec_t;
 	bakedtexturedata_vec_t 					mBakedTextureDatas;
@@ -662,11 +674,13 @@ private:
 	BOOL			mAppearanceAnimSetByUser;	//1.23
 
 public:
+//Mesh export
 	typedef std::map<S32, std::string> lod_mesh_map_t;
 	typedef std::map<std::string, lod_mesh_map_t> mesh_info_t;
 
 	static void getMeshInfo(mesh_info_t* mesh_info);
 	LLPolyMesh*		getMesh( LLPolyMeshSharedData *shared_data );
+
 	//--------------------------------------------------------------------
 	// Clothing colors (convenience functions to access visual parameters)
 	//--------------------------------------------------------------------
@@ -1063,6 +1077,7 @@ protected: // Shared with LLVOAvatarSelf
 		BOOL 	parseXmlColorNodes(LLXmlTreeNode* root);
 		BOOL 	parseXmlLayerNodes(LLXmlTreeNode* root);
 		BOOL 	parseXmlDriverNodes(LLXmlTreeNode* root);
+		BOOL	parseXmlMorphNodes(LLXmlTreeNode* root);
 
 		struct LLVOAvatarMeshInfo
 		{
@@ -1122,20 +1137,34 @@ protected: // Shared with LLVOAvatarSelf
 
 		typedef std::vector<LLDriverParamInfo*> driver_info_list_t;
 		driver_info_list_t mDriverInfoList;
+
+		struct LLVOAvatarMorphInfo
+		{
+			LLVOAvatarMorphInfo()
+				: mInvert(FALSE) {}
+			std::string mName;
+			std::string mRegion;
+			std::string mLayer;
+			BOOL mInvert;
+		};
+
+		typedef std::vector<LLVOAvatarMorphInfo*> morph_info_list_t;
+		morph_info_list_t	mMorphMaskInfoList;
 	};
 
-public: //Public until pulled out of LLTexLayer
 	struct LLMaskedMorph
 	{
-		LLMaskedMorph(LLPolyMorphTarget *morph_target, BOOL invert) :
+		LLMaskedMorph(LLPolyMorphTarget *morph_target, BOOL invert, std::string layer) :
 			mMorphTarget(morph_target), 
-			mInvert(invert)
+			mInvert(invert),
+			mLayer(layer)
 		{
 			morph_target->addPendingMorphMask();
 		}
 	
 		LLPolyMorphTarget	*mMorphTarget;
 		BOOL				mInvert;
+		std::string			mLayer;
 	};
 
 /**                    Support classes

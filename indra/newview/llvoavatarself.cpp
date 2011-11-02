@@ -410,6 +410,78 @@ LLVOAvatarSelf::~LLVOAvatarSelf()
 {
 	cleanup();
 }
+
+/**
+ **
+ ** End LLVOAvatarSelf Constructor routines
+ **                                                                             **
+ *********************************************************************************/
+
+//virtual
+BOOL LLVOAvatarSelf::loadLayersets()
+{
+	BOOL success = TRUE;
+	for (LLVOAvatarXmlInfo::layer_info_list_t::const_iterator iter = sAvatarXmlInfo->mLayerInfoList.begin();
+		 iter != sAvatarXmlInfo->mLayerInfoList.end(); 
+		 ++iter)
+	{
+		// Construct a layerset for each one specified in avatar_lad.xml and initialize it as such.
+		const LLTexLayerSetInfo *info = *iter;
+		LLTexLayerSet* layer_set = new LLTexLayerSet( this );
+		
+		if (!layer_set->setInfo(info))
+		{
+			stop_glerror();
+			delete layer_set;
+			llwarns << "avatar file: layer_set->parseData() failed" << llendl;
+			return FALSE;
+		}
+
+		// scan baked textures and associate the layerset with the appropriate one
+		EBakedTextureIndex baked_index = BAKED_NUM_INDICES;
+		for (LLVOAvatarDictionary::BakedTextures::const_iterator baked_iter = LLVOAvatarDictionary::getInstance()->getBakedTextures().begin();
+			 baked_iter != LLVOAvatarDictionary::getInstance()->getBakedTextures().end();
+			 ++baked_iter)
+		{
+			const LLVOAvatarDictionary::BakedEntry *baked_dict = baked_iter->second;
+			if (layer_set->isBodyRegion(baked_dict->mName))
+			{
+				baked_index = baked_iter->first;
+				// ensure both structures are aware of each other
+				mBakedTextureDatas[baked_index].mTexLayerSet = layer_set;
+				layer_set->setBakedTexIndex(baked_index);
+				break;
+			}
+		}
+		// if no baked texture was found, warn and cleanup
+		if (baked_index == BAKED_NUM_INDICES)
+		{
+			llwarns << "<layer_set> has invalid body_region attribute" << llendl;
+			delete layer_set;
+			return FALSE;
+		}
+
+		// scan morph masks and let any affected layers know they have an associated morph
+		for (LLVOAvatar::morph_list_t::const_iterator morph_iter = mBakedTextureDatas[baked_index].mMaskedMorphs.begin();
+			morph_iter != mBakedTextureDatas[baked_index].mMaskedMorphs.end();
+			 ++morph_iter)
+		{
+			LLMaskedMorph *morph = *morph_iter;
+			LLTexLayerInterface* layer = layer_set->findLayerByName(morph->mLayer);
+			if (layer)
+			{
+				layer->setHasMorph(TRUE);
+			}
+			else
+			{
+				llwarns << "Could not find layer named " << morph->mLayer << " to set morph flag" << llendl;
+				success = FALSE;
+			}
+		}
+	}
+	return success;
+}
+// virtual
 BOOL LLVOAvatarSelf::updateCharacter(LLAgent &agent)
 {
 	LLMemType mt(LLMemType::MTYPE_AVATAR);
@@ -773,6 +845,7 @@ void LLVOAvatarSelf::idleUpdateTractorBeam()
 		}
 	}
 }
+
 //-----------------------------------------------------------------------------
 // restoreMeshData()
 //-----------------------------------------------------------------------------
@@ -789,6 +862,8 @@ void LLVOAvatarSelf::restoreMeshData()
 	// force mesh update as LOD might not have changed to trigger this
 	gPipeline.markRebuild(mDrawable, LLDrawable::REBUILD_GEOMETRY, TRUE);
 }
+
+
 
 //-----------------------------------------------------------------------------
 // updateAttachmentVisibility()
@@ -1917,6 +1992,7 @@ void LLVOAvatarSelf::processRebakeAvatarTextures(LLMessageSystem* msg, void**)
 		gAgentAvatarp->updateMeshTextures();
 	}
 }
+
 BOOL LLVOAvatarSelf::isUsingBakedTextures() const
 {
 	// Composite textures are used during appearance mode.

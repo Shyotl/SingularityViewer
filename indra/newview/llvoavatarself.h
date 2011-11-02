@@ -56,6 +56,7 @@ protected:
 	BOOL					loadAvatarSelf();
 	BOOL					buildSkeletonSelf(const LLVOAvatarSkeletonInfo *info);
 	BOOL					buildMenus();
+	/*virtual*/ BOOL		loadLayersets();
 
 /**                    Initialization
  **                                                                            **
