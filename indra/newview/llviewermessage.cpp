@@ -144,6 +144,7 @@
 #include "llfloaterworldmap.h"
 #include "llviewerdisplay.h"
 #include "llkeythrottle.h"
+#include "llagentui.h"
 #include "lltranslate.h"
 // <edit>
 #include "llviewernetwork.h"
@@ -183,6 +184,7 @@ extern LLMap< const LLUUID, LLFloaterAvatarInfo* > gAvatarInfoInstances; // Only
 //
 const F32 BIRD_AUDIBLE_RADIUS = 32.0f;
 const F32 SIT_DISTANCE_FROM_TARGET = 0.25f;
+const F32 CAMERA_POSITION_THRESHOLD_SQUARED = 0.001f * 0.001f;
 static const F32 LOGOUT_REPLY_TIME = 3.f;	// Wait this long after LogoutReply before quitting.
 
 // Determine how quickly residents' scripts can issue question dialogs
@@ -1169,7 +1171,7 @@ bool LLOfferInfo::inventory_offer_callback(const LLSD& notification, const LLSD&
 	msg->addUUIDFast(_PREHASH_ID, mTransactionID);
 	msg->addU32Fast(_PREHASH_Timestamp, NO_TIMESTAMP); // no timestamp necessary
 	std::string name;
-	gAgent.buildFullname(name);
+	LLAgentUI::buildFullname(name);
 	msg->addStringFast(_PREHASH_FromAgentName, name);
 	msg->addStringFast(_PREHASH_Message, ""); 
 	msg->addU32Fast(_PREHASH_ParentEstateID, 0);
@@ -1821,9 +1823,8 @@ void process_improved_im(LLMessageSystem *msg, void **user_data)
 				//Generate slurl
 				std::string slrul = gAgent.getSLURL();
 				//Generate idle time
-				LLVOAvatar* myavatar = gAgentAvatarp;
 				std::string idle_time = "";
-				if(myavatar)idle_time = llformat("%d mins", (U8)(myavatar->mIdleTimer.getElapsedTimeF32()/60.));
+				if(isAgentAvatarValid())idle_time = llformat("%d mins", (U8)(gAgentAvatarp->mIdleTimer.getElapsedTimeF32()/60.));
 
 				//Handle Replacements
 				size_t found = autoresponse.find(fname_wildcard);
@@ -1966,7 +1967,7 @@ void process_improved_im(LLMessageSystem *msg, void **user_data)
 				// if there is not a panel for this conversation (i.e. it is a new IM conversation
 				// initiated by the other party) then...
 				std::string my_name;
-				gAgent.buildFullname(my_name);
+				LLAgentUI::buildFullname(my_name);
 				std::string response = gSavedPerAccountSettings.getText("BusyModeResponse");
 				pack_instant_message(
 					gMessageSystem,
@@ -2769,7 +2770,7 @@ void busy_message (LLMessageSystem* msg, LLUUID from_id)
 	if (gAgent.getBusy())
 	{
 		std::string my_name;
-		gAgent.buildFullname(my_name);
+		LLAgentUI::buildFullname(my_name);
 		std::string response = gSavedPerAccountSettings.getText("BusyModeResponse");
 		pack_instant_message(
 			gMessageSystem,
@@ -3820,8 +3821,7 @@ void process_agent_movement_complete(LLMessageSystem* msg, void**)
 	std::string version_channel;
 	msg->getString("SimData", "ChannelVersion", version_channel);
 
-	LLVOAvatar* avatarp = gAgentAvatarp;
-	if (!avatarp)
+	if (!isAgentAvatarValid())
 	{
 		// Could happen if you were immediately god-teleported away on login,
 		// maybe other cases.  Continue, but warn.
@@ -3882,9 +3882,9 @@ void process_agent_movement_complete(LLMessageSystem* msg, void**)
 		gAgent.sendAgentSetAppearance();
 
 // [RLVa:KB] - Checked: 2009-07-04 (RLVa-1.0.0a)
-		if ( (avatarp) && (!gRlvHandler.hasBehaviour(RLV_BHVR_SHOWLOC)) )
+		if ( (isAgentAvatarValid()) && (!gRlvHandler.hasBehaviour(RLV_BHVR_SHOWLOC)) )
 // [/RLVa:KB]
-//		if (avatarp)
+//		if (isAgentAvatarValid())
 		{
 			// Chat the "back" SLURL. (DEV-4907)
 			LLChat chat("Teleport completed from " + gAgent.getTeleportSourceSLURL());
@@ -3892,9 +3892,9 @@ void process_agent_movement_complete(LLMessageSystem* msg, void**)
  			LLFloaterChat::addChatHistory(chat);
 
 			// Set the new position
-			avatarp->setPositionAgent(agent_pos);
-			avatarp->clearChat();
-			avatarp->slamPosition();
+			gAgentAvatarp->setPositionAgent(agent_pos);
+			gAgentAvatarp->clearChat();
+			gAgentAvatarp->slamPosition();
 		}
 
 		// add teleport destination to the list of visited places
@@ -3968,9 +3968,9 @@ void process_agent_movement_complete(LLMessageSystem* msg, void**)
 		gAgent.clearBusy();
 	}
 
-	if (avatarp)
+	if (isAgentAvatarValid())
 	{
-		avatarp->mFootPlane.clearVec();
+		gAgentAvatarp->mFootPlane.clearVec();
 	}
 	
 	// send walk-vs-run status
@@ -4006,6 +4006,7 @@ void process_crossed_region(LLMessageSystem* msg, void**)
 		return;
 	}
 	LL_INFOS("Messaging") << "process_crossed_region()" << LL_ENDL;
+	gAgentAvatarp->resetRegionCrossingTimer();
 
 	U32 sim_ip;
 	msg->getIPAddrFast(_PREHASH_RegionData, _PREHASH_SimIP, sim_ip);
@@ -4932,9 +4933,7 @@ void process_avatar_sit_response(LLMessageSystem *mesgsys, void **user_data)
 	BOOL force_mouselook;
 	mesgsys->getBOOLFast(_PREHASH_SitTransform, _PREHASH_ForceMouselook, force_mouselook);
 
-	LLVOAvatar* avatar = gAgentAvatarp;
-
-	if (avatar && dist_vec_squared(camera_eye, camera_at) > 0.0001f)
+	if (isAgentAvatarValid() && dist_vec_squared(camera_eye, camera_at) > CAMERA_POSITION_THRESHOLD_SQUARED)
 	{
 		gAgentCamera.setSitCamera(sitObjectID, camera_eye, camera_at);
 	}
@@ -4948,7 +4947,7 @@ void process_avatar_sit_response(LLMessageSystem *mesgsys, void **user_data)
 	if (object)
 	{
 		LLVector3 sit_spot = object->getPositionAgent() + (sitPosition * object->getRotation());
-		if (!use_autopilot || (avatar && avatar->isSitting() && avatar->getRoot() == object->getRoot()))
+		if (!use_autopilot || isAgentAvatarValid() && gAgentAvatarp->isSitting() && gAgentAvatarp->getRoot() == object->getRoot())
 		{
 			//we're already sitting on this object, so don't autopilot
 		}
@@ -5215,7 +5214,9 @@ void process_money_balance_reply( LLMessageSystem* msg, void** )
 	S32 credit = 0;
 	S32 committed = 0;
 	std::string desc;
+	LLUUID tid;
 
+	msg->getUUID("MoneyData", "TransactionID", tid);
 	msg->getS32("MoneyData", "MoneyBalance", balance);
 	msg->getS32("MoneyData", "SquareMetersCredit", credit);
 	msg->getS32("MoneyData", "SquareMetersCommitted", committed);
@@ -5246,35 +5247,44 @@ void process_money_balance_reply( LLMessageSystem* msg, void** )
 		gStatusBar->setLandCommitted(committed);
 	}
 
-	LLUUID tid;
-	msg->getUUID("MoneyData", "TransactionID", tid);
-	static std::deque<LLUUID> recent;
-	if(!desc.empty() && gSavedSettings.getBOOL("NotifyMoneyChange")
-	   && (std::find(recent.rbegin(), recent.rend(), tid) == recent.rend()))
+	if (desc.empty()
+		|| !gSavedSettings.getBOOL("NotifyMoneyChange"))
 	{
-		// Make the user confirm the transaction, since they might
-		// have missed something during an event.
-		// *TODO:translate
-		LLSD args;
-		args["MESSAGE"] = desc;
-		LLNotificationsUtil::add("SystemMessage", args);
-
-		// Also send notification to chat -- MC
-		LLChat chat(desc);
-		LLFloaterChat::addChat(desc);
-
-		// Once the 'recent' container gets large enough, chop some
-		// off the beginning.
-		const U32 MAX_LOOKBACK = 30;
-		const S32 POP_FRONT_SIZE = 12;
-		if(recent.size() > MAX_LOOKBACK)
-		{
-			LL_DEBUGS("Messaging") << "Removing oldest transaction records" << LL_ENDL;
-			recent.erase(recent.begin(), recent.begin() + POP_FRONT_SIZE);
-		}
-		//LL_DEBUGS("Messaging") << "Pushing back transaction " << tid << LL_ENDL;
-		recent.push_back(tid);
+		// ...nothing to display
+		return;
 	}
+
+	// Suppress duplicate messages about the same transaction
+	static std::deque<LLUUID> recent;
+	if (std::find(recent.rbegin(), recent.rend(), tid) != recent.rend())
+	{
+		return;
+	}
+	
+
+	// Make the user confirm the transaction, since they might
+	// have missed something during an event.
+	// *TODO:translate
+
+
+	// Once the 'recent' container gets large enough, chop some
+	// off the beginning.
+	const U32 MAX_LOOKBACK = 30;
+	const S32 POP_FRONT_SIZE = 12;
+	if(recent.size() > MAX_LOOKBACK)
+	{
+		LL_DEBUGS("Messaging") << "Removing oldest transaction records" << LL_ENDL;
+		recent.erase(recent.begin(), recent.begin() + POP_FRONT_SIZE);
+	}
+	//LL_DEBUGS("Messaging") << "Pushing back transaction " << tid << LL_ENDL;
+	recent.push_back(tid);
+	LLSD args;
+	args["MESSAGE"] = desc;
+	LLNotificationsUtil::add("SystemMessage", args);
+
+	// Also send notification to chat -- MC
+	LLChat chat(desc);
+	LLFloaterChat::addChat(desc);
 }
 
 bool handle_special_notification_callback(const LLSD& notification, const LLSD& response)
@@ -5826,7 +5836,7 @@ void process_script_question(LLMessageSystem *msg, void **user_data)
 	// so we'll reuse the same namespace for both throttle types.
 	std::string throttle_name = owner_name;
 	std::string self_name;
-	gAgent.getName( self_name );
+	LLAgentUI::buildFullname( self_name );
 	if( owner_name == self_name )
 	{
 		throttle_name = taskid.getString();
@@ -6196,7 +6206,7 @@ void send_simple_im(const LLUUID& to_id,
 					const LLUUID& id)
 {
 	std::string my_name;
-	gAgent.buildFullname(my_name);
+	LLAgentUI::buildFullname(my_name);
 	send_improved_im(to_id,
 					 my_name,
 					 message,
@@ -6217,7 +6227,7 @@ void send_group_notice(const LLUUID& group_id,
 	// This will mean converting the item to a binary bucket,
 	// and the subject/message into a single field.
 	std::string my_name;
-	gAgent.buildFullname(my_name);
+	LLAgentUI::buildFullname(my_name);
 
 	// Combine subject + message into a single string.
 	std::ostringstream subject_and_message;

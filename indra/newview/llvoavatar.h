@@ -299,7 +299,9 @@ private:
 	S32				mFullyLoadedFrameCounter;
 	LLFrameTimer	mFullyLoadedTimer;
 	LLFrameTimer	mRuthTimer;
-	
+protected:
+	LLFrameTimer    mInvisibleTimer;	
+
 /**                    State
  **                                                                            **
  *******************************************************************************/
@@ -542,6 +544,8 @@ protected:
 	};
 	typedef std::vector<BakedTextureData> 	bakedtexturedata_vec_t;
 	bakedtexturedata_vec_t 					mBakedTextureDatas;
+	LLLoadedCallbackEntry::source_callback_list_t mCallbackTextureList ; 
+	BOOL mLoadedCallbacksPaused;
 	//--------------------------------------------------------------------
 	// Local Textures
 	//--------------------------------------------------------------------
@@ -549,6 +553,8 @@ protected:
 	virtual void	setLocalTexture(LLVOAvatarDefines::ETextureIndex type, LLViewerTexture* tex, BOOL baked_version_exits);
 	virtual void	addLocalTextureStats(LLVOAvatarDefines::ETextureIndex type, LLViewerFetchedTexture* imagep, F32 texel_area_ratio, BOOL rendered, BOOL covered_by_baked);
 
+
+	void checkTextureLoading() ;
 	//--------------------------------------------------------------------
 	// Layers
 	//--------------------------------------------------------------------
@@ -642,7 +648,7 @@ protected:
 public:
 	void 			processAvatarAppearance(LLMessageSystem* mesgsys);
 	void 			hideSkirt();
-	void			startAppearanceAnimation(BOOL set_by_user, BOOL play_sound);
+	void			startAppearanceAnimation(BOOL set_by_user=FALSE);
 	
 	//--------------------------------------------------------------------
 	// Appearance morphing
@@ -739,6 +745,7 @@ public:
 	void 				rebuildHUD();
 	void 				resetHUDAttachments();
 	BOOL				canAttachMoreObjects() const;
+	BOOL				canAttachMoreObjects(U32 n) const;
 protected:
 	U32					getNumAttachments() const; // O(N), not O(1)
 
@@ -945,15 +952,25 @@ public:
 	std::string extraMetadata;
 	// </edit>
 	
-	static bool 	updateClientTags();
-	static bool 	loadClientTags();
+	bool 			isUnknownClient();
+	void			clearClientTag() { mClientTag = ""; }
+private:
 	std::string 	mClientTag; //Zwagoth's new client identification system. -HgB
 	LLColor4 		mClientColor; //Zwagoth's new client identification system. -HgB
+	bool 			mNameFromChatOverride;
+	bool			mNameFromChatChanged;
+	std::string		mNameFromChatText;
+	std::string 	mNameFromAttachment;
+	
+public:
+	static void		resolveClient(LLColor4& avatar_name_color, std::string& client, LLVOAvatar* avatar);
+	static bool 	updateClientTags();
+	static bool 	loadClientTags();
+private:
+	static LLSD 	sClientResolutionList;
 
-	bool mNameFromChatOverride;
-	bool mNameFromChatChanged;
-	std::string mNameFromChatText;
-	std::string mNameFromAttachment;
+	friend class LLFloaterAvatarList;
+	
 
 /**                    Name
  **                                                                            **
@@ -1125,17 +1142,6 @@ public: //Public until pulled out of LLTexLayer
  **                                                                            **
  *******************************************************************************/
 
-// <edit>
-
-public:
-	//bool mNametagSaysIdle;
-	//bool mIdleForever;
-	//LLFrameTimer mIdleTimer;
-	//U32 mIdleMinutes;
-	LLUUID mFocusObject;
-	LLVector3d mFocusVector;
-	//void resetIdleTime();
-// </edit>
 
 private:
 	//-----------------------------------------------------------------------------------------------
@@ -1155,27 +1161,12 @@ private:
 	localtexture_map_t mLocalTextureData;
 
 
-	//--------------------------------------------------------------------
-	// Private member variables.
-	//--------------------------------------------------------------------
-	// Scratch textures used for compositing
-	static LLMap< LLGLenum, LLGLuint*> sScratchTexNames;
-	static LLMap< LLGLenum, F32*> sScratchTexLastBindTime;
-	static S32 sScratchTexBytes;
-	
-	static LLSD sClientResolutionList;
-
-	bool isUnknownClient();
-	static void resolveClient(LLColor4& avatar_name_color, std::string& client, LLVOAvatar* avatar);
-	friend class LLFloaterAvatarList;
-
-	
-	U64		  mLastRegionHandle;
-	LLFrameTimer mRegionCrossingTimer;
-	S32		  mRegionCrossingCount;
 	
 	static bool		sDoProperArc;
 };
+
+extern const F32 SELF_ADDITIONAL_PRI;
+extern const S32 MAX_TEXTURE_VIRTURE_SIZE_RESET_INTERVAL;
 
 //-----------------------------------------------------------------------------------------------
 // Inlines

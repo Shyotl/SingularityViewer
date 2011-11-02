@@ -601,7 +601,7 @@ bool handleCloudSettingsChanged(const LLSD& newvalue)
 bool handleAscentSelfTag(const LLSD& newvalue)
 {
 	if(gAgentAvatarp)
-		gAgentAvatarp->mClientTag = "";
+		gAgentAvatarp->clearClientTag();
 	return true;
 }
 
@@ -612,7 +612,7 @@ bool handleAscentGlobalTag(const LLSD& newvalue)
 	{
 		LLViewerObject *objectp = gObjectList.getObject(i);
 		if (objectp && objectp->isAvatar())
-			((LLVOAvatar*)objectp)->mClientTag = "";
+			((LLVOAvatar*)objectp)->clearClientTag();
 	}
 	return true;
 }

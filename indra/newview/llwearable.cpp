@@ -640,7 +640,7 @@ void LLWearable::writeToAvatar( BOOL set_by_user )
 	// only interpolate with user-originated changes
 	if (set_by_user)
 	{
-		gAgentAvatarp->startAppearanceAnimation(TRUE, TRUE);
+		gAgentAvatarp->startAppearanceAnimation(TRUE);
 	}
 
 	// Pull texture entries

@@ -305,6 +305,11 @@ BOOL LLVOAvatarSelf::buildMenus()
 
 	for (S32 pass = 0; pass < 2; pass++)
 	{
+		// *TODO: Skinning - gAttachSubMenu is an awful, awful hack
+		if (!gAttachSubMenu)
+		{
+			break;
+		}
 		for (attachment_map_t::iterator iter = mAttachmentPoints.begin(); 
 			 iter != mAttachmentPoints.end();
 			 ++iter)
@@ -1384,6 +1389,7 @@ void LLVOAvatarSelf::invalidateComposite( LLTexLayerSet* layerset, BOOL upload_r
 	{
 		return;
 	}
+	// llinfos << "LLVOAvatar::invalidComposite() " << layerset->getBodyRegionName() << llendl;
 
 	layerset->requestUpdate();
 
@@ -1752,25 +1758,24 @@ void LLVOAvatarSelf::addLocalTextureStats( ETextureIndex type, LLViewerFetchedTe
 {
 	if (!isIndexLocalTexture(type)) return;
 
-	if (!covered_by_baked) // render_avatar is always true if isSelf()
+	if (!covered_by_baked)
 	{
 		if (getLocalTextureID(type) != IMG_DEFAULT_AVATAR && imagep->getDiscardLevel() != 0)
 		{
 			F32 desired_pixels;
 			desired_pixels = llmin(mPixelArea, (F32)getTexImageArea());
 			imagep->setBoostLevel(getAvatarBoostLevel());
-			// SNOW-8 : temporary snowglobe1.0 fix for baked textures
-			if (!gGLManager.mIsDisabled )
-			{
-				// bind the texture so that its boost level won't be slammed
-				gGL.getTexUnit(0)->bind(imagep);
-			}
+
+			imagep->resetTextureStats();
+			imagep->setMaxVirtualSizeResetInterval(MAX_TEXTURE_VIRTURE_SIZE_RESET_INTERVAL);
 			imagep->addTextureStats( desired_pixels / texel_area_ratio );
+			imagep->setAdditionalDecodePriority(SELF_ADDITIONAL_PRI) ;
+			imagep->forceUpdateBindStats() ;
 			if (imagep->getDiscardLevel() < 0)
 			{
 				mHasGrey = TRUE; // for statistics gathering
 			}
-		}	
+		}
 		else
 		{
 			// texture asset is missing
@@ -1986,21 +1991,15 @@ LLTexLayerSet* LLVOAvatarSelf::getLayerSet(ETextureIndex index) const
 	return NULL;
 }
 
-//-----------------------------------------------------------------------------
 // static
-// onCustomizeStart()
-//-----------------------------------------------------------------------------
 void LLVOAvatarSelf::onCustomizeStart()
 {
-	// We're no longer doing any baking or invalidating on entering
-	// appearance editing mode. Leaving function in place in case
+	// We're no longer doing any baking or invalidating on entering 
+	// appearance editing mode. Leaving function in place in case 
 	// further changes require us to do something at this point - Nyx
 }
 
-//-----------------------------------------------------------------------------
 // static
-// onCustomizeEnd()
-//-----------------------------------------------------------------------------
 void LLVOAvatarSelf::onCustomizeEnd()
 {
 	if (isAgentAvatarValid())
@@ -2009,6 +2008,88 @@ void LLVOAvatarSelf::onCustomizeEnd()
 		gAgentAvatarp->requestLayerSetUploads();
 	}
 }
+
+// HACK: this will null out the avatar's local texture IDs before the TE message is sent
+//       to ensure local texture IDs are not sent to other clients in the area.
+//       this is a short-term solution. The long term solution will be to not set the texture
+//       IDs in the avatar object, and keep them only in the wearable.
+//       This will involve further refactoring that is too risky for the initial release of 2.0.
+bool LLVOAvatarSelf::sendAppearanceMessage(LLMessageSystem *mesgsys)// const
+{
+	LLUUID texture_id[TEX_NUM_INDICES];
+	// pack away current TEs to make sure we don't send them out
+	for (LLVOAvatarDictionary::Textures::const_iterator iter = LLVOAvatarDictionary::getInstance()->getTextures().begin();
+		 iter != LLVOAvatarDictionary::getInstance()->getTextures().end();
+		 ++iter)
+	{
+		const ETextureIndex index = iter->first;
+		const LLVOAvatarDictionary::TextureEntry *texture_dict = iter->second;
+		if (!texture_dict->mIsBakedTexture)
+		{
+			LLTextureEntry* entry = getTE((U8) index);
+			texture_id[index] = entry->getID();
+			entry->setID(IMG_DEFAULT_AVATAR);
+		}
+	}
+
+	/*if (gSavedSettings.getBOOL("AscentUseCustomTag"))
+		{
+			LLColor4 color;
+			if (!gSavedSettings.getBOOL("AscentStoreSettingsPerAccount"))
+			{
+				color = gSavedSettings.setColor4("AscentCustomTagColor");
+			}
+			else
+			{
+				color = gSavedPerAccountSettings.getColor4("AscentCustomTagColor");
+			}
+			LLUUID old_teid;
+			U8 client_buffer[UUID_BYTES];
+			memset(&client_buffer, 0, UUID_BYTES);
+			LLTextureEntry* entry = (LLTextureEntry*)gAgentAvatarp->getTE(0);
+			old_teid = entry->getID();
+			//You edit this to change the tag in your client. Yes.
+			const char* tag_client = "Ascent";
+			strncpy((char*)&client_buffer[0], tag_client, UUID_BYTES);
+			LLUUID part_a;
+			memcpy(&part_a.mData, &client_buffer[0], UUID_BYTES);
+			entry->setColor(color);
+			//This glow is used to tell if the tag color and name is set or not.
+			entry->setGlow(0.1f);
+			entry->setID(part_a);
+			gAgentAvatarp->packTEMessage( gMessageSystem, 1, gSavedSettings.getString("AscentReportClientUUID") );
+			entry->setID(old_teid);
+			
+		}
+*/
+		
+	std::string client_tag;
+	if(gSavedSettings.getBOOL("AscentUseTag"))
+		client_tag = gSavedSettings.getString("AscentReportClientUUID");
+	else
+		client_tag = "c228d1cf-4b5d-4ba8-84f4-899a0796aa97";
+		
+	bool success = packTEMessage(mesgsys, 1, client_tag);
+
+	// unpack TEs to make sure we don't re-trigger a bake
+	for (LLVOAvatarDictionary::Textures::const_iterator iter = LLVOAvatarDictionary::getInstance()->getTextures().begin();
+		 iter != LLVOAvatarDictionary::getInstance()->getTextures().end();
+		 ++iter)
+	{
+		const ETextureIndex index = iter->first;
+		const LLVOAvatarDictionary::TextureEntry *texture_dict = iter->second;
+		if (!texture_dict->mIsBakedTexture)
+		{
+			LLTextureEntry* entry = getTE((U8) index);
+			entry->setID(texture_id[index]);
+		}
+	}
+
+	clearClientTag();
+	return success;
+}
+
+
 //------------------------------------------------------------------------
 // needsRenderBeam()
 //------------------------------------------------------------------------
@@ -2094,89 +2175,6 @@ if(gAuditTexture)
 		LLImageGL::sGlobalTextureMemoryInBytes -= sScratchTexBytes;
 		sScratchTexBytes = 0;
 	}
-}
-
-BOOL LLVOAvatarSelf::bindScratchTexture( LLGLenum format )
-{
-	U32 texture_bytes = 0;
-	S32 components = 0; 
-	GLuint gl_name = getScratchTexName( format, components, &texture_bytes );
-	if( gl_name )
-	{
-		gGL.getTexUnit(0)->bindManual(LLTexUnit::TT_TEXTURE, gl_name);
-		stop_glerror();
-
-		F32* last_bind_time = sScratchTexLastBindTime.getIfThere( format );
-		if( last_bind_time )
-		{
-			if( *last_bind_time != LLImageGL::sLastFrameTime )
-			{
-				*last_bind_time = LLImageGL::sLastFrameTime;
-				LLImageGL::updateBoundTexMem(texture_bytes, components, LLViewerTexture::AVATAR_SCRATCH_TEX) ;
-			}
-		}
-		else
-		{
-			LLImageGL::updateBoundTexMem(texture_bytes, components, LLViewerTexture::AVATAR_SCRATCH_TEX) ;
-			sScratchTexLastBindTime.addData( format, new F32(LLImageGL::sLastFrameTime) );
-		}
-		return TRUE;
-	}
-	return FALSE;
-}
-
-LLGLuint LLVOAvatarSelf::getScratchTexName( LLGLenum format, S32& components, U32* texture_bytes )
-{	
-	GLenum internal_format;
-	switch( format )
-	{
-		case GL_LUMINANCE:			components = 1; internal_format = GL_LUMINANCE8;		break;
-		case GL_ALPHA:				components = 1; internal_format = GL_ALPHA8;			break;
-		case GL_LUMINANCE_ALPHA:	components = 2; internal_format = GL_LUMINANCE8_ALPHA8;	break;
-		case GL_RGB:				components = 3; internal_format = GL_RGB8;				break;
-		case GL_RGBA:				components = 4; internal_format = GL_RGBA8;				break;
-		default:	llassert(0);	components = 4; internal_format = GL_RGBA8;				break;
-	}
-
-	*texture_bytes = components * SCRATCH_TEX_WIDTH * SCRATCH_TEX_HEIGHT;
-	
-	if( sScratchTexNames.checkData( format ) )
-	{
-		return *( sScratchTexNames.getData( format ) );
-	}
-
-	LLGLSUIDefault gls_ui;
-
-	U32 name = 0;
-	LLImageGL::generateTextures(1, &name );
-	stop_glerror();
-
-	gGL.getTexUnit(0)->bindManual(LLTexUnit::TT_TEXTURE, name);
-	stop_glerror();
-
-	LLImageGL::setManualImage(
-		GL_TEXTURE_2D, 0, internal_format,
-		SCRATCH_TEX_WIDTH, SCRATCH_TEX_HEIGHT,
-		format, GL_UNSIGNED_BYTE, NULL );
-	stop_glerror();
-
-	gGL.getTexUnit(0)->setTextureFilteringOption(LLTexUnit::TFO_BILINEAR);
-	gGL.getTexUnit(0)->setTextureAddressMode(LLTexUnit::TAM_CLAMP);
-	stop_glerror();
-
-	gGL.getTexUnit(0)->unbind(LLTexUnit::TT_TEXTURE);
-	stop_glerror();
-
-	sScratchTexNames.addData( format, new LLGLuint( name ) );
-
-	sScratchTexBytes += *texture_bytes;
-	LLImageGL::sGlobalTextureMemoryInBytes += *texture_bytes;
-
-	if(gAuditTexture)
-	{
-		LLImageGL::incTextureCounter(SCRATCH_TEX_WIDTH * SCRATCH_TEX_HEIGHT, components, LLViewerTexture::AVATAR_SCRATCH_TEX) ;
-	}
-	return name;
 }
 
 // static 

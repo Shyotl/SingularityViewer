@@ -41,6 +41,9 @@
 #include "llwearabletype.h"
 
 class LLViewerInventoryItem;
+class LLVisualParam;
+class LLTexGlobalColorInfo;
+class LLTexGlobalColor;
 
 class LLWearable
 {

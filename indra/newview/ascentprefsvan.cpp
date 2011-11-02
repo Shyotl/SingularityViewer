@@ -145,7 +145,7 @@ void LLPrefsAscentVan::onManualClientUpdate(void* data)
             if(avatarp)
             {
                 LLVector3 root_pos_last = avatarp->mRoot.getWorldPosition();
-                avatarp->mClientTag = "";
+                avatarp->clearClientTag();
             }
         }
     }
@@ -168,7 +168,7 @@ void LLPrefsAscentVan::onCommitCheckBox(LLUICtrl* ctrl, void* user_data)
             if(avatarp)
             {
                 LLVector3 root_pos_last = avatarp->mRoot.getWorldPosition();
-                avatarp->mClientTag = "";
+                avatarp->clearClientTag();
             }
         }
     }
@@ -181,7 +181,7 @@ void LLPrefsAscentVan::onCommitCheckBox(LLUICtrl* ctrl, void* user_data)
             if(avatarp)
             {
                 LLVector3 root_pos_last = avatarp->mRoot.getWorldPosition();
-                avatarp->mClientTag = "";
+                avatarp->clearClientTag();
             }
         }
 
@@ -201,10 +201,10 @@ void LLPrefsAscentVan::onCommitCheckBox(LLUICtrl* ctrl, void* user_data)
         self->childSetEnabled("custom_tag_color_swatch", showCustomOptions);
     }
 
-    if (!gAgent.getID().isNull())
+    if (isAgentAvatarValid())
     {
         gAgent.sendAgentSetAppearance();
-        gAgent.resetClientTag();
+        gAgentAvatarp->clearClientTag();
     }
 }
 

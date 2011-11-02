@@ -119,6 +119,10 @@ public:
 public:
 	/*virtual*/ BOOL    getIsCloud();
 
+	//--------------------------------------------------------------------
+	// Region state
+	//--------------------------------------------------------------------
+	void			resetRegionCrossingTimer()	{ mRegionCrossingTimer.reset();	}
 
 private:
 	U64				mLastRegionHandle;
@@ -226,10 +230,7 @@ public:
 	// Scratch textures (used for compositing)
 	//--------------------------------------------------------------------
 public:
-	BOOL			bindScratchTexture(LLGLenum format);
 	static void		deleteScratchTextures();
-protected:
-	LLGLuint		getScratchTexName(LLGLenum format, S32& components, U32* texture_bytes);
 private:
 	static S32 		sScratchTexBytes;
 	static LLMap< LLGLenum, LLGLuint*> sScratchTexNames;
@@ -309,10 +310,22 @@ public:
 	static void		onCustomizeStart();
 	static void		onCustomizeEnd();
 
+	//--------------------------------------------------------------------
+	// Visibility
+	//--------------------------------------------------------------------
+public:
+	bool			sendAppearanceMessage(LLMessageSystem *mesgsys);// const;
 
 /**                    Appearance
  **                                                                            **
  *******************************************************************************/
+
+/********************************************************************************
+ **                                                                            **
+ **                    DIAGNOSTICS
+ **/
+
+	//--------------------------------------------------------------------
 	// General
 	//--------------------------------------------------------------------
 public:	
