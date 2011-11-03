@@ -522,8 +522,8 @@ public:
 	// Loading status
 	//--------------------------------------------------------------------
 public:
- 	BOOL            isTextureDefined(LLVOAvatarDefines::ETextureIndex type) const;
-	BOOL			isTextureVisible(LLVOAvatarDefines::ETextureIndex type) const;
+ 	virtual BOOL            isTextureDefined(LLVOAvatarDefines::ETextureIndex type) const;
+	virtual BOOL			isTextureVisible(LLVOAvatarDefines::ETextureIndex type) const;
 
 protected:
 	BOOL			isFullyBaked();
@@ -565,6 +565,15 @@ protected:
 	virtual void	setLocalTexture(LLVOAvatarDefines::ETextureIndex type, LLViewerTexture* tex, BOOL baked_version_exits);
 	virtual void	addLocalTextureStats(LLVOAvatarDefines::ETextureIndex type, LLViewerFetchedTexture* imagep, F32 texel_area_ratio, BOOL rendered, BOOL covered_by_baked);
 
+	//--------------------------------------------------------------------
+	// Texture accessors
+	//--------------------------------------------------------------------
+private:
+	virtual	void				setImage(const U8 te, LLViewerTexture *imagep); 
+	virtual LLViewerTexture*	getImage(const U8 te) const;
+
+	virtual const LLTextureEntry* getTexEntry(const U8 te_num) const;
+	virtual void setTexEntry(const U8 index, const LLTextureEntry &te);
 
 	void checkTextureLoading() ;
 	//--------------------------------------------------------------------
@@ -1196,20 +1205,5 @@ private:
 
 extern const F32 SELF_ADDITIONAL_PRI;
 extern const S32 MAX_TEXTURE_VIRTURE_SIZE_RESET_INTERVAL;
-
-//-----------------------------------------------------------------------------------------------
-// Inlines
-//-----------------------------------------------------------------------------------------------
-inline BOOL LLVOAvatar::isTextureDefined(LLVOAvatarDefines::ETextureIndex type) const
-{
-	return (getTEImage(type)->getID() != IMG_DEFAULT_AVATAR && getTEImage(type)->getID() != IMG_DEFAULT);
-}
-
-inline BOOL LLVOAvatar::isTextureVisible(LLVOAvatarDefines::ETextureIndex type) const
-{
-	return ((isTextureDefined(type) || isSelf())
-			&& (getTEImage(type)->getID() != IMG_INVISIBLE 
-				|| LLDrawPoolAlpha::sShowDebugAlpha));
-}
 
 #endif // LL_VO_AVATAR_H
