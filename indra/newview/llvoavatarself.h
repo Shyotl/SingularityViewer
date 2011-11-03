@@ -174,11 +174,14 @@ public:
 	bool				areTexturesCurrent() const;
 	BOOL				isLocalTextureDataAvailable(const LLTexLayerSet* layerset) const;
 	BOOL				isLocalTextureDataFinal(const LLTexLayerSet* layerset) const;
+	/*virtual*/ BOOL    isTextureDefined(LLVOAvatarDefines::ETextureIndex type) const;
+	/*virtual*/ BOOL	isTextureVisible(LLVOAvatarDefines::ETextureIndex type) const;
 	//--------------------------------------------------------------------
 	// Local Textures
 	//--------------------------------------------------------------------
 public:
 	BOOL				getLocalTextureGL(LLVOAvatarDefines::ETextureIndex type, LLViewerTexture** image_gl_pp) const;
+	LLViewerFetchedTexture*	getLocalTextureGL(LLVOAvatarDefines::ETextureIndex type) const;
 	const LLUUID&		getLocalTextureID(LLVOAvatarDefines::ETextureIndex type) const;
 	void				setLocalTextureTE( U8 te, LLViewerTexture* image, BOOL set_by_user );
 	void 				setLocalTexture( LLVOAvatarDefines::ETextureIndex type, LLViewerTexture* tex, BOOL baked_version_exits );
@@ -188,6 +191,11 @@ protected:
 	/*virtual*/ void	addLocalTextureStats(LLVOAvatarDefines::ETextureIndex i, LLViewerFetchedTexture* imagep, F32 texel_area_ratio, BOOL rendered, BOOL covered_by_baked);
 private:
 	static void			onLocalTextureLoaded(BOOL succcess, LLViewerFetchedTexture *src_vi, LLImageRaw* src, LLImageRaw* aux_src, S32 discard_level, BOOL final, void* userdata);
+
+	/*virtual*/	void	setImage(const U8 te, LLViewerTexture *imagep); 
+	/*virtual*/ LLViewerTexture* getImage(const U8 te) const;
+
+
 	//--------------------------------------------------------------------
 	// Baked textures
 	//--------------------------------------------------------------------
