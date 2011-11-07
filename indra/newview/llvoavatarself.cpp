@@ -90,6 +90,14 @@ LLVOAvatarSelf::LLVOAvatarSelf(const LLUUID& id,
 
 	mMotionController.mIsSelf = TRUE;
 
+	for( S32 i=0; i<TEX_NUM_INDICES; i++ )
+	{
+		if (isIndexLocalTexture((ETextureIndex)i))
+		{
+			mLocalTextureData[(ETextureIndex)i] = LocalTextureData();
+		}
+	}
+
 	lldebugs << "Marking avatar as self " << id << llendl;
 }
 
