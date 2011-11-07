@@ -3155,62 +3155,27 @@ void LLVOAvatar::getClientInfo(std::string& client, LLColor4& color, BOOL useCom
 		else if (ascent_use_tag)
 			uuid_str = ascent_report_client_uuid;
 	}
-	if(getTEImage(TEX_HEAD_BODYPAINT)->getID() == IMG_DEFAULT_AVATAR)
+	if(!isSelf() && getTEImage(TEX_HEAD_BODYPAINT)->getID() == IMG_DEFAULT_AVATAR)
 	{
-		BOOL res = FALSE;
-		for(int ti = TEX_UPPER_SHIRT; ti < TEX_NUM_INDICES; ti++)
+		for(S32 ti = TEX_UPPER_SHIRT; ti <= TEX_SKIRT; ti++)
 		{
-			switch((ETextureIndex)ti)
+			if(isIndexLocalTexture((ETextureIndex)ti) && getTEImage(ti)->getID() != IMG_DEFAULT_AVATAR)
 			{
-				case TEX_HEAD_BODYPAINT:
-				case TEX_UPPER_SHIRT:
-				case TEX_LOWER_PANTS:
-				case TEX_EYES_IRIS:
-				case TEX_HAIR:
-				case TEX_UPPER_BODYPAINT:
-				case TEX_LOWER_BODYPAINT:
-				case TEX_LOWER_SHOES:
-				case TEX_LOWER_SOCKS:
-				case TEX_UPPER_JACKET:
-				case TEX_LOWER_JACKET:
-				case TEX_UPPER_GLOVES:
-				case TEX_UPPER_UNDERSHIRT:
-				case TEX_LOWER_UNDERPANTS:
-				case TEX_SKIRT:
-					if(getTEImage(ti)->getID() != IMG_DEFAULT_AVATAR)
-						res = TRUE;
-					break;
-				default:
-					break;
+				//I found that someone failed at clothing protection
+				if(getTEImage(TEX_EYES_IRIS)->getID().asString() == "4934f1bf-3b1f-cf4f-dbdf-a72550d05bc6"
+				&& getTEImage(TEX_UPPER_BODYPAINT)->getID().asString() == "4934f1bf-3b1f-cf4f-dbdf-a72550d05bc6"
+				&& getTEImage(TEX_LOWER_BODYPAINT)->getID().asString() == "4934f1bf-3b1f-cf4f-dbdf-a72550d05bc6")
+				{
+					color = avatar_name_color;
+					client = "?";
+				}
+				return;
 			}
-			if(res)
-				break;
 		}
-		if(res)
-		{ 
-			//I found that someone failed at clothing protection
-			if(getTEImage(TEX_EYES_IRIS)->getID().asString() == "4934f1bf-3b1f-cf4f-dbdf-a72550d05bc6"
-			&& getTEImage(TEX_UPPER_BODYPAINT)->getID().asString() == "4934f1bf-3b1f-cf4f-dbdf-a72550d05bc6"
-			&& getTEImage(TEX_LOWER_BODYPAINT)->getID().asString() == "4934f1bf-3b1f-cf4f-dbdf-a72550d05bc6")
-			{
-				color = avatar_name_color;
-				client = "?";
-			}
-			return;
-		}
-		else
-		{
-			color = LLColor4(1.0f, 1.0f, 1.0f); //White, since tags are white on their side. -HgB
-			client = "Viewer 2.0";
-			return;
-		}
+		color = LLColor4::white; //White, since tags are white on their side. -HgB
+		client = "Viewer 2.0";
 	}
-	if(getTEImage(TEX_HEAD_BODYPAINT)->isMissingAsset())
-	{
-		color = LLColor4(0.5f, 0.0f, 0.0f);
-		client = "Unknown";
-	}
-	if (LLVOAvatar::sClientResolutionList.has("isComplete") && LLVOAvatar::sClientResolutionList.has(uuid_str))
+	else if (LLVOAvatar::sClientResolutionList.has("isComplete") && LLVOAvatar::sClientResolutionList.has(uuid_str))
 	{
 		
 		LLSD cllsd = LLVOAvatar::sClientResolutionList[uuid_str];
@@ -3225,46 +3190,17 @@ void LLVOAvatar::getClientInfo(std::string& client, LLColor4& color, BOOL useCom
 		else
 			color = colour;
 	}
+	else if(getTEImage(TEX_HEAD_BODYPAINT)->isMissingAsset())
+	{
+		color = LLColor4(0.5f, 0.0f, 0.0f);
+		client = "Unknown";
+	}
 	else
 	{
 		color = avatar_name_color;
 		color.setAlpha(1.f);
 		client = "?";
-		//llinfos << "Apparently this tag isn't registered: " << uuid_str << llendl;
 	}
-
-	/*if (false)
-	//We'll remove this entirely eventually, but it's useful information if we're going to try for the new client tag idea. -HgB
-	//if(useComment) 
-	{
-		LLUUID baked_head_id = getTE(9)->getID();
-		LLPointer<LLViewerTexture> baked_head_image = LLViewerTextureManager::getFetchedTexture(baked_head_id);
-		if(baked_head_image && baked_head_image->decodedComment.length())
-		{
-			if(client.length())
-				client += ", ";
-
-			if(baked_head_image->commentEncryptionType == ENC_EMKDU_V1 || baked_head_image->commentEncryptionType == ENC_ONYXKDU)
-				client += "(XOR) ";
-			else if(baked_head_image->commentEncryptionType == ENC_EMKDU_V2)
-				client += "(AES) ";
-
-			client += baked_head_image->decodedComment;
-		}
-
-		LLPointer<LLViewerTexture> baked_eye_image = gTextureList.getImage(getTE(11)->getID());
-
-		if(baked_eye_image && !baked_eye_image->decodedComment.empty()
-			&& baked_eye_image->decodedComment != baked_head_image->decodedComment)
-		{
-			if(baked_eye_image->commentEncryptionType == ENC_EMKDU_V1 || baked_eye_image->commentEncryptionType == ENC_ONYXKDU)
-				extraMetadata = "(XOR) ";
-			else if(baked_eye_image->commentEncryptionType == ENC_EMKDU_V2)
-				extraMetadata = "(AES) ";
-
-			extraMetadata += baked_eye_image->decodedComment;
-		}
-	}*/
 }
 
 
@@ -7356,7 +7292,7 @@ void LLVOAvatar::updateMeshTextures()
 		const LLViewerTexture* te_image = getImage(i);
 		if(!te_image || te_image->getID().isNull() || (te_image->getID() == IMG_DEFAULT))
 		{
-			setTEImage(i, LLViewerTextureManager::getFetchedTexture(i == TEX_HAIR ? IMG_DEFAULT : IMG_DEFAULT)); // IMG_DEFAULT_AVATAR = a special texture that's never rendered.
+			setTEImage(i, LLViewerTextureManager::getFetchedTexture(i == TEX_HAIR ? IMG_DEFAULT : IMG_DEFAULT_AVATAR)); // IMG_DEFAULT_AVATAR = a special texture that's never rendered.
 		}
 	}
 

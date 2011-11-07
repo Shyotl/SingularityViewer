@@ -1450,7 +1450,8 @@ BOOL LLVOAvatarSelf::isLocalTextureDataFinal(const LLTexLayerSet* layerset) cons
 
 BOOL LLVOAvatarSelf::isTextureDefined(LLVOAvatarDefines::ETextureIndex type) const
 {
-	LLUUID id;
+	return LLVOAvatar::isTextureDefined(type);
+	/*LLUUID id;
 	BOOL isDefined = TRUE;
 	if (isIndexLocalTexture(type))
 	{
@@ -1465,12 +1466,14 @@ BOOL LLVOAvatarSelf::isTextureDefined(LLVOAvatarDefines::ETextureIndex type) con
 		isDefined &= (id != IMG_DEFAULT_AVATAR && id != IMG_DEFAULT);
 	}
 	
-	return isDefined;
+	return isDefined;*/
 }
 
 //virtual
 BOOL LLVOAvatarSelf::isTextureVisible(LLVOAvatarDefines::ETextureIndex type) const
 {
+	return LLVOAvatar::isTextureVisible(type);
+	/*
 	if (isIndexBakedTexture(type))
 	{
 		return LLVOAvatar::isTextureVisible(type);
@@ -1478,7 +1481,7 @@ BOOL LLVOAvatarSelf::isTextureVisible(LLVOAvatarDefines::ETextureIndex type) con
 
 	LLUUID tex_id = getLocalTextureID(type);
 	return (tex_id != IMG_INVISIBLE) 
-			|| (LLDrawPoolAlpha::sShowDebugAlpha);
+			|| (LLDrawPoolAlpha::sShowDebugAlpha);*/
 }
 //-----------------------------------------------------------------------------
 // requestLayerSetUploads()
@@ -1774,26 +1777,28 @@ void LLVOAvatarSelf::onLocalTextureLoaded( BOOL success, LLViewerFetchedTexture 
 
 /*virtual*/	void LLVOAvatarSelf::setImage(const U8 te, LLViewerTexture *imagep)
 {
-	if (isIndexLocalTexture((ETextureIndex)te))
+	LLVOAvatar::setImage(te,imagep);
+	/*if (isIndexLocalTexture((ETextureIndex)te))
 	{
 		setLocalTexture((ETextureIndex)te, imagep, FALSE);
 	}
 	else 
 	{
 		setTEImage(te,imagep);
-	}
+	}*/
 }
 
 /*virtual*/ LLViewerTexture* LLVOAvatarSelf::getImage(const U8 te) const
 {
-	if (isIndexLocalTexture((ETextureIndex)te))
+	return LLVOAvatar::getImage(te);
+	/*if (isIndexLocalTexture((ETextureIndex)te))
 	{
 		return getLocalTextureGL((ETextureIndex)te);
 	}
 	else 
 	{
 		return getTEImage(te);
-	}
+	}*/
 }
 
 // static
