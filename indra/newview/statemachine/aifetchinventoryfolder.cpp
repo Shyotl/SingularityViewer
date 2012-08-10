@@ -32,6 +32,8 @@
 #include "aifetchinventoryfolder.h"
 #include "aievent.h"
 #include "llagent.h"
+#include "llviewerinventory.h"
+#include "llinventorymodel.h"
 #include "llinventoryobserver.h"
 #include "llinventorymodelbackgroundfetch.h"
 

@@ -45,6 +45,7 @@
 #include "lluictrlfactory.h"
 #include "llviewercontrol.h"
 #include "llstartup.h"
+#include "llinventorymodel.h"
 
 LLDropTarget* mBuildDropTarget;
 LLPrefsAscentSys* LLPrefsAscentSys::sInst;

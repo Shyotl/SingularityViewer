@@ -25,6 +25,7 @@
 //#include "llviewertexteditor.h"
 
 //#include "jclslpreproc.h"
+#include "llinventorymodel.h"
 
 ImportTracker gImportTracker;
 

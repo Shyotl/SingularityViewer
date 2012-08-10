@@ -41,6 +41,7 @@
 #include "lluictrlfactory.h"
 #include "llviewercontrol.h"
 #include "lgghunspell_wrapper.h"
+#include "llinventorymodel.h"
 
 #include "llstartup.h"
 

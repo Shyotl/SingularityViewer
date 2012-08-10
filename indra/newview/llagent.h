@@ -44,7 +44,7 @@
 #include "llcoordframe.h"			// for mFrameAgent
 #include "llvoavatardefines.h"
 #include "llviewerinventory.h"
-#include "llinventorymodel.h"
+//#include "llinventorymodel.h"
 #include "v3dmath.h"
 
 #include <boost/signals2.hpp>
