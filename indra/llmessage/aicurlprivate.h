@@ -111,11 +111,21 @@ class CurlEasyHandle : public boost::noncopyable, protected AICurlEasyHandleEven
 	char* unescape(char* url, int inlength , int* outlength);
 
 	// Extract information from a curl handle.
-	CURLcode getinfo(CURLINFO info, void* data);
-#if _WIN64 || __x86_64__ || __ppc64__
+  private:
+	CURLcode getinfo_priv(CURLINFO info, void* data);
+  public:
+	// The rest are inlines to provide some type-safety.
+	CURLcode getinfo(CURLINFO info, char** data) { return getinfo_priv(info, data); }
+	CURLcode getinfo(CURLINFO info, curl_slist** data) { return getinfo_priv(info, data); }
+	CURLcode getinfo(CURLINFO info, double* data) { return getinfo_priv(info, data); }
+	CURLcode getinfo(CURLINFO info, long* data) { return getinfo_priv(info, data); }
+#ifdef __LP64__	// sizeof(long) > sizeof(int) ?
 	// Overload for integer types that are too small (libcurl demands a long).
-	CURLcode getinfo(CURLINFO info, S32* data) { long ldata; CURLcode res = getinfo(info, &ldata); *data = static_cast<S32>(ldata); return res; }
-	CURLcode getinfo(CURLINFO info, U32* data) { long ldata; CURLcode res = getinfo(info, &ldata); *data = static_cast<U32>(ldata); return res; }
+	CURLcode getinfo(CURLINFO info, S32* data) { long ldata; CURLcode res = getinfo_priv(info, &ldata); *data = static_cast<S32>(ldata); return res; }
+	CURLcode getinfo(CURLINFO info, U32* data) { long ldata; CURLcode res = getinfo_priv(info, &ldata); *data = static_cast<U32>(ldata); return res; }
+#else
+	CURLcode getinfo(CURLINFO info, S32* data) { return getinfo_priv(info, static_cast<long*>(data)); }
+	CURLcode getinfo(CURLINFO info, U32* data) { return getinfo_priv(info, static_cast<long*>(data)); }
 #endif
 
 	// Perform a file transfer (blocking).
@@ -133,6 +143,7 @@ class CurlEasyHandle : public boost::noncopyable, protected AICurlEasyHandleEven
 	CURL* mEasyHandle;
 	CURLM* mActiveMultiHandle;
 	char* mErrorBuffer;
+	AIPostFieldPtr mPostField;		// This keeps the POSTFIELD data alive for as long as the easy handle exists.
 	bool mQueuedForRemoval;			// Set if the easy handle is (probably) added to the multi handle, but is queued for removal.
 #ifdef SHOW_ASSERT
   public:
@@ -180,6 +191,9 @@ class CurlEasyHandle : public boost::noncopyable, protected AICurlEasyHandleEven
 	// Return the underlying curl easy handle.
 	CURL* getEasyHandle(void) const { return mEasyHandle; }
 
+	// Keep POSTFIELD data alive.
+	void setPostField(AIPostFieldPtr const& post_field_ptr) { mPostField = post_field_ptr; }
+
   private:
 	// Return, and possibly create, the curl (easy) error buffer used by the current thread.
 	static char* getTLErrorBuffer(void);
@@ -198,9 +212,13 @@ class CurlEasyHandle : public boost::noncopyable, protected AICurlEasyHandleEven
 // AICurlEasyRequest is deleted, then also the ThreadSafeCurlEasyRequest is deleted
 // and the CurlEasyRequest destructed.
 class CurlEasyRequest : public CurlEasyHandle {
+  private:
+	void setPost_raw(S32 size, char const* data);
   public:
+	void setPost(S32 size) { setPost_raw(size, NULL); }
+	void setPost(AIPostFieldPtr const& postdata, S32 size);
+	void setPost(char const* data, S32 size) { setPost(new AIPostField(data), size); }
 	void setoptString(CURLoption option, std::string const& value);
-	void setPost(char const* postdata, S32 size);
 	void addHeader(char const* str);
 
   private:

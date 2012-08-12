@@ -46,14 +46,15 @@ struct buf2str {
   int mSize;
 };
 
-} // namespace libcwd
-
-enum print_thread_id_t { print_thread_id };
-inline void init() { }
 struct libcwd_do_type {
  void on() const { }
 };
 extern LL_COMMON_API libcwd_do_type const libcw_do;
+
+} // namespace libcwd
+
+enum print_thread_id_t { print_thread_id };
+inline void init() { }
 struct Indent {
   int M_indent;
   static ll_thread_local int S_indentation;
@@ -87,12 +88,18 @@ extern LL_COMMON_API fake_channel const notice;
 } // namespace dc
 } // namespace debug
 
-#define Debug(x) do { using namespace debug; x; } while(0)
-#define Dout(a, b) do { using namespace debug;  if ((a).mOn) { llinfos_nf << print_thread_id << (a).mLabel << ": " << Indent::print << b << llendl; } } while(0)
+#define LIBCWD_DEBUG_CHANNELS debug
+#define LibcwDoutScopeBegin(a, b, c) do { using namespace debug; using namespace debug::libcwd; llinfos_nf << print_thread_id << (c).mLabel << ": " << Indent::print;
+#define LibcwDoutStream llcont
+#define LibcwDoutScopeEnd llcont << llendl; } while(0)
+
+#define Debug(x) do { using namespace debug; using namespace debug::libcwd; x; } while(0)
+#define Dout(a, b) do { using namespace debug; using namespace debug::libcwd; if ((a).mOn) { llinfos_nf << print_thread_id << (a).mLabel << ": " << Indent::print << b << llendl; } } while(0)
 #define DoutEntering(a, b) \
   int __slviewer_debug_indentation = 2; \
   { \
 	using namespace debug; \
+	using namespace debug::libcwd; \
 	if ((a).mOn) \
 	  llinfos_nf << print_thread_id << (a).mLabel << ": " << Indent::print << "Entering " << b << llendl; \
     else \
