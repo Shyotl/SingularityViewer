@@ -663,6 +663,7 @@ CURLcode debug_curl_easy_setopt(CURL* handle, CURLoption option, ...)
 	  Dout(dc::curl, "curl_easy_setopt(" << (AICURL*)handle << ", " << option << ", (curl_off_t)" << param.offset << ") = " << ret);
 	  break;
 	default:
+      ret = CURLE_UNKNOWN_OPTION;
 	  break;
   }
   return ret;
@@ -807,6 +808,7 @@ CURLMcode debug_curl_multi_setopt(CURLM* multi_handle, CURLMoption option, ...)
 	  Dout(dc::curl, "curl_easy_setopt(" << (AICURLM*)multi_handle << ", " << option << ", (curl_off_t)" << param.offset << ") = " << ret);
 	  break;
 	default:	// Stop compiler complaining about no default.
+	  ret = CURLM_UNKNOWN_OPTION;
 	  break;
   }
   return ret;
