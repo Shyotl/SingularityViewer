@@ -181,6 +181,8 @@ public:
 	S32 mTextureMemory;
 	mutable F32  mLastBindTime;	// last time this was bound, by discard level
 	
+	public:
+		std::string mMaskLevel;
 private:
 	LLPointer<LLImageRaw> mSaveData; // used for destroyGL/restoreGL
 	S32	mSaveDiscardLevel;

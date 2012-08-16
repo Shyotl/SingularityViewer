@@ -44,6 +44,7 @@
 #include "llgl.h"
 #include "llglslshader.h"
 #include "llrender.h"
+#include "llfasttimer.h"
 
 //----------------------------------------------------------------------------
 const F32 MIN_TEXTURE_LIFETIME = 10.f;
@@ -290,9 +291,11 @@ S32 LLImageGL::dataFormatComponents(S32 dataformat)
 
 //----------------------------------------------------------------------------
 
+static LLFastTimer::DeclareTimer FTM_IMAGE_UPDATE_STATS("Image Stats");
 // static
 void LLImageGL::updateStats(F32 current_time)
 {
+	LLFastTimer t(FTM_IMAGE_UPDATE_STATS);
 	sLastFrameTime = current_time;
 	sBoundTextureMemoryInBytes = sCurBoundTextureMemory;
 	sCurBoundTextureMemory = 0;
@@ -487,6 +490,7 @@ void LLImageGL::init(BOOL usemipmaps)
 	mAutoGenMips = FALSE;
 
 	mIsMask = FALSE;
+	mMaskLevel = "NULL";
 	mNeedsAlphaAndPickMask = TRUE ;
 	mAlphaStride = 0 ;
 	mAlphaOffset = 0 ;
@@ -1721,6 +1725,7 @@ void LLImageGL::setNeedsAlphaAndPickMask(BOOL need_mask)
 		{
 			mAlphaOffset = INVALID_OFFSET ;
 			mIsMask = FALSE;
+			mMaskLevel = "INV";
 		}
 	}
 }
@@ -1745,6 +1750,7 @@ void LLImageGL::calcAlphaChannelOffsetAndStride()
 	case GL_RGB:
 		mNeedsAlphaAndPickMask = FALSE ;
 		mIsMask = FALSE;
+		mMaskLevel = "OPA";
 		return ; //no alpha channel.
 	case GL_RGBA:
 		mAlphaStride = 4;
@@ -1792,6 +1798,7 @@ void LLImageGL::calcAlphaChannelOffsetAndStride()
 
 		mNeedsAlphaAndPickMask = FALSE ;
 		mIsMask = FALSE;
+		mMaskLevel = "FMT";
 	}
 }
 
@@ -1883,7 +1890,8 @@ void LLImageGL::analyzeAlpha(const void* data_in, U32 w, U32 h)
 		upperhalftotal += sample[i];
 	}
 
-	if (midrangetotal > length/48 || // lots of midrange, or
+	mMaskLevel=llformat("D:%i Lo:%i Mi:%i/%i Hi:%i Al:%i Len:%i",mCurrentDiscardLevel,lowerhalftotal,midrangetotal,(int)(length/48),upperhalftotal,alphatotal,length);
+	if ((midrangetotal > length/48) || // lots of midrange, or
 	    (lowerhalftotal == length && alphatotal != 0) || // all close to transparent but not all totally transparent, or
 	    (upperhalftotal == length && alphatotal != 255*length)) // all close to opaque but not all totally opaque
 	{

@@ -236,6 +236,7 @@ public:
 	S32        getTextureMemory() const ;
 	LLGLenum   getPrimaryFormat() const;
 	BOOL       getIsAlphaMask() const ;
+	const std::string&       getAlphaMaskLevel() const ;
 	LLTexUnit::eTextureType getTarget(void) const ;
 	BOOL       getMask(const LLVector2 &tc);
 	F32        getTimePassedSinceLastBound();

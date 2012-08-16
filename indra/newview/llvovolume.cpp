@@ -702,6 +702,25 @@ void LLVOVolume::updateTextureVirtualSize(bool forced)
 	{
 		setDebugText(llformat("%.0f:%.0f", (F32) sqrt(min_vsize),(F32) sqrt(max_vsize)));
 	}
+	else if (gPipeline.hasRenderDebugMask(LLPipeline::RENDER_DEBUG_ALPHAMASK_CRITERIA))
+	{
+		std::string tex;
+		for(S32 i = 0; i<num_faces;++i)
+		{
+			LLFace* face = mDrawable->getFace(i);
+			if(face->getPoolType() != LLDrawPool::POOL_ALPHA)
+				continue;
+			tex.append(llformat("%i",i));
+			if(!face)
+				tex.append("[NF]\n");
+			else if(!face->getTexture())
+				tex.append("[NT]\n");
+			else
+				tex.append(llformat("[%i|%s]\n",(int)face->getTexture()->getIsAlphaMask(),face->getTexture()->getAlphaMaskLevel().c_str()));
+			
+		}
+		setDebugText(tex);
+	}
 
 	if (mPixelArea == 0)
 	{ //flexi phasing issues make this happen

@@ -1101,6 +1101,8 @@ BOOL LLViewerTexture::getIsAlphaMask() const
 	return mGLTexturep->getIsAlphaMask() ;
 }
 
+const std::string& LLViewerTexture::getAlphaMaskLevel() const { static std::string notex("NTEX"); if(!getGLTexture()) return notex; else return getGLTexture()->mMaskLevel;}
+
 BOOL LLViewerTexture::getMask(const LLVector2 &tc)
 {
 	llassert(mGLTexturep.notNull()) ;
