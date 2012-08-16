@@ -640,6 +640,9 @@ public:
 
 	// TODO: Make all this stuff private.  JC
 	LLPointer<LLHUDText> mText;
+	std::string mHudTextString;	//Cache for reset on debug infodisplay toggle.
+	LLColor4 mHudTextColor;		//Cache for reset on debug infodisplay toggle.
+
 	LLPointer<LLHUDIcon> mIcon;
 
 	bool mIsNameAttachment;

@@ -1238,6 +1238,9 @@ U32 LLViewerObject::processUpdateMessage(LLMessageSystem *mesgsys,
 					mesgsys->getBinaryDataFast(_PREHASH_ObjectData, _PREHASH_Data, mData, data_size, block_num);
 				}
 
+				mHudTextString.clear();				//Cache for reset on debug infodisplay toggle.
+				mHudTextColor = LLColor4U::white;	//Cache for reset on debug infodisplay toggle.
+
 				S32 text_size = mesgsys->getSizeFast(_PREHASH_ObjectData, block_num, _PREHASH_Text);
 				if (text_size > 1)
 				{
@@ -1252,17 +1255,21 @@ U32 LLViewerObject::processUpdateMessage(LLMessageSystem *mesgsys,
 						mText->setOnHUDAttachment(isHUDAttachment());
 					}
 
-					std::string temp_string;
-					mesgsys->getStringFast(_PREHASH_ObjectData, _PREHASH_Text, temp_string, block_num );
+					//Cache for reset on debug infodisplay toggle.
+					mesgsys->getStringFast(_PREHASH_ObjectData, _PREHASH_Text, mHudTextString, block_num );
 					
 					LLColor4U coloru;
 					mesgsys->getBinaryDataFast(_PREHASH_ObjectData, _PREHASH_TextColor, coloru.mV, 4, block_num);
 
 					// alpha was flipped so that it zero encoded better
 					coloru.mV[3] = 255 - coloru.mV[3];
-					mText->setColor(LLColor4(coloru));
-					mText->setString(temp_string);
-					
+					mHudTextColor = LLColor4(coloru);	//Cache for reset on debug infodisplay toggle.
+					if(mText->getDoFade())	//Fade is disabled when this is being overridden by debug text.
+					{
+						mText->setColor(mHudTextColor);
+						mText->setString(mHudTextString);
+					}
+	
 					if (mDrawable.notNull())
 					{
 						setChanged(MOVED | SILHOUETTE);
@@ -1641,6 +1648,9 @@ U32 LLViewerObject::processUpdateMessage(LLMessageSystem *mesgsys,
 					mData = NULL;
 				}
 
+				mHudTextString.clear();				//Cache for reset on debug infodisplay toggle.
+				mHudTextColor = LLColor4U::white;	//Cache for reset on debug infodisplay toggle.
+
 				// Setup object text
 				if (!mText && (value & 0x4))
 				{
@@ -1654,13 +1664,17 @@ U32 LLViewerObject::processUpdateMessage(LLMessageSystem *mesgsys,
 
 				if (value & 0x4)
 				{
-					std::string temp_string;
-					dp->unpackString(temp_string, "Text");
+					//Cache for reset on debug infodisplay toggle.
+					dp->unpackString(mHudTextString, "Text");
 					LLColor4U coloru;
 					dp->unpackBinaryDataFixed(coloru.mV, 4, "Color");
 					coloru.mV[3] = 255 - coloru.mV[3];
-					mText->setColor(LLColor4(coloru));
-					mText->setString(temp_string);
+					mHudTextColor = LLColor4(coloru);	//Cache for reset on debug infodisplay toggle.
+					if(mText->getDoFade())	//Fade is disabled when this is being overridden by debug text.
+					{
+						mText->setColor(mHudTextColor);
+						mText->setString(mHudTextString);
+					}
 					setChanged(TEXTURE);
 				}
 				else if(mText.notNull())
@@ -4667,8 +4681,11 @@ void LLViewerObject::setCanSelect(BOOL canSelect)
 
 void LLViewerObject::setDebugText(const std::string &utf8text)
 {
-	if (utf8text.empty() && !mText)
+	if (utf8text.empty() && mHudTextString.empty())
 	{
+		if(mText)
+			mText->markDead();
+		mText = NULL;
 		return;
 	}
 
@@ -4681,10 +4698,10 @@ void LLViewerObject::setDebugText(const std::string &utf8text)
 		mText->setSourceObject(this);
 		mText->setOnHUDAttachment(isHUDAttachment());
 	}
-	mText->setColor(LLColor4::white);
-	mText->setString(utf8text);
-	mText->setZCompare(FALSE);
-	mText->setDoFade(FALSE);
+	mText->setColor(utf8text.empty() ? mHudTextColor : LLColor4::white );
+	mText->setString(utf8text.empty() ? mHudTextString :  utf8text );
+	mText->setZCompare(utf8text.empty());
+	mText->setDoFade(utf8text.empty());
 	updateText();
 }
 // <edit>
