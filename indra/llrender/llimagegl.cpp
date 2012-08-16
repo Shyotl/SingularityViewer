@@ -1811,7 +1811,8 @@ void LLImageGL::analyzeAlpha(const void* data_in, U32 w, U32 h)
 
 	U32 length = w * h;
 	U32 alphatotal = 0;
-	
+	U32 midrange_count = 0;
+
 	U32 sample[16];
 	memset(sample, 0, sizeof(U32)*16);
 
@@ -1830,6 +1831,13 @@ void LLImageGL::analyzeAlpha(const void* data_in, U32 w, U32 h)
 			const GLubyte* current = rowstart;
 			for (U32 x = 0; x < w; x+=2)
 			{
+				/*
+				+---+---+
+				|s1 |s3 |
+				+---+---+
+				|s2 |s4  |
+				+---+---+
+				*/
 				const U32 s1 = current[0];
 				alphatotal += s1;
 				const U32 s2 = current[w * mAlphaStride];
@@ -1840,6 +1848,15 @@ void LLImageGL::analyzeAlpha(const void* data_in, U32 w, U32 h)
 				const U32 s4 = current[w * mAlphaStride];
 				alphatotal += s4;
 				current += mAlphaStride;
+
+				if((s1/16)>=2 && (s1/16)<13)
+					midrange_count++;
+				if((s2/16)>=2 && (s2/16)<13)
+					midrange_count++;
+				if((s3/16)>=2 && (s3/16)<13)
+					midrange_count++;
+				if((s4/16)>=2 && (s4/16)<13)
+					midrange_count++;
 
 				++sample[s1/16];
 				++sample[s2/16];
@@ -1863,6 +1880,8 @@ void LLImageGL::analyzeAlpha(const void* data_in, U32 w, U32 h)
 			const U32 s1 = *current;
 			alphatotal += s1;
 			++sample[s1/16];
+			if((s1/16)>=2 && (s1/16)<13)
+				midrange_count++;
 			current += mAlphaStride;
 		}
 	}
@@ -1890,8 +1909,8 @@ void LLImageGL::analyzeAlpha(const void* data_in, U32 w, U32 h)
 		upperhalftotal += sample[i];
 	}
 
-	mMaskLevel=llformat("D:%i Lo:%i Mi:%i/%i Hi:%i Al:%i Len:%i",mCurrentDiscardLevel,lowerhalftotal,midrangetotal,(int)(length/48),upperhalftotal,alphatotal,length);
-	if ((midrangetotal > length/48) || // lots of midrange, or
+	mMaskLevel=llformat("D:%i Lo:%i Mi:%i/%i Hi:%i NMi: Al:%i Len:%i",mCurrentDiscardLevel,lowerhalftotal,midrangetotal,(int)(length/48),upperhalftotal,midrange_count,alphatotal,length);
+	if ((midrangetotal > length/48 && (F32(midrange_count)/F32(w*h)) > .05f) || // lots of midrange, or
 	    (lowerhalftotal == length && alphatotal != 0) || // all close to transparent but not all totally transparent, or
 	    (upperhalftotal == length && alphatotal != 255*length)) // all close to opaque but not all totally opaque
 	{
