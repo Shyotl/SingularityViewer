@@ -4957,8 +4957,10 @@ void LLViewerWindow::requestResolutionUpdate(bool fullscreen_checked)
 	mIsFullscreenChecked = fullscreen_checked;
 }
 
+static LLFastTimer::DeclareTimer FTM_WINDOW_CHECK_SETTINGS("Window Settings");
 BOOL LLViewerWindow::checkSettings()
 {
+	LLFastTimer t(FTM_WINDOW_CHECK_SETTINGS);
 	if (mStatesDirty)
 	{
 		gGL.refreshState();
