@@ -304,13 +304,8 @@ void LLVolumeImplFlexible::doIdleUpdate(LLAgent &agent, LLWorld &world, const F6
 	{
 		//LLFastTimer ftm(FTM_FLEXIBLE_UPDATE);
 
-		//flexible objects never go static
-		drawablep->mQuietCount = 0;
-		if (!drawablep->isRoot())
-		{
-			LLViewerObject* parent = (LLViewerObject*) mVO->getParent();
-			parent->mDrawable->mQuietCount = 0;
-		}
+		//ensure drawable is active
+		drawablep->makeActive();
 
 		if (gPipeline.hasRenderDebugFeatureMask(LLPipeline::RENDER_DEBUG_FEATURE_FLEXIBLE))
 		{

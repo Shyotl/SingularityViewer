@@ -426,47 +426,34 @@ void LLVOVolume::animateTextures()
 		}
 	}
 }
-BOOL LLVOVolume::idleUpdate(LLAgent &agent, LLWorld &world, const F64 &time)
+void LLVOVolume::idleUpdate(LLAgent &agent, LLWorld &world, const F64 &time)
 {
-	LLViewerObject::idleUpdate(agent, world, time);
+	if (!mDead)
+	{
+		if (!mStatic)
+		{ //do some velocity interpolation/rotation
+			LLViewerObject::idleUpdate(agent, world, time);
+		}
 
 	//static LLFastTimer::DeclareTimer ftm("Volume Idle");
-	//LLFastTimer t(ftm);
+		//LLFastTimer t(ftm);
 
-	if (mDead || mDrawable.isNull())
-	{
-		return TRUE;
-	}
-	
-	///////////////////////
-	//
-	// Do texture animation stuff
-	//
+		///////////////////////
+		//
+		// Do texture animation stuff
+		//
 
-	if (mTextureAnimp && gAnimateTextures)
-	{
-		animateTextures();
-	}
-
-	// Dispatch to implementation
-	if (mVolumeImpl)
-	{
-		mVolumeImpl->doIdleUpdate(agent, world, time);
-	}
-
-	const S32 MAX_ACTIVE_OBJECT_QUIET_FRAMES = 40;
-
-	if (mDrawable->isActive())
-	{
-		if (mDrawable->isRoot() && 
-			mDrawable->mQuietCount++ > MAX_ACTIVE_OBJECT_QUIET_FRAMES && 
-			(!mDrawable->getParent() || !mDrawable->getParent()->isActive()))
+		if (mTextureAnimp && gAnimateTextures)
 		{
-			mDrawable->makeStatic();
+			animateTextures();
+		}
+
+		// Dispatch to implementation
+		if (mVolumeImpl)
+		{
+			mVolumeImpl->doIdleUpdate(agent, world, time);
 		}
 	}
-
-	return TRUE;
 }
 
 void LLVOVolume::updateTextures()
@@ -730,8 +717,8 @@ void LLVOVolume::updateTextureVirtualSize(bool forced)
 
 BOOL LLVOVolume::isActive() const
 {
-	return !mStatic || mTextureAnimp || (mVolumeImpl && mVolumeImpl->isActive()) || 
-		(mDrawable.notNull() && mDrawable->isActive());
+	return !mStatic || mTextureAnimp || (mVolumeImpl && mVolumeImpl->isActive());// || 
+		//(mDrawable.notNull() && mDrawable->isActive());
 }
 
 BOOL LLVOVolume::setMaterial(const U8 material)
@@ -1621,9 +1608,13 @@ S32 LLVOVolume::setTEColor(const U8 te, const LLColor4& color)
 	}
 	else if (color != tep->getColor())
 	{
-		if (color.mV[3] != tep->getColor().mV[3])
+		F32 old_alpha = tep->getColor().mV[3];
+		if (color.mV[3] != old_alpha)
 		{
 			gPipeline.markTextured(mDrawable);
+			//treat this alpha change as an LoD update since render batches may need to get rebuilt
+			mLODChanged = TRUE;
+			gPipeline.markRebuild(mDrawable, LLDrawable::REBUILD_VOLUME, FALSE);
 		}
 		retval = LLPrimitive::setTEColor(te, color);
 		if (mDrawable.notNull() && retval)

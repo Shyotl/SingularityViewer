@@ -2854,7 +2854,7 @@ void LLVOAvatar::dumpAnimationState()
 //------------------------------------------------------------------------
 // idleUpdate()
 //------------------------------------------------------------------------
-BOOL LLVOAvatar::idleUpdate(LLAgent &agent, LLWorld &world, const F64 &time)
+void LLVOAvatar::idleUpdate(LLAgent &agent, LLWorld &world, const F64 &time)
 {
 	LLMemType mt(LLMemType::MTYPE_AVATAR);
 	LLFastTimer t(FTM_AVATAR_UPDATE);
@@ -2862,12 +2862,12 @@ BOOL LLVOAvatar::idleUpdate(LLAgent &agent, LLWorld &world, const F64 &time)
 	if (isDead())
 	{
 		llinfos << "Warning!  Idle on dead avatar" << llendl;
-		return TRUE;
+		return;
 	}
 
  	if (!(gPipeline.hasRenderType(LLPipeline::RENDER_TYPE_AVATAR)))
 	{
-		return TRUE;
+		return;
 	}
 
 	checkTextureLoading() ;
@@ -2936,7 +2936,7 @@ BOOL LLVOAvatar::idleUpdate(LLAgent &agent, LLWorld &world, const F64 &time)
 
 	if (gNoRender)
 	{
-		return TRUE;
+		return;
 	}
 
 	idleUpdateVoiceVisualizer( voice_enabled );
@@ -2953,8 +2953,6 @@ BOOL LLVOAvatar::idleUpdate(LLAgent &agent, LLWorld &world, const F64 &time)
 
 	idleUpdateNameTag( root_pos_last );
 	idleUpdateRenderCost();
-
-	return TRUE;
 }
 
 void LLVOAvatar::idleUpdateVoiceVisualizer(bool voice_enabled)
@@ -3134,7 +3132,7 @@ void LLVOAvatar::idleUpdateMisc(bool detailed_update)
 
 	if (isImpostor() && !mNeedsImpostorUpdate)
 	{
-		LLVector4a ext[2];
+		LL_ALIGN_16(LLVector4a ext[2]);
 		F32 distance;
 		LLVector3 angle;
 
@@ -8161,6 +8159,7 @@ LLBBox LLVOAvatar::getHUDBBox() const
 				 attachment_iter != attachment->mAttachedObjects.end();
 				 ++attachment_iter)
 			{
+
 				const LLViewerObject* attached_object = (*attachment_iter);
 				if (attached_object == NULL)
 				{

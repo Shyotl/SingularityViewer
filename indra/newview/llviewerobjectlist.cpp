@@ -927,8 +927,6 @@ void LLViewerObjectList::update(LLAgent &agent, LLWorld &world)
 
 	const F64 frame_time = LLFrameTimer::getElapsedSeconds();
 	
-	std::vector<LLViewerObject*> kill_list;
-	S32 num_active_objects = 0;
 	LLViewerObject *objectp = NULL;	
 	
 	// Make a copy of the list in case something in idleUpdate() messes with it
@@ -989,21 +987,7 @@ void LLViewerObjectList::update(LLAgent &agent, LLWorld &world)
 			idle_iter != idle_end; idle_iter++)
 		{
 			objectp = *idle_iter;
-			if (objectp->idleUpdate(agent, world, frame_time))
-			{
-				num_active_objects++;				
-			}
-			else
-			{
-				//  If Idle Update returns false, kill object!
-				kill_list.push_back(objectp);
-			}
-		}
-		for (std::vector<LLViewerObject*>::iterator kill_iter = kill_list.begin();
-			kill_iter != kill_list.end(); kill_iter++)
-		{
-			objectp = *kill_iter;
-			killObject(objectp);
+			objectp->idleUpdate(agent, world, frame_time);
 		}
 	}
 
@@ -1073,7 +1057,7 @@ void LLViewerObjectList::update(LLAgent &agent, LLWorld &world)
 	*/
 
 	LLViewerStats::getInstance()->mNumObjectsStat.addValue((S32) mObjects.size() - mNumDeadObjects);
-	LLViewerStats::getInstance()->mNumActiveObjectsStat.addValue(num_active_objects);
+	LLViewerStats::getInstance()->mNumActiveObjectsStat.addValue(idle_count);
 	LLViewerStats::getInstance()->mNumSizeCulledStat.addValue(mNumSizeCulled);
 	LLViewerStats::getInstance()->mNumVisCulledStat.addValue(mNumVisCulled);
 }
@@ -1475,7 +1459,7 @@ void LLViewerObjectList::updateActive(LLViewerObject *objectp)
 			{
 				llassert(idx < mActiveObjects.size());
 				llassert(mActiveObjects[idx] == objectp);
-				if (idx >= mActiveObjects.size() ||
+				if (idx >= (S32)mActiveObjects.size() ||
 					mActiveObjects[idx] != objectp)
 				{
 					llwarns << "Invalid object list index detected!" << llendl;

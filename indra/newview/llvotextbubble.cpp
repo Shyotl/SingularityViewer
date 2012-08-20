@@ -84,13 +84,13 @@ BOOL LLVOTextBubble::isActive() const
 	return TRUE;
 }
 
-BOOL LLVOTextBubble::idleUpdate(LLAgent &agent, LLWorld	&world, const F64 &time)
+void LLVOTextBubble::idleUpdate(LLAgent &agent, LLWorld	&world, const F64 &time)
 {
 	F32 dt = mUpdateTimer.getElapsedTimeF32();
 	// Die after a few seconds.
 	if (dt > 1.5f)
 	{
-		return FALSE;
+		return;
 	}
 
 	LLViewerObject::idleUpdate(agent, world, time);
@@ -103,7 +103,7 @@ BOOL LLVOTextBubble::idleUpdate(LLAgent &agent, LLWorld	&world, const F64 &time)
 	color.mV[VALPHA] -= alpha;
 	if (color.mV[VALPHA] <= 0.05f)
 	{
-		return FALSE;
+		return;
 	}
 	S32 i;
 	for (i = 0; i < getNumTEs(); i++)
@@ -113,7 +113,7 @@ BOOL LLVOTextBubble::idleUpdate(LLAgent &agent, LLWorld	&world, const F64 &time)
 	}
 
 	gPipeline.markRebuild(mDrawable, LLDrawable::REBUILD_VOLUME, TRUE);
-	return TRUE;
+	return;
 }
 
 
