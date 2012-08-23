@@ -1490,8 +1490,10 @@ void LLRender::translateUI(F32 x, F32 y, F32 z)
 		llerrs << "Need to push a UI translation frame before offsetting" << llendl;
 	}
 
-	LLVector4a add(x,y,x);
-	mUIOffset.back()->add(add);
+	//mUIOffset.back().mV[0] += x;
+	//mUIOffset.back().mV[1] += y;
+	//mUIOffset.back().mV[2] += z;
+	mUIOffset.back()->add(LLVector4a(x,y,z));
 }
 
 void LLRender::scaleUI(F32 x, F32 y, F32 z)
@@ -1501,27 +1503,31 @@ void LLRender::scaleUI(F32 x, F32 y, F32 z)
 		llerrs << "Need to push a UI transformation frame before scaling." << llendl;
 	}
 
-	LLVector4a scale(x,y,z);
-	mUIScale.back()->mul(scale);
+	//mUIScale.back().scaleVec(LLVector3(x,y,z));
+	mUIScale.back()->mul(LLVector4a(x,y,z));
 }
 
 void LLRender::pushUIMatrix()
 {
 	if (mUIOffset.empty())
 	{
+		//mUIOffset.push_back(LLVector3(0,0,0));
 		mUIOffset.push_back(new LLVector4a(0.f));
 	}
 	else
 	{
+		//mUIOffset.push_back(mUIOffset.back());
 		mUIOffset.push_back(new LLVector4a(*mUIOffset.back()));
 	}
 	
 	if (mUIScale.empty())
 	{
+		//mUIScale.push_back(LLVector3(1,1,1));
 		mUIScale.push_back(new LLVector4a(1.f));
 	}
 	else
 	{
+		//mUIScale.push_back(mUIScale.back());
 		mUIScale.push_back(new LLVector4a(*mUIScale.back()));
 	}
 }
@@ -1544,6 +1550,7 @@ LLVector3 LLRender::getUITranslation()
 	{
 		return LLVector3(0,0,0);
 	}
+	//return mUIOffset.back();
 	return LLVector3(mUIOffset.back()->getF32ptr());
 }
 
@@ -1553,7 +1560,8 @@ LLVector3 LLRender::getUIScale()
 	{
 		return LLVector3(1,1,1);
 	}
-	return LLVector3(mUIOffset.back()->getF32ptr());
+	//return mUIScale.back();
+	return LLVector3(mUIScale.back()->getF32ptr());
 }
 
 
@@ -1563,6 +1571,8 @@ void LLRender::loadUIIdentity()
 	{
 		llerrs << "Need to push UI translation frame before clearing offset." << llendl;
 	}
+	//mUIOffset.back().setVec(0,0,0);
+	//mUIScale.back().setVec(1,1,1);
 	mUIOffset.back()->splat(0.f);
 	mUIScale.back()->splat(1.f);
 }
@@ -1814,6 +1824,7 @@ void LLRender::end()
 		flush();
 	}
 }
+
 void LLRender::flush()
 {
 	if (mCount > 0)
@@ -1947,11 +1958,13 @@ void LLRender::vertex4a(const LLVector4a& vertex)
 
 	if (mUIOffset.empty())
 	{
-		mVerticesp[mCount]=vertex;
+		//mVerticesp[mCount] = LLVector3(x,y,z);
+		mVerticesp[mCount] = vertex;
 	}
 	else
 	{
 		//LLVector3 vert = (LLVector3(x,y,z)+mUIOffset.back()).scaledVec(mUIScale.back());
+		//mVerticesp[mCount] = vert;
 		mVerticesp[mCount].setAdd(vertex,*mUIOffset.back());
 		mVerticesp[mCount].mul(*mUIScale.back());
 	}
@@ -2155,7 +2168,27 @@ void LLRender::vertexBatchPreTransformed(LLVector4a* verts, LLVector2* uvs, LLCo
 	mTexcoordsp[mCount] = mTexcoordsp[mCount-1];
 	mColorsp[mCount] = mColorsp[mCount-1];
 }
+/*
+void LLRender::vertex2i(const GLint& x, const GLint& y)
+{
+	vertex3f((GLfloat) x, (GLfloat) y, 0);	
+}
 
+void LLRender::vertex2f(const GLfloat& x, const GLfloat& y)
+{ 
+	vertex3f(x,y,0);
+}
+
+void LLRender::vertex2fv(const GLfloat* v)
+{ 
+	vertex3f(v[0], v[1], 0);
+}
+
+void LLRender::vertex3fv(const GLfloat* v)
+{
+	vertex3f(v[0], v[1], v[2]);
+}
+*/
 void LLRender::texCoord2f(const GLfloat& x, const GLfloat& y)
 { 
 	mTexcoordsp[mCount] = LLVector2(x,y);
