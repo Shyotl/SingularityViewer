@@ -18,6 +18,6 @@ VARYING vec2 vary_texcoord0;
 
 void main(void) 
 {
-	vec3 color = pow(floor(pow(vec3(texture2D(tex0, vary_texcoord0.st)),vec3(.6)) * layerCount)/layerCount,vec3(1.66666));
+	vec3 color = pow(floor(pow(vec3(texture2DRect(tex0, vary_texcoord0.st)),vec3(.6)) * layerCount)/layerCount,vec3(1.66666));
 	gl_FragColor = vec4(color, 1.0);
 }
