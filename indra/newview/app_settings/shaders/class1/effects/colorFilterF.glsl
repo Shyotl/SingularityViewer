@@ -8,7 +8,9 @@
 #extension GL_ARB_texture_rectangle : enable
  
 #ifdef DEFINE_GL_FRAGCOLOR
-out vec4 gl_FragColor;
+out vec4 frag_color;
+#else
+#define frag_color gl_FragColor
 #endif
 
 uniform sampler2DRect tex0;
@@ -38,5 +40,5 @@ void main(void)
 	/// Modulate saturation
 	color = mix(vec3(dot(color, lumWeights)), color, saturation);
 
-	gl_FragColor = vec4(color, 1.0);
+	frag_color = vec4(color, 1.0);
 }
