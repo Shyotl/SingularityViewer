@@ -5196,6 +5196,8 @@ void LLSelectMgr::renderSilhouettes(BOOL for_hud)
 
 		gGL.matrixMode(LLRender::MM_MODELVIEW);
 		gGL.pushMatrix();
+		gGL.pushUIMatrix();
+		gGL.loadUIIdentity();
 		gGL.loadIdentity();
 		gGL.loadMatrix(OGL_TO_CFR_ROTATION);		// Load Cory's favorite reference frame
 		gGL.translatef(-hud_bbox.getCenterLocal().mV[VX] + (depth *0.5f), 0.f, 0.f);
@@ -5288,6 +5290,7 @@ void LLSelectMgr::renderSilhouettes(BOOL for_hud)
 
 		gGL.matrixMode(LLRender::MM_MODELVIEW);
 		gGL.popMatrix();
+		gGL.popUIMatrix();
 		stop_glerror();
 	}
 
@@ -5610,8 +5613,8 @@ void pushWireframe(LLDrawable* drawable)
 
 		if (drawable->isState(LLDrawable::RIGGED))
 		{
-				vobj->updateRiggedVolume();
-				volume = vobj->getRiggedVolume();
+			vobj->updateRiggedVolume();
+			volume = vobj->getRiggedVolume();
 		}
 		else
 		{
@@ -5653,6 +5656,8 @@ void LLSelectNode::renderOneWireframe(const LLColor4& color)
 		gDebugProgram.bind();
 	}
 
+	static LLCachedControl<U32> mode("OutlineMode",0);
+
 	gGL.matrixMode(LLRender::MM_MODELVIEW);
 	gGL.pushMatrix();
 	
@@ -5673,10 +5678,12 @@ void LLSelectNode::renderOneWireframe(const LLColor4& color)
 	
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	
+	//Singu Note: Diverges from v3. If sRenderHiddenSelections set, draw non-z-culled wireframe, else draw occluded 'thick' wireframe to create an outline.
 	if (LLSelectMgr::sRenderHiddenSelections) // && gFloaterTools && gFloaterTools->getVisible())
 	{
 		gGL.blendFunc(LLRender::BF_SOURCE_COLOR, LLRender::BF_ONE);
 		LLGLDepthTest gls_depth(GL_TRUE, GL_FALSE, GL_GEQUAL);
+
 		if (shader)
 		{
 			gGL.diffuseColor4f(color.mV[VRED], color.mV[VGREEN], color.mV[VBLUE], 0.4f);
@@ -5699,17 +5706,19 @@ void LLSelectNode::renderOneWireframe(const LLColor4& color)
 			}
 		}
 	}
+	else
+	{
+		LLGLEnable cull_face(GL_CULL_FACE);
+		LLGLEnable offset(GL_POLYGON_OFFSET_LINE);
 
-	gGL.flush();
-	gGL.setSceneBlendType(LLRender::BT_ALPHA);
+		gGL.setSceneBlendType(LLRender::BT_ALPHA);
+		gGL.diffuseColor4f(color.mV[VRED]*2, color.mV[VGREEN]*2, color.mV[VBLUE]*2, LLSelectMgr::sHighlightAlpha*2);
+		glPolygonOffset(3.f, 3.f);
+		glLineWidth(3.f);
+		pushWireframe(drawable);
+		glLineWidth(1.f);
+	}
 
-	gGL.diffuseColor4f(color.mV[VRED]*2, color.mV[VGREEN]*2, color.mV[VBLUE]*2, LLSelectMgr::sHighlightAlpha*2);
-	
-	LLGLEnable offset(GL_POLYGON_OFFSET_LINE);
-	glPolygonOffset(3.f, 3.f);
-	glLineWidth(3.f);
-	pushWireframe(drawable);
-	glLineWidth(1.f);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	gGL.popMatrix();
 
@@ -5765,6 +5774,9 @@ void LLSelectNode::renderOneSilhouette(const LLColor4 &color)
 
 	gGL.matrixMode(LLRender::MM_MODELVIEW);
 	gGL.pushMatrix();
+	gGL.pushUIMatrix();
+	gGL.loadUIIdentity();
+
 	if (!is_hud_object)
 	{
 		gGL.loadIdentity();
@@ -5881,6 +5893,7 @@ void LLSelectNode::renderOneSilhouette(const LLColor4 &color)
 		gGL.flush();
 	}
 	gGL.popMatrix();
+	gGL.popUIMatrix();
 
 	if (shader)
 	{
