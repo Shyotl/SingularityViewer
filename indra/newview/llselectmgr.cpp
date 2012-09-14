@@ -5705,6 +5705,7 @@ void LLSelectNode::renderOneWireframe(const LLColor4& color)
 				pushWireframe(drawable);
 			}
 		}
+		gGL.setSceneBlendType(LLRender::BT_ALPHA);
 	}
 	else
 	{
