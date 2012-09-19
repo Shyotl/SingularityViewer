@@ -3,10 +3,10 @@
      can_resize="false" height="400" left="50" min_height="400"
      min_width="300" mouse_opaque="true" name="Post-Process Floater"
      title="Post-Process Settings" width="400">
-	<tab_container bottom="-400" follows="left|top" height="400" left="0"
-	     mouse_opaque="false" name="Post-Process Tabs" tab_position="top"
+	<tab_container bottom="-400" follows="left|top" height="384" left="0"
+	     mouse_opaque="false" name="Post-Process Tabs" tab_position="left"
 	     width="400">
-		<panel border="true" bottom="-400" follows="left|top|right|bottom" height="400"
+		<panel border="true" bottom="-400" follows="left|top|right|bottom" height="384"
 		     label="Color Filter" left="1" mouse_opaque="false"
 		     name="ColorFilterPanel" width="398">
 			<check_box bottom="-20" follows="left|top"
@@ -85,7 +85,7 @@
 			     mouse_opaque="true" name="contrast_base[3]" show_text="true" value="1.0"
 			     width="200" />
 		</panel>
-		<panel border="true" bottom="-180" follows="left|top|right|bottom" height="400"
+		<panel border="true" bottom="-180" follows="left|top|right|bottom" height="384"
 		     label="Gauss Blur" left="1" mouse_opaque="false"
 		     name="GaussBlurPanel" width="398">
 			<check_box bottom="-20" follows="left|top"
@@ -104,7 +104,7 @@
 			     max_val="25" min_val="1" mouse_opaque="true"
 			     name="gauss_blur_passes" show_text="true" value="0.7" width="200" />
 		</panel>
-		<panel border="true" bottom="-180" follows="left|top|right|bottom" height="400"
+		<panel border="true" bottom="-180" follows="left|top|right|bottom" height="384"
 		     label="Night Vision" left="1" mouse_opaque="false"
 		     name="NightVisionPanel" width="398">
 			<check_box bottom="-20" follows="left|top"
@@ -146,7 +146,7 @@
 			     left="14" max_val="1" min_val="0" mouse_opaque="true"
 			     name="noise_strength" show_text="true" value="1.0" width="200" />
 		</panel>
-    <panel border="true" bottom="-180" follows="left|top|right|bottom" height="400"
+    <panel border="true" bottom="-180" follows="left|top|right|bottom" height="384"
      label="Posterize" left="1" mouse_opaque="false"
      name="PosterizePanel" width="398">
       <check_box bottom="-20" follows="left|top"
@@ -164,6 +164,25 @@
 			     height="18" increment="1" initial_val="10" label="" left="14"
 			     max_val="20" min_val="1" mouse_opaque="true"
 			     name="posterize_layers" show_text="true" value="10" width="200" />
+    </panel>
+    <panel border="true" bottom="-180" follows="left|top|right|bottom" height="384"
+     label="MotionBlur" left="1" mouse_opaque="false"
+     name="MotionBlurPanel" width="398">
+      <check_box bottom="-20" follows="left|top"
+			     font="SansSerifSmall" height="16" initial_value="false" label="Enable"
+			     left="14" mouse_opaque="true" name="enable_motionblur" width="200" />
+      <text type="string" length="1" bg_visible="false" border_drop_shadow_visible="false" border_visible="false"
+           bottom_delta="-21" drop_shadow_visible="true" follows="left|top|right"
+           font="SansSerif" h_pad="0" halign="left" height="16"
+           left="10" mouse_opaque="true" name="MotionBlurText" v_pad="0"
+           width="355">
+        Motionblur Strength
+      </text>
+      <slider bottom_delta="-30" can_edit_text="true"
+			     decimal_digits="0" follows="left"
+			     height="18" increment="1" initial_val="8" label="" left="14"
+			     max_val="30" min_val="1" mouse_opaque="true"
+			     name="blur_strength" show_text="true" value="0.7" width="200" />
     </panel>
 		<!--<panel border="true" bottom="-180" follows="left|top|right|bottom" height="400"
 		     label="Bloom" left="1" mouse_opaque="true"
