@@ -406,7 +406,7 @@ void LLViewerPartGroup::updateParticles(const F32 lastdt)
 		// Kill dead particles (either flagged dead, or too old)
 		if ((part->mLastUpdateTime > part->mMaxAge) || (LLViewerPart::LL_PART_DEAD_MASK == part->mFlags))
 		{
-			vector_replace_with_last(mParticles,mParticles.begin() + i);
+			vector_replace_with_last(mParticles, mParticles.begin() + i);
 			delete part ;
 		}
 		else 
@@ -416,7 +416,7 @@ void LLViewerPartGroup::updateParticles(const F32 lastdt)
 			{
 				// Transfer particles between groups
 				LLViewerPartSim::getInstance()->put(part) ;
-				vector_replace_with_last(mParticles,mParticles.begin() + i);
+				vector_replace_with_last(mParticles, mParticles.begin() + i);
 			}
 			else
 			{
@@ -721,8 +721,8 @@ void LLViewerPartSim::updateSimulation()
 
 		if (mViewerPartSources[i]->isDead())
 		{
-			vector_replace_with_last(mViewerPartSources,mViewerPartSources.begin() + i);
-			//mViewerPartSources.erase(mViewerPartSources.begin() + i);
+			vector_replace_with_last(mViewerPartSources, mViewerPartSources.begin() + i);
+			//mViewerPartSources.erase(it);
 			count--;
 		}
 		else
@@ -758,8 +758,8 @@ void LLViewerPartSim::updateSimulation()
 			if (!mViewerPartGroups[i]->getCount())
 			{
 				delete mViewerPartGroups[i];
-				vector_replace_with_last(mViewerPartGroups,mViewerPartGroups.begin() + i);
-				//mViewerPartGroups.erase(mViewerPartGroups.begin() + i);
+				vector_replace_with_last(mViewerPartGroups, mViewerPartGroups.begin() + i);
+				//mViewerPartGroups.erase(it);
 				i--;
 				count--;
 			}

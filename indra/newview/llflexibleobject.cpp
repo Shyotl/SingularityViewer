@@ -83,7 +83,8 @@ LLVolumeImplFlexible::~LLVolumeImplFlexible()
 	std::vector<LLVolumeImplFlexible*>::iterator iter = vector_replace_with_last(sInstanceList, sInstanceList.begin() + mInstanceIndex);
 	if(iter != sInstanceList.end())
 		(*iter)->mInstanceIndex = mInstanceIndex;
-	vector_replace_with_last(sUpdateDelay,sUpdateDelay.begin() + mInstanceIndex);
+	std::vector<U32>::iterator update_it(sUpdateDelay.begin() + mInstanceIndex);
+	vector_replace_with_last(sUpdateDelay, update_it);
 }
 
 //static
