@@ -2196,8 +2196,39 @@ LLGLUserClipPlane::LLGLUserClipPlane(const LLPlane& p, const LLMatrix4a& modelvi
 	}
 }
 
+#include "llcontrol.h"	//for LLCachedControl
+#include "glh/glh_linear.h"
 void LLGLUserClipPlane::setPlane(F32 a, F32 b, F32 c, F32 d)
 {
+	static LLCachedControl<bool> mat_fallback1("mat_fallback1",true);
+	if(mat_fallback1)
+	{
+		glh::matrix4f P(mProjection.getF32ptr());
+		glh::matrix4f M(mModelview.getF32ptr());
+    
+		glh::matrix4f invtrans_MVP = (P * M).inverse().transpose();
+	    glh::vec4f oplane(a,b,c,d);
+	    glh::vec4f cplane;
+	    invtrans_MVP.mult_matrix_vec(oplane, cplane);
+
+	    cplane /= fabs(cplane[2]); // normalize such that depth is not scaled
+	    cplane[3] -= 1;
+
+	    if(cplane[2] < 0)
+	        cplane *= -1;
+
+	    glh::matrix4f suffix;
+	    suffix.set_row(2, cplane);
+	    glh::matrix4f newP = suffix * P;
+	    gGL.matrixMode(LLRender::MM_PROJECTION);
+		gGL.pushMatrix();
+		LLMatrix4a mat;
+		mat.loadu(newP.m);
+	    gGL.loadMatrix(mat);
+	    gGL.matrixMode(LLRender::MM_MODELVIEW);
+		return;
+	}
+
     LLMatrix4a& P = mProjection;
 	LLMatrix4a& M = mModelview;
 
