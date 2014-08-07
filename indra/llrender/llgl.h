@@ -44,6 +44,7 @@
 #include "llinstancetracker.h"
 
 #include "llglheaders.h"
+#include "glh/glh_linear.h"
 
 extern BOOL gDebugGL;
 extern BOOL gDebugSession;
@@ -347,10 +348,11 @@ private:
   leaves this class.
   Does not stack.
 */
+
 class LLGLSquashToFarClip
 {
 public:
-	LLGLSquashToFarClip(const LLMatrix4a& projection, U32 layer = 0);
+	LLGLSquashToFarClip(glh::matrix4f projection, U32 layer = 0);
 	~LLGLSquashToFarClip();
 };
 

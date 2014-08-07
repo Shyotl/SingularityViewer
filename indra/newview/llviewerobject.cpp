@@ -3719,18 +3719,18 @@ const LLQuaternion LLViewerObject::getRenderRotation() const
 	{
 		if (!mDrawable->isRoot())
 		{
-			ret = getRotation() * LLQuaternion(LLMatrix4(mDrawable->getParent()->getWorldMatrix().getF32ptr()));
+			ret = getRotation() * LLQuaternion(mDrawable->getParent()->getWorldMatrix());
 		}
 		else
 		{
-			ret = LLQuaternion(LLMatrix4(mDrawable->getWorldMatrix().getF32ptr()));
+			ret = LLQuaternion(mDrawable->getWorldMatrix());
 		}
 	}
 	
 	return ret;
 }
 
-const LLMatrix4a& LLViewerObject::getRenderMatrix() const
+const LLMatrix4 LLViewerObject::getRenderMatrix() const
 {
 	return mDrawable->getWorldMatrix();
 }

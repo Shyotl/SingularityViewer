@@ -807,8 +807,8 @@ void LLManipTranslate::highlightManipulators(S32 x, S32 y)
 	}
 	
 	//LLBBox bbox = LLSelectMgr::getInstance()->getBBoxOfSelection();
-	LLMatrix4 projMatrix( LLViewerCamera::getInstance()->getProjection().getF32ptr() );
-	LLMatrix4 modelView( LLViewerCamera::getInstance()->getModelview().getF32ptr() );
+	LLMatrix4 projMatrix = LLViewerCamera::getInstance()->getProjection();
+	LLMatrix4 modelView = LLViewerCamera::getInstance()->getModelview();
 
 	LLVector3 object_position = getPivotPoint();
 	
@@ -827,7 +827,7 @@ void LLManipTranslate::highlightManipulators(S32 x, S32 y)
 		relative_camera_dir = LLVector3(1.f, 0.f, 0.f) * ~grid_rotation;
 		LLVector4 translation(object_position);
 		transform.initRotTrans(grid_rotation, translation);
-		LLMatrix4 cfr(OGL_TO_CFR_ROTATION.getF32ptr());
+		LLMatrix4 cfr(OGL_TO_CFR_ROTATION);
 		transform *= cfr;
 		LLMatrix4 window_scale;
 		F32 zoom_level = 2.f * gAgentCamera.mHUDCurZoom;
@@ -1693,15 +1693,12 @@ void LLManipTranslate::highlightIntersection(LLVector3 normal,
 			normal = -normal;
 		}
 		F32 d = -(selection_center * normal);
-		LLVector4a plane(normal.mV[0], normal.mV[1], normal.mV[2], d );
+		glh::vec4f plane(normal.mV[0], normal.mV[1], normal.mV[2], d );
 
-		LLMatrix4a inv_mat = gGL.getModelviewMatrix();
-		inv_mat.invert();
-		inv_mat.transpose();
-		inv_mat.rotate4(plane,plane);
+		gGL.getModelviewMatrix().inverse().mult_vec_matrix(plane);
 
 		static LLStaticHashedString sClipPlane("clip_plane");
-		gClipProgram.uniform4fv(sClipPlane, 1, plane.getF32ptr());
+		gClipProgram.uniform4fv(sClipPlane, 1, plane.v);
 		
 		BOOL particles = gPipeline.hasRenderType(LLPipeline::RENDER_TYPE_PARTICLES);
 #if ENABLE_CLASSIC_CLOUDS

@@ -109,8 +109,8 @@ public:
 	std::vector<LLPointer<LLViewerTexture> > mTextureList;
 
 	S32 mDebugColor;
-	const LLMatrix4a* mTextureMatrix;
-	const LLMatrix4a* mModelMatrix;
+	const LLMatrix4* mTextureMatrix;
+	const LLMatrix4* mModelMatrix;
 	U16 mStart;
 	U16 mEnd;
 	U32 mCount;

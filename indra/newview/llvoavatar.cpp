@@ -1651,10 +1651,7 @@ const LLVector3 LLVOAvatar::getRenderPosition() const
 	}
 	else
 	{
-		LLVector4a pos;
-		pos.load3(getPosition().mV);
-		mDrawable->getParent()->getRenderMatrix().affineTransform(pos,pos);
-		return LLVector3(pos.getF32ptr());
+		return getPosition() * mDrawable->getParent()->getRenderMatrix();
 	}
 }
 
@@ -1712,7 +1709,9 @@ void LLVOAvatar::getSpatialExtents(LLVector4a& newMin, LLVector4a& newMax)
 		LLPolyMesh* mesh = i->second;
 		for (S32 joint_num = 0; joint_num < mesh->mJointRenderData.count(); joint_num++)
 		{
-			update_min_max(newMin, newMax, mesh->mJointRenderData[joint_num]->mWorldMatrix->getRow<LLMatrix4a::ROW_TRANS>());
+			LLVector4a trans;
+			trans.load3( mesh->mJointRenderData[joint_num]->mWorldMatrix->getTranslation().mV);
+			update_min_max(newMin, newMax, trans);
 		}
 	}
 
@@ -1836,7 +1835,7 @@ void LLVOAvatar::renderJoints()
 		jointp->updateWorldMatrix();
 	
 		gGL.pushMatrix();
-		gGL.multMatrix(jointp->getXform()->getWorldMatrix());
+		gGL.multMatrix( &jointp->getXform()->getWorldMatrix().mMatrix[0][0] );
 
 		gGL.diffuseColor3f( 1.f, 0.f, 1.f );
 	
@@ -1925,37 +1924,36 @@ BOOL LLVOAvatar::lineSegmentIntersect(const LLVector4a& start, const LLVector4a&
 		{
 			mCollisionVolumes[i].updateWorldMatrix();
 
-			const LLMatrix4a& mat = mCollisionVolumes[i].getXform()->getWorldMatrix();
-			LLMatrix4a inverse = mat;
-			inverse.invert();
-			LLMatrix4a norm_mat = inverse;
-			norm_mat.transpose();
+			glh::matrix4f mat((F32*) mCollisionVolumes[i].getXform()->getWorldMatrix().mMatrix);
+			glh::matrix4f inverse = mat.inverse();
+			glh::matrix4f norm_mat = inverse.transpose();
 
+			glh::vec3f p1(start.getF32ptr());
+			glh::vec3f p2(end.getF32ptr());
 
-			LLVector4a p1, p2;
-			inverse.affineTransform(start,p1);	//Might need to use perspectiveTransform here.
-			inverse.affineTransform(end,p2);
+			inverse.mult_matrix_vec(p1);
+			inverse.mult_matrix_vec(p2);
 
 			LLVector3 position;
 			LLVector3 norm;
 
-			if (linesegment_sphere(LLVector3(p1.getF32ptr()), LLVector3(p2.getF32ptr()), LLVector3(0,0,0), 1.f, position, norm))
+			if (linesegment_sphere(LLVector3(p1.v), LLVector3(p2.v), LLVector3(0,0,0), 1.f, position, norm))
 			{
+				glh::vec3f res_pos(position.mV);
+				mat.mult_matrix_vec(res_pos);
+				
+				norm.normalize();
+				glh::vec3f res_norm(norm.mV);
+				norm_mat.mult_matrix_dir(res_norm);
+
 				if (intersection)
 				{
-					LLVector4a res_pos;
-					res_pos.load3(position.mV);
-					mat.affineTransform(res_pos,res_pos);
-					*intersection = res_pos;
+					intersection->load3(res_pos.v);
 				}
 
 				if (normal)
 				{
-					LLVector4a res_norm;
-					res_norm.load3(norm.mV);
-					res_norm.normalize3fast();
-					norm_mat.perspectiveTransform(res_norm,res_norm);
-					*normal = res_norm;
+					normal->load3(res_norm.v);
 				}
 
 				return TRUE;
@@ -4125,7 +4123,7 @@ BOOL LLVOAvatar::updateCharacter(LLAgent &agent)
 				
 			}
 
-			LLQuaternion root_rotation = LLMatrix4(mRoot->getWorldMatrix().getF32ptr()).quaternion();
+			LLQuaternion root_rotation = mRoot->getWorldMatrix().quaternion();
 			F32 root_roll, root_pitch, root_yaw;
 			root_rotation.getEulerAngles(&root_roll, &root_pitch, &root_yaw);
 
@@ -4142,7 +4140,7 @@ BOOL LLVOAvatar::updateCharacter(LLAgent &agent)
 			// and head turn.  Once in motion, it must conform however.
 			BOOL self_in_mouselook = isSelf() && gAgentCamera.cameraMouselook();
 
-			LLVector3 pelvisDir( mRoot->getWorldMatrix().getRow<LLMatrix4a::ROW_FWD>().getF32ptr() );
+			LLVector3 pelvisDir( mRoot->getWorldMatrix().getFwdRow4().mV );
 
 			static const LLCachedControl<F32> s_pelvis_rot_threshold_slow(gSavedSettings, "AvatarRotateThresholdSlow", 60.0);
 			static const LLCachedControl<F32> s_pelvis_rot_threshold_fast(gSavedSettings, "AvatarRotateThresholdFast", 2.0);
@@ -8841,6 +8839,7 @@ void LLVOAvatar::updateSoftwareSkinnedVertices(const LLMeshSkinInfo* skin, const
 	
 	//build matrix palette
 	LLMatrix4a mp[JOINT_COUNT];
+	LLMatrix4* mat = (LLMatrix4*) mp;
 
 	U32 count = llmin((U32) skin->mJointNames.size(), (U32) JOINT_COUNT);
 
@@ -8855,9 +8854,8 @@ void LLVOAvatar::updateSoftwareSkinnedVertices(const LLMeshSkinInfo* skin, const
 		}
 		if (joint)
 		{
-			LLMatrix4a mat;
-			mat.loadu((F32*)skin->mInvBindMatrix[j].mMatrix);
-			mp[j].setMul(joint->getWorldMatrix(),mat);
+			mat[j] = skin->mInvBindMatrix[j];
+			mat[j] *= joint->getWorldMatrix();
 		}
 	}
 

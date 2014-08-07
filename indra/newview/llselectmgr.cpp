@@ -1262,12 +1262,12 @@ void LLSelectMgr::getGrid(LLVector3& origin, LLQuaternion &rotation, LLVector3 &
 			size.setSub(max_extents, min_extents);
 			size.mul(0.5f);
 
+			mGridOrigin.set(center.getF32ptr());
 			LLDrawable* drawable = first_grid_object->mDrawable;
 			if (drawable && drawable->isActive())
 			{
-				first_grid_object->getRenderMatrix().affineTransform(center,center);
+				mGridOrigin = mGridOrigin * first_grid_object->getRenderMatrix();
 			}
-			mGridOrigin.set(center.getF32ptr());
 			mGridScale.set(size.getF32ptr());
 		}
 	}
@@ -6119,7 +6119,7 @@ void pushWireframe(LLDrawable* drawable)
 	{
 		LLVertexBuffer::unbind();
 		gGL.pushMatrix();
-		gGL.multMatrix(vobj->getRelativeXform());
+		gGL.multMatrix((const GLfloat*)vobj->getRelativeXform().mMatrix);
 
 		LLVolume* volume = NULL;
 
@@ -6175,13 +6175,13 @@ void LLSelectNode::renderOneWireframe(const LLColor4& color)
 
 	if (drawable->isActive())
 	{
-		gGL.loadMatrix(gGLModelView);
-		gGL.multMatrix(objectp->getRenderMatrix());
+		gGL.loadMatrix(gGLModelView.getF32ptr());
+		gGL.multMatrix((F32*) objectp->getRenderMatrix().mMatrix);
 	}
 	else if (!is_hud_object)
 	{
 		gGL.loadIdentity();
-		gGL.multMatrix(gGLModelView);
+		gGL.multMatrix(gGLModelView.getF32ptr());
 		LLVector3 trans = objectp->getRegion()->getOriginAgent();		
 		gGL.translatef(trans.mV[0], trans.mV[1], trans.mV[2]);		
 	}
@@ -6291,13 +6291,13 @@ void LLSelectNode::renderOneSilhouette(const LLColor4 &color)
 	if (!is_hud_object)
 	{
 		gGL.loadIdentity();
-		gGL.multMatrix(gGLModelView);
+		gGL.multMatrix(gGLModelView.getF32ptr());
 	}
 	
 	
 	if (drawable->isActive())
 	{
-		gGL.multMatrix(objectp->getRenderMatrix());
+		gGL.multMatrix((F32*) objectp->getRenderMatrix().mMatrix);
 	}
 
 	LLVolume *volume = objectp->getVolume();

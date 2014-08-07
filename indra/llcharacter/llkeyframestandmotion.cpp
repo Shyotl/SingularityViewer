@@ -286,38 +286,40 @@ BOOL LLKeyframeStandMotion::onUpdate(F32 time, U8* joint_mask)
 	//-------------------------------------------------------------------------
 	if ( mTrackAnkles )
 	{
-		const LLVector4a& dirLeft4 = mAnkleLeftJoint.getWorldMatrix().getRow<LLMatrix4a::ROW_FWD>();
-		const LLVector4a& dirRight4 = mAnkleRightJoint.getWorldMatrix().getRow<LLMatrix4a::ROW_FWD>();
+		LLVector4 dirLeft4 = mAnkleLeftJoint.getWorldMatrix().getFwdRow4();
+		LLVector4 dirRight4 = mAnkleRightJoint.getWorldMatrix().getFwdRow4();
+		LLVector3 dirLeft = vec4to3( dirLeft4 );
+		LLVector3 dirRight = vec4to3( dirRight4 );
 
-		LLVector4a up;
-		LLVector4a dir;
-		LLVector4a left;
+		LLVector3 up;
+		LLVector3 dir;
+		LLVector3 left;
 
-		up.load3(mNormalLeft.mV);
-		up.normalize3fast();
+		up = mNormalLeft;
+		up.normVec();
 		if (mFlipFeet)
 		{
-			up.negate();
+			up *= -1.0f;
 		}
-		dir = dirLeft4;
-		dir.normalize3fast();
-		left.setCross3(up,dir);
-		left.normalize3fast();
-		dir.setCross3(left,up);
-		mRotationLeft = LLQuaternion( LLVector3(dir.getF32ptr()), LLVector3(left.getF32ptr()), LLVector3(up.getF32ptr()));
+		dir = dirLeft;
+		dir.normVec();
+		left = up % dir;
+		left.normVec();
+		dir = left % up;
+		mRotationLeft = LLQuaternion( dir, left, up );
 
-		up.load3(mNormalRight.mV);
-		up.normalize3fast();
+		up = mNormalRight;
+		up.normVec();
 		if (mFlipFeet)
 		{
-			up.negate();
+			up *= -1.0f;
 		}
-		dir = dirRight4;
-		dir.normalize3fast();
-		left.setCross3(up,dir);
-		left.normalize3fast();
-		dir.setCross3(left,up);
-		mRotationRight = LLQuaternion( LLVector3(dir.getF32ptr()), LLVector3(left.getF32ptr()), LLVector3(up.getF32ptr()));
+		dir = dirRight;
+		dir.normVec();
+		left = up % dir;
+		left.normVec();
+		dir = left % up;
+		mRotationRight = LLQuaternion( dir, left, up );
 	}
 	mAnkleLeftJoint.setWorldRotation( mRotationLeft );
 	mAnkleRightJoint.setWorldRotation( mRotationRight );

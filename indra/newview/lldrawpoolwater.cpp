@@ -293,10 +293,11 @@ void LLDrawPoolWater::render(S32 pass)
 
 		gGL.matrixMode(LLRender::MM_TEXTURE);
 		gGL.loadIdentity();
-		LLMatrix4a camera_rot = LLViewerCamera::getInstance()->getModelview();
-		camera_rot.extractRotation_affine();
+		LLMatrix4 camera_mat = LLViewerCamera::getInstance()->getModelview();
+		LLMatrix4 camera_rot(camera_mat.getMat3());
 		camera_rot.invert();
-		gGL.loadMatrix(camera_rot);
+
+		gGL.loadMatrix((F32 *)camera_rot.mMatrix);
 
 		gGL.matrixMode(LLRender::MM_MODELVIEW);
 		LLOverrideFaceColor overrid(this, 1.f, 1.f, 1.f,  0.5f*up_dot);
@@ -726,7 +727,7 @@ void LLDrawPoolWater::shade()
 				gGL.getTexUnit(diffTex)->bind(face->getTexture());
 
 			sNeedsReflectionUpdate = TRUE;
-
+			
 			if (water->getUseTexture() || !water->getIsEdgePatch())
 			{
 				sNeedsDistortionUpdate = TRUE;

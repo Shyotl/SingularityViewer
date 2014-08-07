@@ -85,24 +85,24 @@ public:
 
 	void updateMesh();
 
-	void appendMesh(LLStrider<LLVector4a>& vertices, 
-						 LLStrider<LLVector4a>& normals, 
+	void appendMesh(LLStrider<LLVector3>& vertices, 
+						 LLStrider<LLVector3>& normals, 
 						 LLStrider<LLVector2>& tex_coords, 
 						 LLStrider<U16>& indices,
 						 U16& idx_offset,
-						 LLMatrix4a& matrix,
-						 LLMatrix4a& norm_mat,
+						 LLMatrix4& matrix,
+						 LLMatrix4& norm_mat,
 						 S32 vertex_offset,
 						 S32 vertex_count,
 						 S32 index_count,
 						 S32 index_offset);
 
-	void genBranchPipeline(LLStrider<LLVector4a>& vertices, 
-								 LLStrider<LLVector4a>& normals, 
+	void genBranchPipeline(LLStrider<LLVector3>& vertices, 
+								 LLStrider<LLVector3>& normals, 
 								 LLStrider<LLVector2>& tex_coords, 
 								 LLStrider<U16>& indices,
 								 U16& index_offset,
-								 LLMatrix4a& matrix, 
+								 LLMatrix4& matrix, 
 								 S32 trunk_LOD, 
 								 S32 stop_level, 
 								 U16 depth, 
@@ -209,8 +209,8 @@ private:
 	void generateSilhouetteVertices(std::vector<LLVector3> &vertices,
 									std::vector<LLVector3> &normals,
 									const LLVector3& view_vec,
-									const LLMatrix4a& mat,
-									const LLMatrix4a& norm_mat);
+									const LLMatrix4& mat,
+									const LLMatrix3& norm_mat);
 };
 
 #endif

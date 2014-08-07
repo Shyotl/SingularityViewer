@@ -70,8 +70,8 @@
 #include "lllayoutstack.h"
 
 // Functions pulled from pipeline.cpp
-const LLMatrix4a& glh_get_current_modelview();
-const LLMatrix4a& glh_get_current_projection();
+glh::matrix4f glh_get_current_modelview();
+glh::matrix4f glh_get_current_projection();
 // Functions pulled from llviewerdisplay.cpp
 bool get_hud_matrices(LLMatrix4a &proj, LLMatrix4a &model);
 
@@ -609,45 +609,40 @@ void LLPanelPrimMediaControls::updateShape()
 		vert_it = vect_face.begin();
 		vert_end = vect_face.end();
 		
-		LLMatrix4a mat;
+		glh::matrix4f mat;
 		if (!is_hud) 
 		{
-			mat.setMul(glh_get_current_projection(),glh_get_current_modelview());
+			mat = glh_get_current_projection() * glh_get_current_modelview();
 		}
 		else {
 			LLMatrix4a proj, modelview;
 			if (get_hud_matrices(proj, modelview))
 			{
-				//mat = proj * modelview;
-				mat.setMul(proj,modelview);
+				mat = glh::matrix4f(proj.getF32ptr()) * glh::matrix4f(modelview.getF32ptr());
+				//mat.setMul(proj,modelview);
 			}
 		}
-		LLVector4a min;
-		min.splat(1.f);
-		LLVector4a max;
-		max.splat(-1.f);
+		LLVector3 min = LLVector3(1,1,1);
+		LLVector3 max = LLVector3(-1,-1,-1);
 		for(; vert_it != vert_end; ++vert_it)
 		{
 			// project silhouette vertices into screen space
-			LLVector4a screen_vert;
-			screen_vert.load3(vert_it->mV,1.f);
-
-			mat.perspectiveTransform(screen_vert,screen_vert);
-
+			glh::vec3f screen_vert = glh::vec3f(vert_it->mV); 
+			mat.mult_matrix_vec(screen_vert);
+			
 			// add to screenspace bounding box
-			min.setMin(screen_vert,min);
-			max.setMax(screen_vert,max);
+			update_min_max(min, max, LLVector3(screen_vert.v));
 		}
 		
 		// convert screenspace bbox to pixels (in screen coords)
 		LLRect window_rect = gViewerWindow->getWorldViewRectScaled();
 		LLCoordGL screen_min;
-		screen_min.mX = llround((F32)window_rect.mLeft + (F32)window_rect.getWidth() * (min.getF32ptr()[VX] + 1.f) * 0.5f);
-		screen_min.mY = llround((F32)window_rect.mBottom + (F32)window_rect.getHeight() * (min.getF32ptr()[VY] + 1.f) * 0.5f);
+		screen_min.mX = llround((F32)window_rect.mLeft + (F32)window_rect.getWidth() * (min.mV[VX] + 1.f) * 0.5f);
+		screen_min.mY = llround((F32)window_rect.mBottom + (F32)window_rect.getHeight() * (min.mV[VY] + 1.f) * 0.5f);
 		
 		LLCoordGL screen_max;
-		screen_max.mX = llround((F32)window_rect.mLeft + (F32)window_rect.getWidth() * (max.getF32ptr()[VX] + 1.f) * 0.5f);
-		screen_max.mY = llround((F32)window_rect.mBottom + (F32)window_rect.getHeight() * (max.getF32ptr()[VY] + 1.f) * 0.5f);
+		screen_max.mX = llround((F32)window_rect.mLeft + (F32)window_rect.getWidth() * (max.mV[VX] + 1.f) * 0.5f);
+		screen_max.mY = llround((F32)window_rect.mBottom + (F32)window_rect.getHeight() * (max.mV[VY] + 1.f) * 0.5f);
 		
 		// grow panel so that screenspace bounding box fits inside "media_region" element of panel
 		LLRect media_panel_rect;

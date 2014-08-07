@@ -155,9 +155,13 @@ void LLDrawPoolAvatar::prerender()
 	}
 }
 
-const LLMatrix4a& LLDrawPoolAvatar::getModelView()
+LLMatrix4& LLDrawPoolAvatar::getModelView()
 {
-	return gGLModelView;
+	static LLMatrix4 ret;
+
+	ret = LLMatrix4(gGLModelView.getF32ptr());
+
+	return ret;
 }
 
 //-----------------------------------------------------------------------------
@@ -1326,7 +1330,7 @@ void LLDrawPoolAvatar::renderAvatars(LLVOAvatar* single_avatar, S32 pass)
 	{
 		LLMatrix4 rot_mat;
 		LLViewerCamera::getInstance()->getMatrixToLocal(rot_mat);
-		LLMatrix4 cfr(OGL_TO_CFR_ROTATION.getF32ptr());
+		LLMatrix4 cfr(OGL_TO_CFR_ROTATION);
 		rot_mat *= cfr;
 		
 		LLVector4 wind;
@@ -1402,7 +1406,10 @@ void LLDrawPoolAvatar::getRiggedGeometry(LLFace* face, LLPointer<LLVertexBuffer>
 	}
 
 	//llinfos << "Rebuilt face " << face->getTEOffset() << " of " << face->getDrawable() << " at " << gFrameTimeSeconds << llendl;
-	face->getGeometryVolume(*volume, face->getTEOffset(), mat_vert, mat_inv_trans, offset, true);
+	LLMatrix4 mat_vertf(mat_vert.getF32ptr());
+	LLMatrix4 mat_inv_transf(mat_inv_trans.getF32ptr());
+	LLMatrix3 mat_inv_trans3f(mat_inv_transf.getMat3());
+	face->getGeometryVolume(*volume, face->getTEOffset(), mat_vertf, mat_inv_trans3f, offset, true);
 
 	buffer->flush();
 }
@@ -1528,10 +1535,8 @@ void LLDrawPoolAvatar::renderRigged(LLVOAvatar* avatar, U32 type, bool glow)
 					}
 					if (joint)
 					{
-						LLMatrix4a tmp;
-						tmp.loadu((F32*)skin->mInvBindMatrix[i].mMatrix);
-						tmp.setMul(joint->getWorldMatrix(),tmp);
-						mat[i] = LLMatrix4(tmp.getF32ptr());
+						mat[i] = skin->mInvBindMatrix[i];
+						mat[i] *= joint->getWorldMatrix();
 					}
 				}
 				
@@ -1655,7 +1660,7 @@ void LLDrawPoolAvatar::renderRigged(LLVOAvatar* avatar, U32 type, bool glow)
 			if (face->mTextureMatrix && vobj->mTexAnimMode)
 			{
 				gGL.matrixMode(LLRender::MM_TEXTURE);
-				gGL.loadMatrix(*face->mTextureMatrix);
+				gGL.loadMatrix((F32*) face->mTextureMatrix->mMatrix);
 				buff->setBuffer(data_mask);
 				buff->drawRange(LLRender::TRIANGLES, start, end, count, offset);
 				gGL.loadIdentity();

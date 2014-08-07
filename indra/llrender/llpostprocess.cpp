@@ -311,11 +311,14 @@ public:
 	/*virtual*/ S32 getDepthChannel()	const	{ return 1; }
 	/*virtual*/ QuadType preDraw()
 	{
+		const LLMatrix4a& M = gGLModelView;
+		const LLMatrix4a& P = gGLProjection;
 		LLMatrix4a inv_proj;
-		inv_proj.setMul(gGLProjection,gGLModelView);
+		inv_proj.setMul(P,M);
 		inv_proj.invert();
+		const LLMatrix4a& MPrev = gGLPreviousModelView;
 		LLMatrix4a prev_proj;
-		prev_proj.setMul(gGLProjection,gGLPreviousModelView);
+		prev_proj.setMul(P,MPrev);
 
 		LLVector2 screen_rect = LLPostProcess::getInstance()->getDimensions();
 

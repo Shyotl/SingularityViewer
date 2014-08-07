@@ -154,8 +154,7 @@ void LLDrawPoolWLSky::renderDome(F32 camHeightLocal, LLGLSLShader * shader) cons
 
 	// the windlight sky dome works most conveniently in a coordinate system
 	// where Y is up, so permute our basis vectors accordingly.
-	static const LLMatrix4a rot = gGL.genRot(120.f, 1.f / F_SQRT3, 1.f / F_SQRT3, 1.f / F_SQRT3);
-	gGL.rotatef(rot);
+	gGL.rotatef(120.f, 1.f / F_SQRT3, 1.f / F_SQRT3, 1.f / F_SQRT3);
 
 	gGL.scalef(0.333f, 0.333f, 0.333f);
 

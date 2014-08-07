@@ -100,8 +100,8 @@ public:
 	LLFace(LLDrawable* drawablep, LLViewerObject* objp)   { init(drawablep, objp); }
 	~LLFace()  { destroy(); }
 
-	const LLMatrix4a& getWorldMatrix()	const	{ return mVObjp->getWorldMatrix(mXform); }
-	const LLMatrix4a& getRenderMatrix() const;
+	const LLMatrix4& getWorldMatrix()	const	{ return mVObjp->getWorldMatrix(mXform); }
+	const LLMatrix4& getRenderMatrix() const;
 	U32				getIndicesCount()	const	{ return mIndicesCount; };
 	S32				getIndicesStart()	const	{ return mIndicesIndex; };
 	U16				getGeomCount()		const	{ return mGeomCount; }		// vertex count for this face
@@ -173,7 +173,7 @@ public:
 	bool canRenderAsMask(); // logic helper
 	BOOL getGeometryVolume(const LLVolume& volume,
 						const S32 &f,
-						const LLMatrix4a& mat_vert, const LLMatrix4a& mat_normal,
+						const LLMatrix4& mat_vert, const LLMatrix3& mat_normal,
 						const U16 &index_offset,
 						bool force_rebuild = false);
 
@@ -258,7 +258,9 @@ public:
 	F32			mLastUpdateTime;
 	F32			mLastSkinTime;
 	F32			mLastMoveTime;
-	LLMatrix4a*	mTextureMatrix;
+	LLMatrix4*	mTextureMatrix;
+	LLMatrix4*	mSpecMapMatrix;
+	LLMatrix4*	mNormalMapMatrix;
 	LLDrawInfo* mDrawInfo;
 
 	bool		mShinyInAlpha;

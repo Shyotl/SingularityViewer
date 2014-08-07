@@ -314,19 +314,16 @@ void LLDrawPoolTerrain::drawLoop()
 		{
 			LLFace *facep = *iter;
 
-			LLMatrix4a* model_matrix = &(facep->getDrawable()->getRegion()->mRenderMatrix);
-			if(model_matrix && model_matrix->isIdentity())
-			{
-				model_matrix = NULL;
-			}
+			LLMatrix4* model_matrix = &(facep->getDrawable()->getRegion()->mRenderMatrix);
+
 			if (model_matrix != gGLLastMatrix)
 			{
 				llassert(gGL.getMatrixMode() == LLRender::MM_MODELVIEW);
 				gGLLastMatrix = model_matrix;
-				gGL.loadMatrix(gGLModelView);
+				gGL.loadMatrix(gGLModelView.getF32ptr());
 				if (model_matrix)
 				{
-					gGL.multMatrix(*model_matrix);
+					gGL.multMatrix((GLfloat*) model_matrix->mMatrix);
 				}
 				gPipeline.mMatrixOpCount++;
 			}

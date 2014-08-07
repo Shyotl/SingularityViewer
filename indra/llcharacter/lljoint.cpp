@@ -312,15 +312,19 @@ void LLJoint::setWorldPosition( const LLVector3& pos )
 		return;
 	}
 
-	LLMatrix4a temp_matrix = getWorldMatrix();
-	temp_matrix.setTranslate_affine(pos);
+	LLMatrix4 temp_matrix = getWorldMatrix();
+	temp_matrix.mMatrix[VW][VX] = pos.mV[VX];
+	temp_matrix.mMatrix[VW][VY] = pos.mV[VY];
+	temp_matrix.mMatrix[VW][VZ] = pos.mV[VZ];
 
-	LLMatrix4a invParentWorldMatrix = mParent->getWorldMatrix();
-	invParentWorldMatrix.invert();
+	LLMatrix4 parentWorldMatrix = mParent->getWorldMatrix();
+	LLMatrix4 invParentWorldMatrix = parentWorldMatrix.invert();
 
-	invParentWorldMatrix.mul(temp_matrix);
+	temp_matrix *= invParentWorldMatrix;
 
-	LLVector3 localPos(	invParentWorldMatrix.getRow<LLMatrix4a::ROW_TRANS>().getF32ptr() );
+	LLVector3 localPos(	temp_matrix.mMatrix[VW][VX],
+						temp_matrix.mMatrix[VW][VY],
+						temp_matrix.mMatrix[VW][VZ] );
 
 	setPosition( localPos );
 }
@@ -379,19 +383,19 @@ void LLJoint::setWorldRotation( const LLQuaternion& rot )
 		this->setRotation( rot );
 		return;
 	}
-	
-	LLMatrix4a parentWorldMatrix = mParent->getWorldMatrix();
-	LLQuaternion2 rota(rot);
-	LLMatrix4a temp_mat(rota);
 
-	LLMatrix4a invParentWorldMatrix = mParent->getWorldMatrix();
-	invParentWorldMatrix.setTranslate_affine(LLVector3(0.f));
+	LLMatrix4 temp_mat(rot);
 
-	invParentWorldMatrix.invert();
+	LLMatrix4 parentWorldMatrix = mParent->getWorldMatrix();
+	parentWorldMatrix.mMatrix[VW][VX] = 0;
+	parentWorldMatrix.mMatrix[VW][VY] = 0;
+	parentWorldMatrix.mMatrix[VW][VZ] = 0;
 
-	invParentWorldMatrix.mul(temp_mat);
+	LLMatrix4 invParentWorldMatrix = parentWorldMatrix.invert();
 
-	setRotation(LLQuaternion(LLMatrix4(invParentWorldMatrix.getF32ptr())));
+	temp_mat *= invParentWorldMatrix;
+
+	setRotation(LLQuaternion(temp_mat));
 }
 
 
@@ -421,7 +425,7 @@ void LLJoint::setScale( const LLVector3& scale )
 //--------------------------------------------------------------------
 // getWorldMatrix()
 //--------------------------------------------------------------------
-const LLMatrix4a &LLJoint::getWorldMatrix()
+const LLMatrix4 &LLJoint::getWorldMatrix()
 {
 	updateWorldMatrixParent();
 

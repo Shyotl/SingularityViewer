@@ -81,10 +81,13 @@ BOOL compute_min_max(LLMatrix4& box, LLVector2& min, LLVector2& max); // Shouldn
 bool LLRayAABB(const LLVector3 &center, const LLVector3 &size, const LLVector3& origin, const LLVector3& dir, LLVector3 &coord, F32 epsilon = 0);
 BOOL setup_hud_matrices(); // use whole screen to render hud
 BOOL setup_hud_matrices(const LLRect& screen_region); // specify portion of screen (in pixels) to render hud attachments from (for picking)
-const LLMatrix4a& glh_get_current_modelview();
-void glh_set_current_modelview(const LLMatrix4a& mat);
-const LLMatrix4a& glh_get_current_projection();
-void glh_set_current_projection(const LLMatrix4a& mat);
+glh::matrix4f glh_get_current_modelview();
+void glh_set_current_modelview(const glh::matrix4f& mat);
+glh::matrix4f glh_get_current_projection();
+void glh_set_current_projection(const glh::matrix4f& mat);
+glh::matrix4f gl_ortho(GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat znear, GLfloat zfar);
+glh::matrix4f gl_perspective(GLfloat fovy, GLfloat aspect, GLfloat zNear, GLfloat zFar);
+glh::matrix4f gl_lookat(LLVector3 eye, LLVector3 center, LLVector3 up);
 
 extern LLFastTimer::DeclareTimer FTM_RENDER_GEOMETRY;
 extern LLFastTimer::DeclareTimer FTM_RENDER_GRASS;
@@ -108,7 +111,6 @@ extern LLFastTimer::DeclareTimer FTM_PIPELINE;
 extern LLFastTimer::DeclareTimer FTM_CLIENT_COPY;
 
 
-LL_ALIGN_PREFIX(16)
 class LLPipeline
 {
 public:
@@ -303,7 +305,7 @@ public:
 	void generateSunShadow(LLCamera& camera);
 
 
-	void renderShadow(const LLMatrix4a& view, const LLMatrix4a& proj, LLCamera& camera, LLCullResult& result, BOOL use_shader, BOOL use_occlusion, U32 target_width);
+	void renderShadow(glh::matrix4f& view, glh::matrix4f& proj, LLCamera& camera, LLCullResult& result, BOOL use_shader, BOOL use_occlusion, U32 target_width);
 	void renderHighlights();
 	void renderDebug();
 	void renderPhysicsDisplay();
@@ -625,9 +627,17 @@ public:
 	LLCamera				mShadowCamera[8];
 private:
 	LLVector3				mShadowExtents[4][2];
-	LLMatrix4a				mSunShadowMatrix[6];
+	glh::matrix4f			mSunShadowMatrix[6];
 	LLMatrix4a				mShadowModelview[6];
 	LLMatrix4a				mShadowProjection[6];
+	glh::matrix4f			mGIMatrix;
+	glh::matrix4f			mGIMatrixProj;
+	glh::matrix4f			mGIModelview;
+	glh::matrix4f			mGIProjection;
+	glh::matrix4f			mGINormalMatrix;
+	glh::matrix4f			mGIInvProj;
+	LLVector2				mGIRange;
+	F32						mGILightRadius;
 	
 	LLPointer<LLDrawable>				mShadowSpotLight[2];
 	F32									mSpotLightFade[2];
@@ -652,7 +662,7 @@ private:
 
 	LLColor4				mSunDiffuse;
 	LLVector3				mSunDir;
-	LL_ALIGN_16(LLVector4a	mTransformedSunDir);
+	LLVector3				mTransformedSunDir;
 
 public:
 	BOOL					mInitialized;
@@ -825,13 +835,13 @@ public:
 
 	//debug use
 	static U32              sCurRenderPoolType ;
-} LL_ALIGN_POSTFIX(16);
+};
 
 void render_bbox(const LLVector3 &min, const LLVector3 &max);
 void render_hud_elements();
 
 extern LLPipeline gPipeline;
 extern BOOL gDebugPipeline;
-extern const LLMatrix4a* gGLLastMatrix;
+extern const LLMatrix4* gGLLastMatrix;
 
 #endif
