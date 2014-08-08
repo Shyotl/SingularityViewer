@@ -2454,58 +2454,78 @@ void LLGLDepthTest::checkState()
 	}
 }
 
-bool is_approx_equal(glh::vec4f lhs, glh::vec4f rhs)
+bool is_approx_equal(const glh::vec4f& lhs, const LLVector4a& rhs)
 {
 	for (U32 i = 0; i < 4; ++i)
 	{
-		if (llabs(lhs.v[0] - rhs.v[0]) > .01f)
+		if (llabs(lhs.v[i] - rhs[i]) > .01f)
+		{
+			LL_INFOS("is_approx_equal") << "\n" <<
+				lhs.v[0] << ", " << lhs.v[1] << ", " << lhs.v[2] << ", " << lhs.v[3] << "\n" <<
+				rhs[0] << ", " << rhs[1] << ", " << rhs[2] << ", " << rhs[3] << LL_ENDL;
 			return false;
+		}
 	}
 	return true;
 }
 
+std::string getMatrixString(const F32* mat)
+{
+	std::ostringstream out;
+	bool first = true;
+	out << "[";
+	for (S32 i = 0; i < 16; ++i)
+	{
+		if (first)
+			out << mat[i];
+		else
+			out << ", " << mat[i];
+		first = false;
+	}
+	out << "]";
+
+	return out.str();
+}
+
 LLGLSquashToFarClip::LLGLSquashToFarClip(glh::matrix4f P_in, U32 layer)
 {
-	static LLCachedControl<bool> mat_fallback2("mat_fallback2", true);
-	if (mat_fallback2)
-	{
-		glh::matrix4f& P = P_in;
-		F32 depth = 0.99999f - 0.0001f * layer;
-
-		for (U32 i = 0; i < 4; i++)
-		{
-			P.element(2, i) = P.element(3, i) * depth;
-		}
-
-		gGL.matrixMode(LLRender::MM_PROJECTION);
-		gGL.pushMatrix();
-		gGL.loadMatrix(P);
-		gGL.matrixMode(LLRender::MM_MODELVIEW);
-		return;
-	}
-
+	static LLCachedControl<S32> mat_fallback2("mat_fallback2", 0);
+	
 	LLMatrix4a P;
 	P.loadu(P_in.m);
+	glh::matrix4f& P2 = P_in;
 
 	F32 depth = 0.99999f - 0.0001f * layer;
-
-	glh::matrix4f& P2 = P_in;
+	
 	for (U32 i = 0; i < 4; i++)
 	{
 		P2.element(2, i) = P2.element(3, i) * depth;
 	}
 
 	LLVector4a col = P.getColumn<3>();
-	llassert_always(is_approx_equal(P2.get_column(3), glh::vec4f(col.getF32ptr())));
+	llassert_always(is_approx_equal(P2.get_row(3), col));
 	col.mul(depth);
-	llassert_always(is_approx_equal(P2.get_column(3)*depth, glh::vec4f(col.getF32ptr())));
+	llassert_always(is_approx_equal(P2.get_row(3)*depth, col));
 	P.setColumn<2>(col);
 	LLVector4a col2 = P.getColumn<2>();
-	llassert_always(is_approx_equal(P2.get_column(2), glh::vec4f(col2.getF32ptr())));
+	llassert_always(is_approx_equal(P2.get_row(2), col2));
+
+	if (!is_approx_equal(P2.get_column(0), P.getRow<0>()) ||
+		!is_approx_equal(P2.get_column(1), P.getRow<1>()) ||
+		!is_approx_equal(P2.get_column(2), P.getRow<2>()) ||
+		!is_approx_equal(P2.get_column(3), P.getRow<3>()))
+	{
+		LL_ERRS("LLGLSquashToFarClip") << "\n" << getMatrixString(P2.m) << "\n" << getMatrixString(P.getF32ptr()) << LL_ENDL;
+	}
 
 	gGL.matrixMode(LLRender::MM_PROJECTION);
 	gGL.pushMatrix();
-	gGL.loadMatrix(P);
+	if (!mat_fallback2)
+		gGL.loadMatrix(P2);
+	else if (mat_fallback2 == 1)
+		gGL.loadMatrix(glh::matrix4f(P.getF32ptr()));
+	else
+		gGL.loadMatrix(P);
 	gGL.matrixMode(LLRender::MM_MODELVIEW);
 }
 
