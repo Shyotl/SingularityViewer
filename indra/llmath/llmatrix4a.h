@@ -244,20 +244,37 @@ public:
 	template<int N>
 	inline void setColumn(const LLVector4a& col)
 	{
-		mMatrix[0].copyComponent<N>(col.getScalarAt<0>());
-		mMatrix[1].copyComponent<N>(col.getScalarAt<1>());
-		mMatrix[2].copyComponent<N>(col.getScalarAt<2>());
-		mMatrix[3].copyComponent<N>(col.getScalarAt<3>());
+		__m128 xxxx = _mm_shuffle_ps(col, col, _MM_SHUFFLE(0, 0, 0, 0));
+		__m128 yyyy = _mm_shuffle_ps(col, col, _MM_SHUFFLE(1, 1, 1, 1));
+		__m128 zzzz = _mm_shuffle_ps(col, col, _MM_SHUFFLE(2, 2, 2, 2));
+		__m128 wwww = _mm_shuffle_ps(col, col, _MM_SHUFFLE(3, 3, 3, 3));
+
+		__m128 mask = _mm_load_ps((F32*)&S_V4LOGICAL_MASK_TABLE[N * 4]);
+
+		mMatrix[0] = _mm_xor_ps(mMatrix[0], _mm_and_ps(mask, _mm_xor_ps(xxxx, mMatrix[0])));
+		mMatrix[1] = _mm_xor_ps(mMatrix[1], _mm_and_ps(mask, _mm_xor_ps(yyyy, mMatrix[1])));
+		mMatrix[2] = _mm_xor_ps(mMatrix[2], _mm_and_ps(mask, _mm_xor_ps(zzzz, mMatrix[2])));
+		mMatrix[3] = _mm_xor_ps(mMatrix[3], _mm_and_ps(mask, _mm_xor_ps(wwww, mMatrix[3])));
 	}
 
 	template<int N>
 	inline LLVector4a getColumn()
 	{
 		LLVector4a v;
-		v.copyComponent<0>(mMatrix[0].getScalarAt<N>());
-		v.copyComponent<1>(mMatrix[1].getScalarAt<N>());
-		v.copyComponent<2>(mMatrix[2].getScalarAt<N>());
-		v.copyComponent<3>(mMatrix[3].getScalarAt<N>());
+		__m128 splat1 = _mm_shuffle_ps(mMatrix[0], mMatrix[0], _MM_SHUFFLE(N, N, N, N));
+		__m128 splat2 = _mm_shuffle_ps(mMatrix[1], mMatrix[1], _MM_SHUFFLE(N, N, N, N));
+		__m128 splat3 = _mm_shuffle_ps(mMatrix[2], mMatrix[2], _MM_SHUFFLE(N, N, N, N));
+		__m128 splat4 = _mm_shuffle_ps(mMatrix[3], mMatrix[3], _MM_SHUFFLE(N, N, N, N));
+
+		__m128 mask1 = _mm_load_ps((F32*)&S_V4LOGICAL_MASK_TABLE[0 * 4]);
+		__m128 mask2 = _mm_load_ps((F32*)&S_V4LOGICAL_MASK_TABLE[1 * 4]);
+		__m128 mask3 = _mm_load_ps((F32*)&S_V4LOGICAL_MASK_TABLE[2 * 4]);
+		__m128 mask4 = _mm_load_ps((F32*)&S_V4LOGICAL_MASK_TABLE[3 * 4]);
+
+		v = _mm_xor_ps(v, _mm_and_ps(mask1, _mm_xor_ps(splat1, v)));
+		v = _mm_xor_ps(v, _mm_and_ps(mask2, _mm_xor_ps(splat2, v)));
+		v = _mm_xor_ps(v, _mm_and_ps(mask3, _mm_xor_ps(splat3, v)));
+		v = _mm_xor_ps(v, _mm_and_ps(mask4, _mm_xor_ps(splat4, v)));
 		return v;
 	}
 
