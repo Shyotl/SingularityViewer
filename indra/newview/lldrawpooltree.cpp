@@ -117,8 +117,8 @@ void LLDrawPoolTree::render(S32 pass)
 			{
 				LLMatrix4* model_matrix = &(face->getDrawable()->getRegion()->mRenderMatrix);;
 
-				gGL.loadMatrix(gGLModelView.getF32ptr());
-				gGL.multMatrix((GLfloat*) model_matrix->mMatrix);
+				gGL.loadMatrix(glh_get_current_modelview());
+				gGL.multMatrix(*model_matrix);
 				gPipeline.mMatrixOpCount++;
 
 				for(std::vector<LLPointer<LLDrawInfo> >::iterator iter2 = pTree->mDrawList.begin();
@@ -126,7 +126,7 @@ void LLDrawPoolTree::render(S32 pass)
 				{
 					LLDrawInfo& params = *iter2->get();
 					gGL.pushMatrix();
-					gGL.multMatrix((GLfloat*) params.mModelMatrix->mMatrix);
+					gGL.multMatrix(*params.mModelMatrix);
 					gPipeline.mMatrixOpCount++;
 					params.mVertexBuffer->setBuffer(LLDrawPoolTree::VERTEX_DATA_MASK);
 					params.mVertexBuffer->drawRange(params.mDrawMode, params.mStart, params.mEnd, params.mCount, params.mOffset);
@@ -144,11 +144,11 @@ void LLDrawPoolTree::render(S32 pass)
 			if (model_matrix != gGLLastMatrix)
 			{
 				gGLLastMatrix = model_matrix;
-				gGL.loadMatrix(gGLModelView.getF32ptr());
+				gGL.loadMatrix(glh_get_current_modelview());
 				if (model_matrix)
 				{
 					llassert(gGL.getMatrixMode() == LLRender::MM_MODELVIEW);
-					gGL.multMatrix((GLfloat*) model_matrix->mMatrix);
+					gGL.multMatrix(*model_matrix);
 				}
 				gPipeline.mMatrixOpCount++;
 			}

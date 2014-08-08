@@ -297,7 +297,7 @@ void LLDrawPoolWater::render(S32 pass)
 		LLMatrix4 camera_rot(camera_mat.getMat3());
 		camera_rot.invert();
 
-		gGL.loadMatrix((F32 *)camera_rot.mMatrix);
+		gGL.loadMatrix(camera_rot);
 
 		gGL.matrixMode(LLRender::MM_MODELVIEW);
 		LLOverrideFaceColor overrid(this, 1.f, 1.f, 1.f,  0.5f*up_dot);

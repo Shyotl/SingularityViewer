@@ -2917,7 +2917,7 @@ void renderNormals(LLDrawable* drawablep)
 	{
 		LLVolume* volume = vol->getVolume();
 		gGL.pushMatrix();
-		gGL.multMatrix((const GLfloat*)vol->getRelativeXform().mMatrix);
+		gGL.multMatrix(vol->getRelativeXform());
 		
 		gGL.getTexUnit(0)->unbind(LLTexUnit::TT_TEXTURE);
 
@@ -3071,7 +3071,7 @@ void renderPhysicsShape(LLDrawable* drawable, LLVOVolume* volume)
 	LLVector3 size(0.25f,0.25f,0.25f);
 
 	gGL.pushMatrix();
-	gGL.multMatrix((const GLfloat*)volume->getRelativeXform().mMatrix);
+	gGL.multMatrix(volume->getRelativeXform());
 		
 	if (type == LLPhysicsShapeBuilderUtil::PhysicsShapeSpecification::USER_MESH)
 	{
@@ -3369,7 +3369,7 @@ void renderPhysicsShapes(LLSpatialGroup* group)
 			if (object && object->getPCode() == LLViewerObject::LL_VO_SURFACE_PATCH)
 			{
 				gGL.pushMatrix();
-				gGL.multMatrix((F32*) object->getRegion()->mRenderMatrix.mMatrix);
+				gGL.multMatrix(object->getRegion()->mRenderMatrix);
 				//push face vertices for terrain
 				for (S32 i = 0; i < drawable->getNumFaces(); ++i)
 				{
@@ -3684,7 +3684,7 @@ void renderRaycast(LLDrawable* drawablep)
 					
 					gGL.pushMatrix();
 					gGL.translatef(trans.mV[0], trans.mV[1], trans.mV[2]);					
-					gGL.multMatrix((const GLfloat*)vobj->getRelativeXform().mMatrix);
+					gGL.multMatrix(vobj->getRelativeXform());
 
 					LLVector4a start, end;
 					if (transform)
@@ -3749,7 +3749,7 @@ void renderRaycast(LLDrawable* drawablep)
 		{
 			// draw intersection point
 			gGL.pushMatrix();
-			gGL.loadMatrix(gGLModelView.getF32ptr());
+			gGL.loadMatrix(glh_get_current_modelview());
 			LLVector3 translate(gDebugRaycastIntersection.getF32ptr());
 			gGL.translatef(translate.mV[0], translate.mV[1], translate.mV[2]);
 			LLCoordFrame orient;
@@ -3764,7 +3764,7 @@ void renderRaycast(LLDrawable* drawablep)
 			orient.lookDir(normal, binormal);
 			LLMatrix4 rotation;
 			orient.getRotMatrixToParent(rotation);
-			gGL.multMatrix((float*)rotation.mMatrix);
+			gGL.multMatrix(rotation);
 			
 			gGL.diffuseColor4f(1,0,0,0.5f);
 			drawBox(LLVector3(0, 0, 0), LLVector3(0.1f, 0.022f, 0.022f));
@@ -3851,7 +3851,7 @@ public:
 				gGL.flush();
 				gGL.pushMatrix();
 				gGLLastMatrix = NULL;
-				gGL.loadMatrix(gGLModelView.getF32ptr());
+				gGL.loadMatrix(glh_get_current_modelview());
 				renderVisibility(group, mCamera);
 				stop_glerror();
 				gGLLastMatrix = NULL;

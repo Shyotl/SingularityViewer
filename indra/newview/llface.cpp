@@ -523,11 +523,11 @@ void LLFace::renderSelected(LLViewerTexture *imagep, const LLColor4& color)
 		gGL.pushMatrix();
 		if (mDrawablep->isActive())
 		{
-			gGL.multMatrix((GLfloat*)mDrawablep->getRenderMatrix().mMatrix);
+			gGL.multMatrix(mDrawablep->getRenderMatrix());
 		}
 		else
 		{
-			gGL.multMatrix((GLfloat*)mDrawablep->getRegion()->mRenderMatrix.mMatrix);
+			gGL.multMatrix(mDrawablep->getRegion()->mRenderMatrix);
 		}
 	
 		if (mDrawablep->isState(LLDrawable::RIGGED))
@@ -540,7 +540,7 @@ void LLFace::renderSelected(LLViewerTexture *imagep, const LLColor4& color)
 				{
 					LLGLEnable offset(GL_POLYGON_OFFSET_FILL);
 					glPolygonOffset(-1.f, -1.f);
-					gGL.multMatrix((F32*)volume->getRelativeXform().mMatrix);
+					gGL.multMatrix(volume->getRelativeXform());
 					const LLVolumeFace& vol_face = rigged->getVolumeFace(getTEOffset());
 
 					// Singu Note: Implementation changed to utilize a VBO, avoiding fixed functions unless required
@@ -1415,7 +1415,7 @@ BOOL LLFace::getGeometryVolume(const LLVolume& volume,
 		LLGLSLShader* cur_shader = LLGLSLShader::sCurBoundShaderPtr;
 		
 		gGL.pushMatrix();
-		gGL.loadMatrix(mat_vert_in.getF32ptr());
+		gGL.loadMatrix(mat_vert_in);
 
 		if (rebuild_pos)
 		{
@@ -2550,7 +2550,7 @@ S32 LLFace::renderElements(const U16 *index_array) const
 	else
 	{
 		gGL.pushMatrix();
-		gGL.multMatrix((float*)getRenderMatrix().mMatrix);
+		gGL.multMatrix(getRenderMatrix());
 		ret = pushVertices(index_array);
 		gGL.popMatrix();
 	}

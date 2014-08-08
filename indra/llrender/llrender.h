@@ -44,13 +44,13 @@
 #include "llglheaders.h"
 #include "glh/glh_linear.h"
 #include "llrect.h"
+#include "llmatrix4a.h"
 
 class LLVertexBuffer;
 class LLCubeMap;
 class LLImageGL;
 class LLRenderTarget;
 class LLTexture ;
-class LLMatrix4a;
 
 #define LL_MATRIX_STACK_DEPTH 32
 
@@ -355,8 +355,32 @@ public:
 	void pushMatrix();
 	void popMatrix();
 	void loadMatrix(const GLfloat* m);
+	void loadMatrix(const LLMatrix4a& m)
+	{
+		loadMatrix(m.getF32ptr());
+	}
+	void loadMatrix(const glh::matrix4f& m)
+	{
+		loadMatrix(m.m);
+	}
+	void loadMatrix(const LLMatrix4& m)
+	{
+		loadMatrix((const GLfloat*)m.mMatrix);
+	}
 	void loadIdentity();
 	void multMatrix(const GLfloat* m);
+	void multMatrix(const LLMatrix4a& m)
+	{
+		multMatrix(m.getF32ptr());
+	}
+	void multMatrix(const glh::matrix4f& m)
+	{
+		multMatrix(m.m);
+	}
+	void multMatrix(const LLMatrix4& m)
+	{
+		multMatrix((const GLfloat*)m.mMatrix);
+	}
 	void matrixMode(U32 mode);	
 	U32 getMatrixMode();
 

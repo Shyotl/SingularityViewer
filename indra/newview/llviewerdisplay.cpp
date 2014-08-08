@@ -780,9 +780,9 @@ void display(BOOL rebuild, F32 zoom_factor, int subfield, BOOL for_snapshot, boo
 				glh_set_current_projection(proj);
 				glh_set_current_modelview(mod);
 				gGL.matrixMode(LLRender::MM_PROJECTION);
-				gGL.loadMatrix((const GLfloat*)proj.m);
+				gGL.loadMatrix(proj);
 				gGL.matrixMode(LLRender::MM_MODELVIEW);
-				gGL.loadMatrix((const GLfloat*)mod.m);
+				gGL.loadMatrix(mod);
 				gViewerWindow->setup3DViewport();
 
 				LLGLState::checkStates();
@@ -1327,12 +1327,12 @@ BOOL setup_hud_matrices(const LLRect& screen_region)
 
 	// set up transform to keep HUD objects in front of camera
 	gGL.matrixMode(LLRender::MM_PROJECTION);
-	gGL.loadMatrix(proj.getF32ptr());
+	gGL.loadMatrix(proj);
 	glh::matrix4f projf(proj.getF32ptr());
 	glh_set_current_projection(projf);
 	
 	gGL.matrixMode(LLRender::MM_MODELVIEW);
-	gGL.loadMatrix(model.getF32ptr());
+	gGL.loadMatrix(model);
 	glh::matrix4f modelf(model.getF32ptr());
 	glh_set_current_modelview(modelf);
 	return TRUE;
@@ -1349,7 +1349,7 @@ void render_ui(F32 zoom_factor, int subfield, bool tiling)
 	if (!gSnapshot)
 	{
 		gGL.pushMatrix();
-		gGL.loadMatrix(gGLLastModelView.getF32ptr());
+		gGL.loadMatrix(gGLLastModelView);
 		glh::matrix4f last_mv(gGLLastModelView.getF32ptr());
 		glh_set_current_modelview(last_mv.m);
 	}

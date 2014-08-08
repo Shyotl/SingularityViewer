@@ -1835,7 +1835,7 @@ void LLVOAvatar::renderJoints()
 		jointp->updateWorldMatrix();
 	
 		gGL.pushMatrix();
-		gGL.multMatrix( &jointp->getXform()->getWorldMatrix().mMatrix[0][0] );
+		gGL.multMatrix( jointp->getXform()->getWorldMatrix() );
 
 		gGL.diffuseColor3f( 1.f, 0.f, 1.f );
 	

@@ -6119,7 +6119,7 @@ void pushWireframe(LLDrawable* drawable)
 	{
 		LLVertexBuffer::unbind();
 		gGL.pushMatrix();
-		gGL.multMatrix((const GLfloat*)vobj->getRelativeXform().mMatrix);
+		gGL.multMatrix(vobj->getRelativeXform());
 
 		LLVolume* volume = NULL;
 
@@ -6175,13 +6175,13 @@ void LLSelectNode::renderOneWireframe(const LLColor4& color)
 
 	if (drawable->isActive())
 	{
-		gGL.loadMatrix(gGLModelView.getF32ptr());
-		gGL.multMatrix((F32*) objectp->getRenderMatrix().mMatrix);
+		gGL.loadMatrix(glh_get_current_modelview());
+		gGL.multMatrix(objectp->getRenderMatrix());
 	}
 	else if (!is_hud_object)
 	{
 		gGL.loadIdentity();
-		gGL.multMatrix(gGLModelView.getF32ptr());
+		gGL.multMatrix(gGLModelView);
 		LLVector3 trans = objectp->getRegion()->getOriginAgent();		
 		gGL.translatef(trans.mV[0], trans.mV[1], trans.mV[2]);		
 	}
@@ -6291,13 +6291,13 @@ void LLSelectNode::renderOneSilhouette(const LLColor4 &color)
 	if (!is_hud_object)
 	{
 		gGL.loadIdentity();
-		gGL.multMatrix(gGLModelView.getF32ptr());
+		gGL.multMatrix(gGLModelView);
 	}
 	
 	
 	if (drawable->isActive())
 	{
-		gGL.multMatrix((F32*) objectp->getRenderMatrix().mMatrix);
+		gGL.multMatrix(objectp->getRenderMatrix());
 	}
 
 	LLVolume *volume = objectp->getVolume();

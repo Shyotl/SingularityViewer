@@ -5139,7 +5139,7 @@ BOOL LLModelPreview::render()
 				gGL.pushMatrix();
 				LLMatrix4 mat = instance.mTransform;
 
-				gGL.multMatrix((GLfloat*) mat.mMatrix);
+				gGL.multMatrix(mat);
 
 				for (U32 i = 0; i < mVertexBuffer[mPreviewLOD][model].size(); ++i)
 				{
@@ -5222,7 +5222,7 @@ BOOL LLModelPreview::render()
 						gGL.pushMatrix();
 						LLMatrix4 mat = instance.mTransform;
 
-						gGL.multMatrix((GLfloat*) mat.mMatrix);
+						gGL.multMatrix(mat);
 
 
 						bool render_mesh = true;
@@ -5329,7 +5329,7 @@ BOOL LLModelPreview::render()
 						gGL.pushMatrix();
 						LLMatrix4 mat = instance.mTransform;
 
-						gGL.multMatrix((GLfloat*) mat.mMatrix);
+						gGL.multMatrix(mat);
 
 
 						LLPhysicsDecomp* decomp = gMeshRepo.mDecompThread;

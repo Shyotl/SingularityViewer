@@ -2226,7 +2226,7 @@ void LLGLUserClipPlane::setPlane(F32 a, F32 b, F32 c, F32 d)
 		gGL.pushMatrix();
 		LLMatrix4a mat;
 		mat.loadu(newP.m);
-	    gGL.loadMatrix(mat.getF32ptr());
+	    gGL.loadMatrix(mat);
 	    gGL.matrixMode(LLRender::MM_MODELVIEW);
 		return;
 	}
@@ -2256,7 +2256,7 @@ void LLGLUserClipPlane::setPlane(F32 a, F32 b, F32 c, F32 d)
 
     gGL.matrixMode(LLRender::MM_PROJECTION);
 	gGL.pushMatrix();
-    gGL.loadMatrix(newP.getF32ptr());
+    gGL.loadMatrix(newP);
 	//gGLObliqueProjectionInverse = LLMatrix4(newP.inverse().transpose().m);
     gGL.matrixMode(LLRender::MM_MODELVIEW);
 }
@@ -2458,7 +2458,7 @@ LLGLSquashToFarClip::LLGLSquashToFarClip(glh::matrix4f P, U32 layer)
 
 	gGL.matrixMode(LLRender::MM_PROJECTION);
 	gGL.pushMatrix();
-	gGL.loadMatrix(P.m);
+	gGL.loadMatrix(P);
 	gGL.matrixMode(LLRender::MM_MODELVIEW);
 }
 

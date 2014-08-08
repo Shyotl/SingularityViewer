@@ -361,7 +361,7 @@ void LLViewerCamera::setPerspective(BOOL for_selection,
 	glh::matrix4f proj_matf(proj_mat.getF32ptr());
 	proj_matf *= gl_perspective(fov_y, aspect, z_near, z_far);
 
-	gGL.loadMatrix(proj_matf.m);
+	gGL.loadMatrix(proj_matf);
 
 	gGLProjection.loadu(proj_matf.m);
 
@@ -375,7 +375,7 @@ void LLViewerCamera::setPerspective(BOOL for_selection,
 
 	modelview *= glh::matrix4f(ogl_matrix);
 	
-	gGL.loadMatrix(modelview.m);
+	gGL.loadMatrix(modelview);
 	
 	if (for_selection && (width > 1 || height > 1))
 	{

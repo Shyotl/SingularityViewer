@@ -320,10 +320,10 @@ void LLDrawPoolTerrain::drawLoop()
 			{
 				llassert(gGL.getMatrixMode() == LLRender::MM_MODELVIEW);
 				gGLLastMatrix = model_matrix;
-				gGL.loadMatrix(gGLModelView.getF32ptr());
+				gGL.loadMatrix(glh_get_current_modelview());
 				if (model_matrix)
 				{
-					gGL.multMatrix((GLfloat*) model_matrix->mMatrix);
+					gGL.multMatrix(*model_matrix);
 				}
 				gPipeline.mMatrixOpCount++;
 			}
