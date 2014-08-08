@@ -312,13 +312,19 @@ void glh_set_last_projection(const LLMatrix4a& mat)
 
 glh::matrix4f gl_ortho(GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat znear, GLfloat zfar)
 {
-	glh::matrix4f ret(
-		2.f/(right-left), 0.f, 0.f, -(right+left)/(right-left),
-		0.f, 2.f/(top-bottom), 0.f, -(top+bottom)/(top-bottom),
-		0.f, 0.f, -2.f/(zfar-znear),  -(zfar+znear)/(zfar-znear),
-		0.f, 0.f, 0.f, 1.f);
+	static LLCachedControl<bool> mat_fallback13("mat_fallback13", true);
+	if (mat_fallback13)
+	{
+		glh::matrix4f ret(
+			2.f / (right - left), 0.f, 0.f, -(right + left) / (right - left),
+			0.f, 2.f / (top - bottom), 0.f, -(top + bottom) / (top - bottom),
+			0.f, 0.f, -2.f / (zfar - znear), -(zfar + znear) / (zfar - znear),
+			0.f, 0.f, 0.f, 1.f);
 
-	return ret;
+		return ret;
+	}
+	LLMatrix4a ortho = gGL.genOrtho(left, right, bottom, top, znear, zfar);
+	return glh::matrix4f(ortho.getF32ptr());
 }
 
 void display_update_camera(bool tiling=false);

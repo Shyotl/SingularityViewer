@@ -312,19 +312,17 @@ void LLJoint::setWorldPosition( const LLVector3& pos )
 		return;
 	}
 
-	LLMatrix4 temp_matrix = getWorldMatrix();
-	temp_matrix.mMatrix[VW][VX] = pos.mV[VX];
-	temp_matrix.mMatrix[VW][VY] = pos.mV[VY];
-	temp_matrix.mMatrix[VW][VZ] = pos.mV[VZ];
+	LLMatrix4a temp_matrix;
+	temp_matrix.loadu((F32*)getWorldMatrix().mMatrix);
+	temp_matrix.setTranslate_affine(pos);
 
-	LLMatrix4 parentWorldMatrix = mParent->getWorldMatrix();
-	LLMatrix4 invParentWorldMatrix = parentWorldMatrix.invert();
+	LLMatrix4a invParentWorldMatrix;
+	invParentWorldMatrix.loadu((F32*)mParent->getWorldMatrix().mMatrix);
+	invParentWorldMatrix.invert();
 
-	temp_matrix *= invParentWorldMatrix;
+	invParentWorldMatrix.mul(temp_matrix);
 
-	LLVector3 localPos(	temp_matrix.mMatrix[VW][VX],
-						temp_matrix.mMatrix[VW][VY],
-						temp_matrix.mMatrix[VW][VZ] );
+	LLVector3 localPos(invParentWorldMatrix.getRow<LLMatrix4a::ROW_TRANS>().getF32ptr());
 
 	setPosition( localPos );
 }
@@ -384,18 +382,20 @@ void LLJoint::setWorldRotation( const LLQuaternion& rot )
 		return;
 	}
 
-	LLMatrix4 temp_mat(rot);
+	LLMatrix4a parentWorldMatrix;
+	parentWorldMatrix.loadu(mParent->getWorldMatrix());
+	LLQuaternion2 rota(rot);
+	LLMatrix4a temp_mat(rota);
 
-	LLMatrix4 parentWorldMatrix = mParent->getWorldMatrix();
-	parentWorldMatrix.mMatrix[VW][VX] = 0;
-	parentWorldMatrix.mMatrix[VW][VY] = 0;
-	parentWorldMatrix.mMatrix[VW][VZ] = 0;
+	LLMatrix4a invParentWorldMatrix;
+	invParentWorldMatrix.loadu(mParent->getWorldMatrix());
+	invParentWorldMatrix.setTranslate_affine(LLVector3(0.f));
 
-	LLMatrix4 invParentWorldMatrix = parentWorldMatrix.invert();
+	invParentWorldMatrix.invert();
 
-	temp_mat *= invParentWorldMatrix;
+	invParentWorldMatrix.mul(temp_mat);
 
-	setRotation(LLQuaternion(temp_mat));
+	setRotation(LLQuaternion(LLMatrix4(invParentWorldMatrix.getF32ptr())));
 }
 
 

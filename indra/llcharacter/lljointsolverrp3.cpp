@@ -171,12 +171,11 @@ void LLJointSolverRP3::solve()
 	//-------------------------------------------------------------------------
 	// get the poleVector in world space
 	//-------------------------------------------------------------------------
-	LLMatrix4 worldJointAParentMat;
+	LLVector3 poleVec = mPoleVector;
 	if ( mJointA->getParent() )
 	{
-		worldJointAParentMat = mJointA->getParent()->getWorldMatrix();
+		poleVec = rotate_vector(mPoleVector, mJointA->getParent()->getWorldMatrix());
 	}
-	LLVector3 poleVec = rotate_vector( mPoleVector, worldJointAParentMat );
 
 	//-------------------------------------------------------------------------
 	// compute the following:

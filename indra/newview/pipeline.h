@@ -90,7 +90,6 @@ void glh_set_current_projection(const LLMatrix4a& mat);
 
 glh::matrix4f gl_ortho(GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat znear, GLfloat zfar);
 glh::matrix4f gl_perspective(GLfloat fovy, GLfloat aspect, GLfloat zNear, GLfloat zFar);
-glh::matrix4f gl_lookat(LLVector3 eye, LLVector3 center, LLVector3 up);
 
 extern LLFastTimer::DeclareTimer FTM_RENDER_GEOMETRY;
 extern LLFastTimer::DeclareTimer FTM_RENDER_GRASS;

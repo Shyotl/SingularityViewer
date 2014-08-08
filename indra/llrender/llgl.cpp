@@ -2241,12 +2241,20 @@ void LLGLUserClipPlane::setPlane(F32 a, F32 b, F32 c, F32 d)
 
 	LLVector4a oplane(a,b,c,d);
 	LLVector4a cplane;
+	LLVector4a cplane_splat;
+	LLVector4a cplane_neg;
 	invtrans_MVP.rotate4(oplane,cplane);
 
-	cplane.div(cplane.getScalarAt<2>().getAbs());
-	cplane.sub(LLVector4a(0.f,0.f,0.f,1.f));
+	cplane_splat.splat<2>(cplane);
+	cplane_splat.setAbs(cplane_splat);
+	cplane.div(cplane_splat);
+	cplane.sub(LLVector4a(0.f, 0.f, 0.f, 1.f));
 
-	cplane.setSelectWithMask( LLVector4a(cplane.getScalarAt<2>().getQuad()).lessThan( _mm_setzero_ps() ), -(LLSimdScalar)cplane, cplane );
+	cplane_splat.splat<2>(cplane);
+	cplane_neg = cplane;
+	cplane_neg.negate();
+
+	cplane.setSelectWithMask(cplane_splat.lessThan(_mm_setzero_ps()), cplane_neg, cplane);
 
 	LLMatrix4a suffix;
 	suffix.setIdentity();
@@ -2446,15 +2454,34 @@ void LLGLDepthTest::checkState()
 	}
 }
 
-LLGLSquashToFarClip::LLGLSquashToFarClip(glh::matrix4f P, U32 layer)
+LLGLSquashToFarClip::LLGLSquashToFarClip(glh::matrix4f P_in, U32 layer)
 {
+	static LLCachedControl<bool> mat_fallback2("mat_fallback2", true);
+	if (mat_fallback2)
+	{
+		glh::matrix4f& P = P_in;
+		F32 depth = 0.99999f - 0.0001f * layer;
+
+		for (U32 i = 0; i < 4; i++)
+		{
+			P.element(2, i) = P.element(3, i) * depth;
+		}
+
+		gGL.matrixMode(LLRender::MM_PROJECTION);
+		gGL.pushMatrix();
+		gGL.loadMatrix(P);
+		gGL.matrixMode(LLRender::MM_MODELVIEW);
+		return;
+	}
+
+	LLMatrix4a P;
+	P.loadu(P_in.m);
 
 	F32 depth = 0.99999f - 0.0001f * layer;
 
-	for (U32 i = 0; i < 4; i++)
-	{
-		P.element(2, i) = P.element(3, i) * depth;
-	}
+	LLVector4a col = P.getColumn<3>();
+	col.mul(depth);
+	P.setColumn<2>(col);
 
 	gGL.matrixMode(LLRender::MM_PROJECTION);
 	gGL.pushMatrix();

@@ -345,8 +345,17 @@ public:
 	// Needed when the render context has changed and invalidated the current state
 	void refreshState(void);
 
+	LLMatrix4a genRot(const GLfloat& a, const LLVector4a& axis) const;
+	LLMatrix4a genRot(const GLfloat& a, const GLfloat& x, const GLfloat& y, const GLfloat& z) const { return genRot(a, LLVector4a(x, y, z)); }
+	LLMatrix4a genOrtho(const GLfloat& left, const GLfloat& right, const GLfloat& bottom, const GLfloat&  top, const GLfloat& znear, const GLfloat& zfar) const;
+	LLMatrix4a genPersp(const GLfloat& fovy, const GLfloat& aspect, const GLfloat& znear, const GLfloat& zfar) const;
+	LLMatrix4a genLook(const LLVector3& pos_in, const LLVector3& dir_in, const LLVector3& up_in) const;
+	const LLMatrix4a& genNDCtoWC() const;
+
 	void translatef(const GLfloat& x, const GLfloat& y, const GLfloat& z);
 	void scalef(const GLfloat& x, const GLfloat& y, const GLfloat& z);
+	//rotatef requires generation of a transform matrix involving sine/cosine. If rotating by a constant value, use genRot, store the result in a static variable, and pass that var to rotatef.
+	void rotatef(const LLMatrix4a& rot);
 	void rotatef(const GLfloat& a, const GLfloat& x, const GLfloat& y, const GLfloat& z);
 	void ortho(F32 left, F32 right, F32 bottom, F32 top, F32 zNear, F32 zFar);
 	bool projectf(const LLVector3& object, const LLMatrix4a& modelview, const LLMatrix4a& projection, const LLRect& viewport, LLVector3& windowCoordinate);

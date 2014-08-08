@@ -39,6 +39,7 @@
 #include "llquaternion.h"
 #include "xform.h"
 #include "lldarray.h"
+#include "llmatrix4a.h"
 
 const S32 LL_CHARACTER_MAX_JOINTS_PER_MESH = 15;
 const U32 LL_CHARACTER_MAX_JOINTS = 32; // must be divisible by 16!
@@ -162,7 +163,7 @@ public:
 	void setScale( const LLVector3& scale );
 
 	// get/set world matrix
-	const LLMatrix4 &getWorldMatrix();
+	const LLMatrix4& getWorldMatrix();
 	void setWorldMatrix( const LLMatrix4& mat );
 
 	void updateWorldMatrixChildren();
