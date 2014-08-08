@@ -2454,6 +2454,16 @@ void LLGLDepthTest::checkState()
 	}
 }
 
+bool is_approx_equal(glh::vec4f lhs, glh::vec4f rhs)
+{
+	for (U32 i = 0; i < 4; ++i)
+	{
+		if (llabs(lhs.v[0] - rhs.v[0]) > .01f)
+			return false;
+	}
+	return true;
+}
+
 LLGLSquashToFarClip::LLGLSquashToFarClip(glh::matrix4f P_in, U32 layer)
 {
 	static LLCachedControl<bool> mat_fallback2("mat_fallback2", true);
@@ -2479,9 +2489,19 @@ LLGLSquashToFarClip::LLGLSquashToFarClip(glh::matrix4f P_in, U32 layer)
 
 	F32 depth = 0.99999f - 0.0001f * layer;
 
+	glh::matrix4f& P2 = P_in;
+	for (U32 i = 0; i < 4; i++)
+	{
+		P2.element(2, i) = P2.element(3, i) * depth;
+	}
+
 	LLVector4a col = P.getColumn<3>();
+	llassert_always(is_approx_equal(P2.get_column(3), glh::vec4f(col.getF32ptr())));
 	col.mul(depth);
+	llassert_always(is_approx_equal(P2.get_column(3)*depth, glh::vec4f(col.getF32ptr())));
 	P.setColumn<2>(col);
+	LLVector4a col2 = P.getColumn<2>();
+	llassert_always(is_approx_equal(P2.get_column(2), glh::vec4f(col2.getF32ptr())));
 
 	gGL.matrixMode(LLRender::MM_PROJECTION);
 	gGL.pushMatrix();
