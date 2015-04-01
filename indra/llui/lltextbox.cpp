@@ -356,7 +356,7 @@ void LLTextBox::drawText( S32 x, S32 y, const LLColor4& color )
 {
 	if( mLineLengthList.empty() )
 	{
-		mFontGL->render(mText.getWString(), 0, (F32)x, (F32)y, color,
+		mFontGL->render(mText, 0, (F32)x, (F32)y, color,
 						mHAlign, mVAlign, 
 						mFontStyle,
 						mFontShadow,
@@ -369,7 +369,7 @@ void LLTextBox::drawText( S32 x, S32 y, const LLColor4& color )
 			iter != mLineLengthList.end(); ++iter)
 		{
 			S32 line_length = *iter;
-			mFontGL->render(mText.getWString(), cur_pos, (F32)x, (F32)y, color,
+			mFontGL->render(mText, cur_pos, (F32)x, (F32)y, color,
 							mHAlign, mVAlign,
 							mFontStyle,
 							mFontShadow,

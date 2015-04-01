@@ -539,19 +539,19 @@ void LLMenuItemGL::draw( void )
 	{
 		if( !mDrawBoolLabel.empty() )
 		{
-			mFont->render( mDrawBoolLabel.getWString(), 0, (F32)LEFT_PAD_PIXELS, ((F32)MENU_ITEM_PADDING / 2.f) + 1.f, color,
+			mFont->render( mDrawBoolLabel, 0, (F32)LEFT_PAD_PIXELS, ((F32)MENU_ITEM_PADDING / 2.f) + 1.f, color,
 						   LLFontGL::LEFT, LLFontGL::BOTTOM, mStyle, font_shadow, S32_MAX, S32_MAX, NULL, FALSE );
 		}
-		mFont->render( mLabel.getWString(), 0, (F32)LEFT_PLAIN_PIXELS, ((F32)MENU_ITEM_PADDING / 2.f) + 1.f, color,
+		mFont->render( mLabel, 0, (F32)LEFT_PLAIN_PIXELS, ((F32)MENU_ITEM_PADDING / 2.f) + 1.f, color,
 					   LLFontGL::LEFT, LLFontGL::BOTTOM, mStyle, font_shadow, S32_MAX, S32_MAX, NULL, FALSE );
 		if( !mDrawAccelLabel.empty() )
 		{
-			mFont->render( mDrawAccelLabel.getWString(), 0, (F32)getRect().mRight - (F32)RIGHT_PLAIN_PIXELS, ((F32)MENU_ITEM_PADDING / 2.f) + 1.f, color,
+			mFont->render( mDrawAccelLabel, 0, (F32)getRect().mRight - (F32)RIGHT_PLAIN_PIXELS, ((F32)MENU_ITEM_PADDING / 2.f) + 1.f, color,
 						   LLFontGL::RIGHT, LLFontGL::BOTTOM, mStyle, font_shadow, S32_MAX, S32_MAX, NULL, FALSE );
 		}
 		if( !mDrawBranchLabel.empty() )
 		{
-			mFont->render( mDrawBranchLabel.getWString(), 0, (F32)getRect().mRight - (F32)RIGHT_PAD_PIXELS, ((F32)MENU_ITEM_PADDING / 2.f) + 1.f, (!getEnabled() || getHighlight()) ? color : color % .7f,
+			mFont->render( mDrawBranchLabel, 0, (F32)getRect().mRight - (F32)RIGHT_PAD_PIXELS, ((F32)MENU_ITEM_PADDING / 2.f) + 1.f, (!getEnabled() || getHighlight()) ? color : color % .7f,
 						   LLFontGL::RIGHT, LLFontGL::BOTTOM, mStyle, font_shadow, S32_MAX, S32_MAX, NULL, FALSE );
 		}
 	}

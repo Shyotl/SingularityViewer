@@ -3244,14 +3244,14 @@ void LLTextEditor::drawCursor()
 				{
 					cursor_left += CURSOR_THICKNESS;
 					const LLWString space(utf8str_to_wstring(std::string(" ")));
-					F32 spacew = mGLFont->getWidthF32(space.c_str());
+					F32 spacew = mGLFont->getWidthF32(space);
 					if (mCursorPos == line_end)
 					{
 						cursor_right = cursor_left + spacew;
 					}
 					else
 					{
-						F32 width = mGLFont->getWidthF32(text.c_str(), mCursorPos, 1, mAllowEmbeddedItems);
+						F32 width = mGLFont->getWidthF32(text, mCursorPos, 1, mAllowEmbeddedItems);
 						cursor_right = cursor_left + llmax(spacew, width);
 					}
 				}
@@ -3396,7 +3396,6 @@ void LLTextEditor::drawPreeditMarker()
 
 void LLTextEditor::drawText()
 {
-	const LLWString &text = mWText;
 	const S32 text_len = getLength();
 	if( text_len <= 0 ) return;
 	S32 selection_left = -1;
@@ -3448,7 +3447,7 @@ void LLTextEditor::drawText()
 			next_start = getLineStart(cur_line + 1);
 			line_end = next_start;
 		}
-		line_wraps = text[line_end-1] != '\n';
+		line_wraps = mWText[line_end - 1] != '\n';
 		if ( ! line_wraps )
 		{
 			--line_end; // don't attempt to draw the newline char.
@@ -3522,7 +3521,7 @@ void LLTextEditor::drawText()
 					mHTML = style->getLinkHREF();
 				}
 
-				drawClippedSegment( text, seg_start, clipped_end, text_x, text_y, selection_left, selection_right, style, &text_x );
+				drawClippedSegment(seg_start, clipped_end, text_x, text_y, selection_left, selection_right, style, &text_x );
 
 				if( text_x == text_start && mShowLineNumbers ) 
 				{
@@ -3550,7 +3549,7 @@ void LLTextEditor::drawText()
 }
 
 // Draws a single text segment, reversing the color for selection if needed.
-void LLTextEditor::drawClippedSegment(const LLWString &text, S32 seg_start, S32 seg_end, F32 x, F32 y, S32 selection_left, S32 selection_right, const LLStyleSP& style, F32* right_x )
+void LLTextEditor::drawClippedSegment(S32 seg_start, S32 seg_end, F32 x, F32 y, S32 selection_left, S32 selection_right, const LLStyleSP& style, F32* right_x )
 {
 	if (!style->isVisible())
 	{
@@ -3601,7 +3600,7 @@ void LLTextEditor::drawClippedSegment(const LLWString &text, S32 seg_start, S32 
 		S32 start = seg_start;
 		S32 end = llmin( selection_left, seg_end );
 		S32 length =  end - start;
-		font->render(text, start, x, y_top, color, LLFontGL::LEFT, LLFontGL::TOP, font_flags, LLFontGL::NO_SHADOW, length, S32_MAX, right_x, mAllowEmbeddedItems);
+		font->render(mWText, start, x, y_top, color, LLFontGL::LEFT, LLFontGL::TOP, font_flags, LLFontGL::NO_SHADOW, length, S32_MAX, right_x, mAllowEmbeddedItems);
 	}
 	x = *right_x;
 	
@@ -3612,7 +3611,7 @@ void LLTextEditor::drawClippedSegment(const LLWString &text, S32 seg_start, S32 
 		S32 end = llmin( selection_right, seg_end );
 		S32 length = end - start;
 
-		font->render(text, start, x, y_top,
+		font->render(mWText, start, x, y_top,
 					 LLColor4( 1.f - color.mV[0], 1.f - color.mV[1], 1.f - color.mV[2], 1.f ),
 					 LLFontGL::LEFT, LLFontGL::TOP, font_flags, LLFontGL::NO_SHADOW, length, S32_MAX, right_x, mAllowEmbeddedItems);
 	}
@@ -3623,7 +3622,7 @@ void LLTextEditor::drawClippedSegment(const LLWString &text, S32 seg_start, S32 
 		S32 start = llmax( selection_right, seg_start );
 		S32 end = seg_end;
 		S32 length = end - start;
-		font->render(text, start, x, y_top, color, LLFontGL::LEFT, LLFontGL::TOP, font_flags, LLFontGL::NO_SHADOW, length, S32_MAX, right_x, mAllowEmbeddedItems);
+		font->render(mWText, start, x, y_top, color, LLFontGL::LEFT, LLFontGL::TOP, font_flags, LLFontGL::NO_SHADOW, length, S32_MAX, right_x, mAllowEmbeddedItems);
 	}
  }
 
@@ -3790,7 +3789,7 @@ void LLTextEditor::changeLine( S32 delta )
 	// if remembered position was reset (thus -1), calculate new one here
 	if( desired_x_pixel == -1 )
 	{
-		desired_x_pixel = mGLFont->getWidth(mWText.c_str(), line_start, offset, mAllowEmbeddedItems );
+		desired_x_pixel = mGLFont->getWidth(mWText, line_start, offset, mAllowEmbeddedItems );
 	}
 
 	S32 new_line = 0;
@@ -3820,7 +3819,7 @@ void LLTextEditor::changeLine( S32 delta )
 	S32 new_line_len = new_line_end - new_line_start;
 
 	S32 new_offset;
-	new_offset = mGLFont->charFromPixelOffset(mWText.c_str(), new_line_start,
+	new_offset = mGLFont->charFromPixelOffset(mWText, new_line_start,
 											  (F32)desired_x_pixel,
 											  (F32)mTextRect.getWidth(),
 											  new_line_len,
@@ -5162,12 +5161,11 @@ BOOL LLTextEditor::getPreeditLocation(S32 query_offset, LLCoordGL *coord, LLRect
 		current_line++;
 	}
 
-	const llwchar * const text = mWText.c_str();
 	const S32 line_height = llmath::llround(mGLFont->getLineHeight());
 
 	if (coord)
 	{
-		const S32 query_x = mTextRect.mLeft + mGLFont->getWidth(text, current_line_start, query - current_line_start, mAllowEmbeddedItems);
+		const S32 query_x = mTextRect.mLeft + mGLFont->getWidth(mWText, current_line_start, query - current_line_start, mAllowEmbeddedItems);
 		const S32 query_y = mTextRect.mTop - (current_line - first_visible_line) * line_height - line_height / 2;
 		S32 query_screen_x, query_screen_y;
 		localPointToScreen(query_x, query_y, &query_screen_x, &query_screen_y);
@@ -5179,17 +5177,17 @@ BOOL LLTextEditor::getPreeditLocation(S32 query_offset, LLCoordGL *coord, LLRect
 		S32 preedit_left = mTextRect.mLeft;
 		if (preedit_left_position > current_line_start)
 		{
-			preedit_left += mGLFont->getWidth(text, current_line_start, preedit_left_position - current_line_start, mAllowEmbeddedItems);
+			preedit_left += mGLFont->getWidth(mWText, current_line_start, preedit_left_position - current_line_start, mAllowEmbeddedItems);
 		}
 
 		S32 preedit_right = mTextRect.mLeft;
 		if (preedit_right_position < current_line_end)
 		{
-			preedit_right += mGLFont->getWidth(text, current_line_start, preedit_right_position - current_line_start, mAllowEmbeddedItems);
+			preedit_right += mGLFont->getWidth(mWText, current_line_start, preedit_right_position - current_line_start, mAllowEmbeddedItems);
 		}
 		else
 		{
-			preedit_right += mGLFont->getWidth(text, current_line_start, current_line_end - current_line_start, mAllowEmbeddedItems);
+			preedit_right += mGLFont->getWidth(mWText, current_line_start, current_line_end - current_line_start, mAllowEmbeddedItems);
 		}
 
 		const S32 preedit_top = mTextRect.mTop - (current_line - first_visible_line) * line_height;

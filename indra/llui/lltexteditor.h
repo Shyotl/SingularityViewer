@@ -491,7 +491,7 @@ private:
 	void			drawCursor();
 	void			drawMisspelled();
 	void			drawText();
-	void			drawClippedSegment(const LLWString &wtext, S32 seg_start, S32 seg_end, F32 x, F32 y, S32 selection_left, S32 selection_right, const LLStyleSP& color, F32* right_x);
+	void			drawClippedSegment(S32 seg_start, S32 seg_end, F32 x, F32 y, S32 selection_left, S32 selection_right, const LLStyleSP& color, F32* right_x);
 
 	void			needsReflow() 
 	{ 

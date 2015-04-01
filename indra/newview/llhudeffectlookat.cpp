@@ -398,6 +398,16 @@ void LLHUDEffectLookAt::setTargetPosGlobal(const LLVector3d &target_pos_global)
 	mTargetOffsetGlobal = target_pos_global;
 }
 
+void LLHUDEffectLookAt::setAvatarName(const std::string& name)
+{
+	static const LLCachedControl<S32> lookAtNames("LookAtNameSystem");
+	if (lookAtNames < 0) return;
+	std::string text;
+	if (text.length() > 9 && 0 == text.compare(text.length() - 9, 9, " Resident"))
+	text.erase(text.length() - 9);
+	mAvatarName = text;
+}
+
 //-----------------------------------------------------------------------------
 // setLookAt()
 // called by agent logic to set look at behavior locally, and propagate to sim
@@ -495,6 +505,11 @@ void LLHUDEffectLookAt::setSourceObject(LLViewerObject* objectp)
 	// restrict source objects to avatars
 	if (objectp && objectp->isAvatar())
 	{
+		if (objectp != getSourceObject())
+		{
+			mAvatarName.clear();
+			LLAvatarNameCache::get(objectp->getID(), boost::bind(&LLHUDEffectLookAt::setAvatarName, this, boost::bind(&LLAvatarName::getNSName, _2, main_name_system())));
+		}
 		LLHUDEffect::setSourceObject(objectp);
 	}
 }
@@ -547,12 +562,9 @@ void LLHUDEffectLookAt::render()
 		} gGL.end();
 		gGL.popMatrix();
 		// <edit>
-		static const LLCachedControl<S32> lookAtNames("LookAtNameSystem");
-		if (lookAtNames < 0) return;
-		std::string text;
-		if (!LLAvatarNameCache::getNSName(static_cast<LLVOAvatar*>(mSourceObject.get())->getID(), text, lookAtNames)) return;
-		if (text.length() > 9 && 0 == text.compare(text.length() - 9, 9, " Resident"))
-			text.erase(text.length() - 9);
+		const LLWString& text = mAvatarName;
+		if (text.empty())
+			return;
 		LLVector3 offset = gAgentCamera.getCameraPositionAgent() - target;
 		offset.normalize();
 		LLVector3 shadow_offset = offset * 0.49f;
@@ -561,7 +573,7 @@ void LLHUDEffectLookAt::render()
 		LLGLEnable gl_blend(GL_BLEND);
 		gGL.pushMatrix();
 		gViewerWindow->setup2DViewport();
-		hud_render_utf8text(text,
+		hud_render_text(text,
 			target + shadow_offset,
 			*font,
 			LLFontGL::NORMAL,
@@ -570,7 +582,7 @@ void LLHUDEffectLookAt::render()
 			-2.0f,
 			LLColor4::black,
 			FALSE);
-		hud_render_utf8text(text,
+		hud_render_text(text,
 			target + offset,
 			*font,
 			LLFontGL::NORMAL,

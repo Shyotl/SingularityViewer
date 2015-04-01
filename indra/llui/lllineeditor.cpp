@@ -850,18 +850,13 @@ BOOL LLLineEditor::handleMouseUp(S32 x, S32 y, MASK mask)
 
 
 // Remove a single character from the text
-void LLLineEditor::removeChar()
+void LLLineEditor::removeChar(bool prev)
 {
-	if( getCursor() > 0 )
-	{
-		mText.erase(getCursor() - 1, 1);
-
-		setCursor(getCursor() - 1);
-	}
+	const U32 newpos = mText.removeChar(getCursor(), prev);
+	if (newpos != U32(LLWString::npos))
+		setCursor(newpos);
 	else
-	{
 		reportBadKeystroke();
-	}
 }
 
 // Remove a word (set of characters up to next space/punctuation) from the text
@@ -920,8 +915,7 @@ void LLLineEditor::addChar(const llwchar uni_char)
 		LLWString w_buf;
 		w_buf.assign(1, new_c);
 
-		mText.insert(getCursor(), w_buf);
-		setCursor(getCursor() + 1);
+		setCursor(mText.insert(getCursor(), w_buf));
 
 		if (!mReadOnly && mAutoreplaceCallback != NULL)
 		{
@@ -1296,8 +1290,7 @@ void LLLineEditor::pasteHelper(bool is_primary)
 				reportBadKeystroke();
 			}
  
-			mText.insert(getCursor(), clean_string);
-			setCursor( getCursor() + (S32)clean_string.length() );
+			setCursor(mText.insert(getCursor(), clean_string));
 			deselect();
 
 			// Validate new string and rollback the if needed.
@@ -1362,18 +1355,10 @@ BOOL LLLineEditor::handleSpecialKey(KEY key, MASK mask)
 			{
 				deleteSelection();
 			}
+			else if (mask == MASK_CONTROL)
+				removeWord(true);
 			else
-			if( 0 < getCursor() )
-			{
-				if (mask == MASK_CONTROL)
-					removeWord(true);
-				else
-					removeChar();
-			}
-			else
-			{
-				reportBadKeystroke();
-			}
+				removeChar(true);
 		}
 		handled = TRUE;
 		break;
@@ -1717,10 +1702,9 @@ void LLLineEditor::doDelete()
 		{
 			deleteSelection();
 		}
-		else if ( getCursor() < mText.length())
-		{	
-			setCursor(getCursor() + 1);
-			removeChar();
+		else
+		{
+			removeChar(false);
 		}
 
 		// Validate new string and rollback the if needed.
@@ -2040,7 +2024,7 @@ void LLLineEditor::draw()
 		//to give indication that it is not text you typed in
 		if (0 == mText.length() && mReadOnly)
 		{
-			mGLFont->render(mLabel.getWString(), 0,
+			mGLFont->render(mLabel, 0,
 							mMinHPixels, (F32)text_bottom,
 							label_color,
 							LLFontGL::LEFT,
@@ -2065,7 +2049,7 @@ void LLLineEditor::draw()
 		// draw label if no text provided
 		if (0 == mText.length())
 		{
-			mGLFont->render(mLabel.getWString(), 0,
+			mGLFont->render(mLabel, 0,
 							mMinHPixels, (F32)text_bottom,
 							label_color,
 							LLFontGL::LEFT,

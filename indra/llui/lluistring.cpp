@@ -78,31 +78,40 @@ void LLUIString::setArg(const std::string& key, const std::string& replacement)
 	dirty();
 }
 
-void LLUIString::truncate(S32 maxchars)
+/*void LLUIString::truncate(S32 maxchars)
 {
 	if (getUpdatedWResult().size() > (size_t)maxchars)
 	{
 		LLWStringUtil::truncate(getUpdatedWResult(), maxchars);
 		mResult = wstring_to_utf8str(getUpdatedWResult());
 	}
+}*/
+
+U32 LLUIString::erase(S32 charidx, S32 len)
+{
+	const U32 newpos = getUpdatedWResult().erase(charidx, len);
+	mResult = wstring_to_utf8str(getUpdatedWResult());
+	return newpos;
 }
 
-void LLUIString::erase(S32 charidx, S32 len)
+U32 LLUIString::insert(S32 charidx, const LLWString& wchars)
 {
-	getUpdatedWResult().erase(charidx, len);
+	const U32 newpos = getUpdatedWResult().insert(charidx, wchars);
 	mResult = wstring_to_utf8str(getUpdatedWResult());
-}
-
-void LLUIString::insert(S32 charidx, const LLWString& wchars)
-{
-	getUpdatedWResult().insert(charidx, wchars);
-	mResult = wstring_to_utf8str(getUpdatedWResult());
+	return newpos;
 }
 
 void LLUIString::replace(S32 charidx, llwchar wc)
 {
-	getUpdatedWResult()[charidx] = wc;
+	getUpdatedWResult().replace(charidx, wc);
 	mResult = wstring_to_utf8str(getUpdatedWResult());
+}
+
+const U32 LLUIString::removeChar(LLWString::size_type pos, bool backspace)
+{
+	const U32 newpos = getUpdatedWResult().removeChar(pos, backspace);
+	mResult = wstring_to_utf8str(getUpdatedWResult());
+	return newpos;
 }
 
 void LLUIString::clear()

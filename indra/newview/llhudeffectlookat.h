@@ -35,6 +35,7 @@
 
 #include "llhudeffect.h"
 #include "llframetimer.h"
+#include "bidistring.h"
 
 class LLViewerObject;
 class LLVOAvatar;
@@ -85,6 +86,8 @@ protected:
 	void setTargetObjectAndOffset(LLViewerObject *objp, LLVector3d offset);
 	void setTargetPosGlobal(const LLVector3d &target_pos_global);
 
+	void setAvatarName(const std::string& name);
+
 public:
 
 private:
@@ -96,6 +99,7 @@ private:
 	LLVector3					mTargetPos;
 	F32							mLastSendTime;
 	LLAttentionSet*				mAttentions;
+	CBidiString					mAvatarName;
 };
 
 #endif // LL_LLHUDEFFECTLOOKAT_H

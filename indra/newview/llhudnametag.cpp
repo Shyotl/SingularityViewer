@@ -643,7 +643,7 @@ void LLHUDNameTag::setLabel(const std::string &label_utf8)
 void LLHUDNameTag::addLabel(const std::string& label_utf8)
 {
 	LLWString wstr = utf8string_to_wstring(label_utf8);
-	if (!wstr.empty())
+	if (!label_utf8.empty())
 	{
 		LLWString seps(utf8str_to_wstring("\r\n"));
 		LLWString empty;
@@ -1109,7 +1109,7 @@ F32 LLHUDNameTag::LLHUDTextSegment::getWidth(const LLFontGL* font)
 	}
 	else
 	{
-		F32 width = font->getWidthF32(mText.c_str());
+		F32 width = font->getWidthF32(mText);
 		mFontWidthMap[font] = width;
 		return width;
 	}

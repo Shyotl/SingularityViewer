@@ -348,7 +348,7 @@ void LLScrollListText::draw(const LLColor4& color, const LLColor4& highlight_col
 		start_x = (F32)getWidth() * 0.5f;
 		break;
 	}
-	mFont->render(mText.getWString(), 0,
+	mFont->render(mText, 0,
 					start_x, 2.f,
 					display_color,
 					mFontAlignment,

@@ -35,6 +35,7 @@
 #define LL_LLUISTRING_H
 
 #include "llstring.h"
+#include "bidistring.h"
 #include <string>
 
 // Use this class to store translated text that may have arguments
@@ -91,17 +92,18 @@ public:
 
 	// These utility functions are included for text editing.
 	// They do not affect mOrig and do not perform argument substitution
-	void truncate(S32 maxchars);
-	void erase(S32 charidx, S32 len);
-	void insert(S32 charidx, const LLWString& wchars);
+	//void truncate(S32 maxchars);
+	U32 erase(S32 charidx, S32 len);
+	U32 insert(S32 charidx, const LLWString& wchars);
 	void replace(S32 charidx, llwchar wc);
+	const U32 removeChar(LLWString::size_type pos, bool backspace);
 
 private:
 	// something changed, requiring reformatting of strings
 	void dirty();
 
-	std::string& getUpdatedResult() const { if (mNeedsResult) { updateResult(); } return mResult; }
-	LLWString& getUpdatedWResult() const{ if (mNeedsWResult) { updateWResult(); } return mWResult; }
+	const std::string& getUpdatedResult() const { if (mNeedsResult) { updateResult(); } return mResult; }
+	CBidiString& getUpdatedWResult() const{ if (mNeedsWResult) { updateWResult(); } return mWResult; }
 
 	// do actual work of updating strings (non-inlined)
 	void updateResult() const;
@@ -110,7 +112,7 @@ private:
 
 	std::string mOrig;
 	mutable std::string mResult;
-	mutable LLWString mWResult; // for displaying
+	mutable CBidiString mWResult; // for displaying
 	LLStringUtil::format_map_t* mArgs;
 
 	// controls lazy evaluation

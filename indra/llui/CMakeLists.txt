@@ -24,6 +24,7 @@ include_directories(
     )
 
 set(llui_SOURCE_FILES
+    bidistring.cpp
     llalertdialog.cpp
     llbutton.cpp
     llcheckboxctrl.cpp
@@ -97,6 +98,7 @@ set(llui_HEADER_FILES
     CMakeLists.txt
 
     ailist.h
+    bidistring.h
     llalertdialog.h
     llbutton.h
     llcallbackmap.h

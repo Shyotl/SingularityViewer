@@ -38,6 +38,7 @@
 //#include "llframetimer.h"
 #include "llfontgl.h"
 #include "lluiimage.h"
+#include "bidistring.h"
 #include <set>
 #include <vector>
 
@@ -62,14 +63,14 @@ protected:
 			mFont(font)
 		{}
 		F32 getWidth(const LLFontGL* font);
-		const LLWString& getText() const { return mText; }
+		const LLWString& getText() { return mText; }
 		void clearFontWidthMap() { mFontWidthMap.clear(); }
 		
 		LLColor4				mColor;
 		LLFontGL::StyleFlags	mStyle;
 		const LLFontGL*			mFont;
 	private:
-		LLWString				mText;
+		CBidiString				mText;
 		std::map<const LLFontGL*, F32> mFontWidthMap;
 	};
 

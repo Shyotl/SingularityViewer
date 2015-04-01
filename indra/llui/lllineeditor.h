@@ -269,7 +269,7 @@ private:
 
 	void            pasteHelper(bool is_primary);
 
-	void			removeChar();
+	void			removeChar(bool prev);
 	void			removeWord(bool prev);
 	void			addChar(const llwchar c);
 	void			setCursorAtLocalPos(S32 local_mouse_x);
