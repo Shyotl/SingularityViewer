@@ -590,6 +590,8 @@ public:
 	LLRenderTarget			mDeferredScreen;
 private:
 	LLRenderTarget			mFXAABuffer;
+	LLRenderTarget			mSMAAEdgeBuffer;
+	LLRenderTarget			mSMAABlendBuffer;
 public:
 	LLRenderTarget			mDeferredDepth;
 private:
@@ -638,6 +640,11 @@ private:
 	//noise map
 	U32					mNoiseMap;
 	U32					mLightFunc;
+
+	U32					mAreaMap;
+	U32					mSearchMap;
+	U32					mSampleMap;
+	U32					mStencilMap;
 
 	LLColor4				mSunDiffuse;
 	LLVector3				mSunDir;

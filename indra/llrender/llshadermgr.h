@@ -264,9 +264,6 @@ public:
 
 	std::vector<std::string> mReservedUniforms;
 
-	//preprocessor definitions (name/value)
-	std::map<std::string, std::string> mDefinitions;
-
 protected:
 	void cleanupShaderSources();
 

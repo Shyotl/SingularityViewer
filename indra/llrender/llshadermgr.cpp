@@ -688,6 +688,15 @@ GLhandleARB LLShaderMgr::loadShaderFile(const std::string& filename, S32 & shade
 		}
 	}
 
+	if (type == GL_FRAGMENT_SHADER_ARB)
+	{
+		text[count++] = strdup("#define FRAGMENT_SHADER 1\n");
+	}
+	else
+	{
+		text[count++] = strdup("#define VERTEX_SHADER 1\n");
+	}
+
 	if(defines)
 	{
 		for (std::map<std::string,std::string>::iterator iter = defines->begin(); iter != defines->end(); ++iter)
