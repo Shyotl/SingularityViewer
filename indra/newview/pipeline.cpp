@@ -391,7 +391,6 @@ LLPipeline::LLPipeline() :
 	mAreaMap = 0;
 	mSearchMap = 0;
 	mSampleMap = 0;
-	mStencilMap = 0;
 }
 
 void LLPipeline::init()
@@ -995,12 +994,6 @@ void LLPipeline::releaseGLBuffers()
 		LLImageGL::deleteTextures(1, &mSampleMap);
 		mSampleMap = 0;
 	}
-	
-	if (mStencilMap)
-	{
-		LLImageGL::deleteTextures(1, &mStencilMap);
-		mStencilMap = 0;
-	}
 
 	releaseLUTBuffers();
 
@@ -1136,11 +1129,7 @@ void LLPipeline::createGLBuffers()
 		{
 			LLImageGL::generateTextures(1, &mAreaMap);
 			gGL.getTexUnit(0)->bindManual(LLTexUnit::TT_TEXTURE, mAreaMap);
-			char buf[AREATEX_SIZE];
-			for(int i = 0; i < AREATEX_HEIGHT; ++i)
-				memcpy(&buf[i*AREATEX_PITCH],&areaTexBytes[(AREATEX_HEIGHT-i-1)*AREATEX_PITCH],AREATEX_PITCH);
-			LLImageGL::setManualImage(LLTexUnit::getInternalType(LLTexUnit::TT_TEXTURE), 0, GL_RG8, AREATEX_WIDTH, AREATEX_HEIGHT, GL_RG, GL_UNSIGNED_BYTE, buf, false);
-			stop_glerror();
+			LLImageGL::setManualImage(LLTexUnit::getInternalType(LLTexUnit::TT_TEXTURE), 0, GL_RG8, AREATEX_WIDTH, AREATEX_HEIGHT, GL_RG, GL_UNSIGNED_BYTE, areaTexBytes, false);
 			gGL.getTexUnit(0)->setTextureFilteringOption(LLTexUnit::TFO_BILINEAR);
 			gGL.getTexUnit(0)->setTextureAddressMode(LLTexUnit::TAM_CLAMP);
 		}
@@ -1149,11 +1138,7 @@ void LLPipeline::createGLBuffers()
 		{
 			LLImageGL::generateTextures(1, &mSearchMap);
 			gGL.getTexUnit(0)->bindManual(LLTexUnit::TT_TEXTURE, mSearchMap);
-			char buf[SEARCHTEX_SIZE];
-			for(int i = 0; i < SEARCHTEX_HEIGHT; ++i)
-				memcpy(&buf[i*SEARCHTEX_PITCH],&searchTexBytes[(SEARCHTEX_HEIGHT-i-1)*SEARCHTEX_PITCH],SEARCHTEX_PITCH);
-			LLImageGL::setManualImage(LLTexUnit::getInternalType(LLTexUnit::TT_TEXTURE), 0, GL_R8, SEARCHTEX_WIDTH, SEARCHTEX_HEIGHT, GL_RED, GL_UNSIGNED_BYTE, buf, false);
-			stop_glerror();
+			LLImageGL::setManualImage(LLTexUnit::getInternalType(LLTexUnit::TT_TEXTURE), 0, GL_R8, SEARCHTEX_WIDTH, SEARCHTEX_HEIGHT, GL_RED, GL_UNSIGNED_BYTE, searchTexBytes, false);
 			gGL.getTexUnit(0)->setTextureFilteringOption(LLTexUnit::TFO_POINT);
 			gGL.getTexUnit(0)->setTextureAddressMode(LLTexUnit::TAM_CLAMP);
 		}
@@ -1161,7 +1146,7 @@ void LLPipeline::createGLBuffers()
 		{
 			LLPointer<LLImageRaw> raw_image = new LLImageRaw;
 			LLPointer<LLImagePNG> png_image = new LLImagePNG;
-			static LLCachedControl<std::string> sample_path("SamplePath", "G:\\smaa-master\\Demo\\Media\\Unigine05.png");
+			static LLCachedControl<std::string> sample_path("SamplePath", "");
 			if (png_image->load(sample_path.get()) &&
 				png_image->decode(raw_image, 0.0f))
 			{
@@ -1186,16 +1171,6 @@ void LLPipeline::createGLBuffers()
 				gGL.getTexUnit(0)->setTextureFilteringOption(LLTexUnit::TFO_BILINEAR);
 				gGL.getTexUnit(0)->setTextureAddressMode(LLTexUnit::TAM_CLAMP);
 			}
-		}
-
-		if (!mStencilMap)
-		{
-			LLImageGL::generateTextures(1, &mStencilMap);
-			gGL.getTexUnit(0)->bindManual(LLTexUnit::TT_TEXTURE, mStencilMap);
-			LLImageGL::setManualImage(LLTexUnit::getInternalType(LLTexUnit::TT_TEXTURE), 0, GL_DEPTH24_STENCIL8, resX, resY, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL, false);
-			stop_glerror();
-			gGL.getTexUnit(0)->setTextureFilteringOption(LLTexUnit::TFO_POINT);
-			gGL.getTexUnit(0)->setTextureAddressMode(LLTexUnit::TAM_CLAMP);
 		}
 
 		createLUTBuffers();
@@ -7437,9 +7412,12 @@ void LLPipeline::renderBloom(BOOL for_snapshot, F32 zoom_factor, int subfield, b
 
 				static LLCachedControl<U32> show_step("ShowStep", 3);
 				static LLCachedControl<bool> use_sample("UseSample", false);
+				static LLCachedControl<bool> use_stencil("UseStencil", true);
 
 				if (show_step >= 1)
 				{
+					LLGLState stencil(GL_STENCIL_TEST, use_stencil.get());
+
 					//Bind setup:
 					bound_target = &mSMAAEdgeBuffer;
 					bound_shader = &gPostSMAAEdgeDetect;
@@ -7453,18 +7431,26 @@ void LLPipeline::renderBloom(BOOL for_snapshot, F32 zoom_factor, int subfield, b
 					bound_shader->bind();
 					bound_shader->uniform4fv(sSmaaRTMetrics, 1, rt_metrics);
 					bound_target->bindTarget();
+					bound_target->clear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+					if (use_stencil)
+					{
+						glStencilFunc(GL_ALWAYS, 1, 0xFF);
+						glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+						glStencilMask(0xFF);
+					}
 					drawFullScreenRect();
 					bound_target->flush();
 					bound_shader->unbind();
 				}
 				if (show_step >= 2)
 				{
+					LLGLState stencil(GL_STENCIL_TEST, use_stencil.get());
+
 					//Bind setup:
 					bound_target = &mSMAABlendBuffer;
 					bound_shader = &gPostSMAABlendWeights;
 
 					mSMAAEdgeBuffer.bindTexture(0, 0);
-					//gGL.getTexUnit(1)->bindManual(LLTexUnit::TT_TEXTURE, mStencilMap);
 					gGL.getTexUnit(1)->bindManual(LLTexUnit::TT_TEXTURE, mAreaMap);
 					gGL.getTexUnit(2)->bindManual(LLTexUnit::TT_TEXTURE, mSearchMap);
 					gGL.getTexUnit(0)->setTextureFilteringOption(LLTexUnit::TFO_BILINEAR);
@@ -7472,13 +7458,22 @@ void LLPipeline::renderBloom(BOOL for_snapshot, F32 zoom_factor, int subfield, b
 					bound_shader->bind();
 					bound_shader->uniform4fv(sSmaaRTMetrics, 1, rt_metrics);
 					bound_target->bindTarget();
+					bound_target->clear(GL_COLOR_BUFFER_BIT);
+					if (use_stencil)
+					{
+						glStencilFunc(GL_EQUAL, 1, 0xFF);
+						glStencilMask(0x00);
+					}
 					drawFullScreenRect();
+					if (use_stencil)
+					{
+						glStencilFunc(GL_ALWAYS, 0, 0xFF);
+					}
 					bound_target->flush();
 					bound_shader->unbind();
 				}
 				if (show_step >= 3)
 				{
-					//Stencil setup:
 					LLGLDisable stencil(GL_STENCIL_TEST);
 					LLGLEnable srgb(GL_FRAMEBUFFER_SRGB);
 
@@ -7503,8 +7498,8 @@ void LLPipeline::renderBloom(BOOL for_snapshot, F32 zoom_factor, int subfield, b
 				}
 
 				if (bound_target && bound_target->getFBO())
-				{ //copy depth buffer from mScreen to framebuffer
-					LLGLEnable srgb(GL_FRAMEBUFFER_SRGB);
+				{ //copy color buffer from mScreen to framebuffer
+					LLGLState srgb(GL_FRAMEBUFFER_SRGB, show_step >= 3);
 					LLRenderTarget::copyContentsToFramebuffer(*bound_target, 0, 0, mSMAAEdgeBuffer.getWidth(), mSMAAEdgeBuffer.getHeight(),
 						0, 0, mSMAAEdgeBuffer.getWidth(), mSMAAEdgeBuffer.getHeight(), GL_COLOR_BUFFER_BIT, GL_NEAREST);
 				}
