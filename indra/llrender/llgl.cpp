@@ -263,6 +263,9 @@ PFNGLENDTRANSFORMFEEDBACKPROC glEndTransformFeedback = NULL;
 PFNGLTRANSFORMFEEDBACKVARYINGSPROC glTransformFeedbackVaryings = NULL;
 PFNGLBINDBUFFERRANGEPROC glBindBufferRange = NULL;
 
+//GL_ARB_buffer_storage (4.4 core)
+PFNGLBUFFERSTORAGEPROC glBufferStorage = NULL;
+
 //GL_ARB_debug_output
 PFNGLDEBUGMESSAGECONTROLARBPROC glDebugMessageControlARB = NULL;
 PFNGLDEBUGMESSAGEINSERTARBPROC glDebugMessageInsertARB = NULL;
@@ -393,6 +396,17 @@ PFNGLBINDATTRIBLOCATIONARBPROC glBindAttribLocationARB = NULL;
 PFNGLGETACTIVEATTRIBARBPROC glGetActiveAttribARB = NULL;
 PFNGLGETATTRIBLOCATIONARBPROC glGetAttribLocationARB = NULL;
 
+#ifdef GL_VERSION_4_5
+PFNGLCREATEBUFFERSPROC glCreateBuffers = NULL;
+PFNGLNAMEDBUFFERDATAPROC glNamedBufferData = NULL;
+PFNGLNAMEDBUFFERSUBDATAPROC glNamedBufferSubData = NULL;
+PFNGLMAPNAMEDBUFFERPROC glMapNamedBuffer = NULL;
+PFNGLUNMAPNAMEDBUFFERPROC glUnmapNamedBuffer = NULL;
+PFNGLMAPNAMEDBUFFERRANGEPROC glMapNamedBufferRange = NULL;
+PFNGLFLUSHMAPPEDNAMEDBUFFERRANGEPROC glFlushMappedNamedBufferRange = NULL;
+PFNGLNAMEDBUFFERSTORAGEPROC glNamedBufferStorage = NULL;
+#endif
+
 #if LL_WINDOWS
 PFNWGLSWAPINTERVALEXTPROC			wglSwapIntervalEXT = NULL;
 #endif
@@ -404,6 +418,7 @@ PFNGLCLIENTACTIVETEXTUREARBPROC glClientActiveTextureARB = NULL;
 PFNGLDRAWRANGEELEMENTSPROC glDrawRangeElements = NULL;
 #endif // LL_LINUX_NV_GL_HEADERS
 #endif // (LL_WINDOWS || LL_LINUX || LL_SOLARIS)  && !LL_MESA_HEADLESS
+
 
 LLGLManager gGLManager;
 
@@ -438,6 +453,8 @@ LLGLManager::LLGLManager() :
 	mHasTextureRectangle(FALSE),
 	mHasTransformFeedback(FALSE),
 	mMaxIntegerSamples(0),
+	mHasBufferStorage(FALSE),
+	mHasDSA(FALSE),
 
 	mHasAnisotropic(FALSE),
 	mHasARBEnvCombine(FALSE),
@@ -928,6 +945,13 @@ void LLGLManager::initExtensions()
 #else
 	mHasBlendFuncSeparate = FALSE;
 # endif // GL_EXT_blend_func_separate
+# if defined(GL_ARB_buffer_storage)
+	mHasBufferStorage = TRUE;
+#endif
+# if defined(GL_ARB_direct_state_access)
+	mHasDSA = TRUE;
+#endif
+
 	mHasMipMapGeneration = FALSE;
 	mHasSeparateSpecularColor = FALSE;
 	mHasAnisotropic = FALSE;
@@ -977,6 +1001,8 @@ void LLGLManager::initExtensions()
 	mHasTextureRectangle = ExtensionExists("GL_ARB_texture_rectangle", gGLHExts.mSysExts);
 	mHasDebugOutput = ExtensionExists("GL_ARB_debug_output", gGLHExts.mSysExts);
 	mHasTransformFeedback = mGLVersion >= 4.f || ExtensionExists("GL_EXT_transform_feedback", gGLHExts.mSysExts);
+	mHasBufferStorage = mGLVersion >= 4.4f || ExtensionExists("GL_ARB_buffer_storage", gGLHExts.mSysExts);
+	mHasDSA = mGLVersion >= 4.5f || ExtensionExists("GL_ARB_direct_state_access", gGLHExts.mSysExts);
 #if !LL_DARWIN
 	mHasPointParameters = !mIsATI && ExtensionExists("GL_ARB_point_parameters", gGLHExts.mSysExts);
 #endif
@@ -1388,6 +1414,21 @@ void LLGLManager::initExtensions()
 		glGetVertexAttribivARB = (PFNGLGETVERTEXATTRIBIVARBPROC) GLH_EXT_GET_PROC_ADDRESS("glGetVertexAttribivARB");
 		glGetVertexAttribPointervARB = (PFNGLGETVERTEXATTRIBPOINTERVARBPROC) GLH_EXT_GET_PROC_ADDRESS("glgetVertexAttribPointervARB");
 		glIsProgramARB = (PFNGLISPROGRAMARBPROC) GLH_EXT_GET_PROC_ADDRESS("glIsProgramARB");
+	}
+	if (mHasBufferStorage)
+	{
+		glBufferStorage = (PFNGLBUFFERSTORAGEPROC)GLH_EXT_GET_PROC_ADDRESS("glBufferStorage");
+	}
+	if (mHasDSA)
+	{
+		glCreateBuffers = (PFNGLCREATEBUFFERSPROC)GLH_EXT_GET_PROC_ADDRESS("glCreateBuffers");
+		glNamedBufferData = (PFNGLNAMEDBUFFERDATAEXTPROC)GLH_EXT_GET_PROC_ADDRESS("glNamedBufferData");
+		glNamedBufferSubData = (PFNGLNAMEDBUFFERSUBDATAEXTPROC)GLH_EXT_GET_PROC_ADDRESS("glNamedBufferSubData");
+		glMapNamedBuffer = (PFNGLMAPNAMEDBUFFEREXTPROC)GLH_EXT_GET_PROC_ADDRESS("glMapNamedBuffer");
+		glMapNamedBufferRange = (PFNGLMAPNAMEDBUFFERRANGEEXTPROC)GLH_EXT_GET_PROC_ADDRESS("glMapNamedBufferRange");
+		glUnmapNamedBuffer = (PFNGLUNMAPNAMEDBUFFEREXTPROC)GLH_EXT_GET_PROC_ADDRESS("glUnmapNamedBuffer");
+		glFlushMappedNamedBufferRange = (PFNGLFLUSHMAPPEDNAMEDBUFFERRANGEEXTPROC)GLH_EXT_GET_PROC_ADDRESS("glFlushMappedNamedBufferRange");
+		glNamedBufferStorage = (PFNGLNAMEDBUFFERSTORAGEPROC)GLH_EXT_GET_PROC_ADDRESS("glNamedBufferStorage");
 	}
 	LL_DEBUGS("RenderInit") << "GL Probe: Got symbols" << LL_ENDL;
 #endif

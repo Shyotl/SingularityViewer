@@ -4197,7 +4197,7 @@ U32 LLVOVolume::getPartitionType() const
 }
 
 LLVolumePartition::LLVolumePartition(LLViewerRegion* regionp)
-: LLSpatialPartition(LLVOVolume::VERTEX_DATA_MASK, TRUE, GL_DYNAMIC_DRAW_ARB, regionp),
+: LLSpatialPartition(TRUE, LLVOVolume::VERTEX_DATA_MASK, GL_DYNAMIC_DRAW_ARB, regionp),
 LLVolumeGeometryManager()
 {
 	mLODPeriod = 32;
@@ -4205,19 +4205,16 @@ LLVolumeGeometryManager()
 	mDrawableType = LLPipeline::RENDER_TYPE_VOLUME;
 	mPartitionType = LLViewerRegion::PARTITION_VOLUME;
 	mSlopRatio = 0.25f;
-	mBufferUsage = GL_DYNAMIC_DRAW_ARB;
 }
 
 LLVolumeBridge::LLVolumeBridge(LLDrawable* drawablep, LLViewerRegion* regionp)
-: LLSpatialBridge(drawablep, TRUE, LLVOVolume::VERTEX_DATA_MASK, regionp),
+: LLSpatialBridge(drawablep, TRUE, LLVOVolume::VERTEX_DATA_MASK, regionp, GL_DYNAMIC_DRAW_ARB),
 LLVolumeGeometryManager()
 {
 	mDepthMask = FALSE;
 	mLODPeriod = 32;
 	mDrawableType = LLPipeline::RENDER_TYPE_VOLUME;
 	mPartitionType = LLViewerRegion::PARTITION_BRIDGE;
-	
-	mBufferUsage = GL_DYNAMIC_DRAW_ARB;
 
 	mSlopRatio = 0.25f;
 }
@@ -6010,7 +6007,7 @@ void LLVolumeGeometryManager::genDrawInfo(LLSpatialGroup* group, U32 mask, LLFac
 
 		{
 			LL_RECORD_BLOCK_TIME(FTM_GEN_DRAW_INFO_ALLOCATE);
-			buffer = createVertexBuffer(mask, buffer_usage);
+			buffer = createVertexBuffer(mask, buffer_usage, __FUNCTION__);
 			buffer->allocateBuffer(geom_count, index_count, TRUE);
 		}
 

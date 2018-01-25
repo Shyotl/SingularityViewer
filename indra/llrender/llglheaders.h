@@ -258,6 +258,16 @@ extern PFNGLFRAMEBUFFERRENDERBUFFEREXTPROC glFramebufferRenderbufferEXT;
 extern PFNGLGETFRAMEBUFFERATTACHMENTPARAMETERIVEXTPROC glGetFramebufferAttachmentParameterivEXT;
 extern PFNGLGENERATEMIPMAPEXTPROC glGenerateMipmapEXT;
 
+//GL_ARB_direct_state_access
+extern PFNGLCREATEBUFFERSPROC glCreateBuffers;
+extern PFNGLNAMEDBUFFERDATAPROC glNamedBufferData;
+extern PFNGLNAMEDBUFFERSUBDATAPROC glNamedBufferSubData;
+extern PFNGLMAPNAMEDBUFFERPROC glMapNamedBuffer;
+extern PFNGLUNMAPNAMEDBUFFERPROC glUnmapNamedBuffer;
+extern PFNGLMAPNAMEDBUFFERRANGEPROC glMapNamedBufferRange;
+extern PFNGLFLUSHMAPPEDNAMEDBUFFERRANGEPROC glFlushMappedNamedBufferRange;
+extern PFNGLNAMEDBUFFERSTORAGEPROC glNamedBufferStorage;
+
 #elif LL_MESA
 //----------------------------------------------------------------------------
 // MESA headers
@@ -538,6 +548,24 @@ extern PFNGLENDTRANSFORMFEEDBACKPROC glEndTransformFeedback;
 extern PFNGLTRANSFORMFEEDBACKVARYINGSPROC glTransformFeedbackVaryings;
 extern PFNGLBINDBUFFERRANGEPROC glBindBufferRange;
 
+//GL_ARB_buffer_storage (4.4 core)
+extern PFNGLBUFFERSTORAGEPROC glBufferStorage;
+
+//GL_ARB_debug_output
+extern PFNGLDEBUGMESSAGECONTROLARBPROC glDebugMessageControlARB;
+extern PFNGLDEBUGMESSAGEINSERTARBPROC glDebugMessageInsertARB;
+extern PFNGLDEBUGMESSAGECALLBACKARBPROC glDebugMessageCallbackARB;
+extern PFNGLGETDEBUGMESSAGELOGARBPROC glGetDebugMessageLogARB;
+
+//GL_ARB_direct_state_access
+extern PFNGLCREATEBUFFERSPROC glCreateBuffers;
+extern PFNGLNAMEDBUFFERDATAPROC glNamedBufferData;
+extern PFNGLNAMEDBUFFERSUBDATAPROC glNamedBufferSubData;
+extern PFNGLMAPNAMEDBUFFERPROC glMapNamedBuffer;
+extern PFNGLUNMAPNAMEDBUFFERPROC glUnmapNamedBuffer;
+extern PFNGLMAPNAMEDBUFFERRANGEPROC glMapNamedBufferRange;
+extern PFNGLFLUSHMAPPEDNAMEDBUFFERRANGEPROC glFlushMappedNamedBufferRange;
+extern PFNGLNAMEDBUFFERSTORAGEPROC glNamedBufferStorage;
 
 #elif LL_WINDOWS
 //----------------------------------------------------------------------------
@@ -778,11 +806,23 @@ extern PFNGLENDTRANSFORMFEEDBACKPROC glEndTransformFeedback;
 extern PFNGLTRANSFORMFEEDBACKVARYINGSPROC glTransformFeedbackVaryings;
 extern PFNGLBINDBUFFERRANGEPROC glBindBufferRange;
 
+//GL_ARB_buffer_storage (4.4 core)
+extern PFNGLBUFFERSTORAGEPROC glBufferStorage;
+
 //GL_ARB_debug_output
 extern PFNGLDEBUGMESSAGECONTROLARBPROC glDebugMessageControlARB;
 extern PFNGLDEBUGMESSAGEINSERTARBPROC glDebugMessageInsertARB;
 extern PFNGLDEBUGMESSAGECALLBACKARBPROC glDebugMessageCallbackARB;
 extern PFNGLGETDEBUGMESSAGELOGARBPROC glGetDebugMessageLogARB;
+
+extern PFNGLCREATEBUFFERSPROC glCreateBuffers;
+extern PFNGLNAMEDBUFFERDATAPROC glNamedBufferData;
+extern PFNGLNAMEDBUFFERSUBDATAPROC glNamedBufferSubData;
+extern PFNGLMAPNAMEDBUFFERPROC glMapNamedBuffer;
+extern PFNGLUNMAPNAMEDBUFFERPROC glUnmapNamedBuffer;
+extern PFNGLMAPNAMEDBUFFERRANGEPROC glMapNamedBufferRange;
+extern PFNGLFLUSHMAPPEDNAMEDBUFFERRANGEPROC glFlushMappedNamedBufferRange;
+extern PFNGLNAMEDBUFFERSTORAGEPROC glNamedBufferStorage;
 
 #elif LL_DARWIN
 //----------------------------------------------------------------------------

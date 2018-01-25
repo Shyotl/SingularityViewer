@@ -402,6 +402,15 @@ void LLPipeline::init()
 	sDynamicLOD = gSavedSettings.getBOOL("RenderDynamicLOD");
 	sRenderBump = gSavedSettings.getBOOL("RenderObjectBump");
 	LLVertexBuffer::sUseStreamDraw = gSavedSettings.getBOOL("ShyotlRenderUseStreamVBO");
+	static LLCachedControl<LLVector3> RenderVBOBits("RenderVBOBits", LLVector3(1, 1, 1));
+	static LLCachedControl<LLVector3> RenderVBOConv("RenderVBOConv", LLVector3(0, 0, 0));
+	static LLCachedControl<bool> RenderVBODSA("RenderVBODSA", false);
+	extern LLVector3 vbo_bits;
+	extern LLVector3 vbo_conv;
+	extern bool vbo_dsa;
+	vbo_bits = RenderVBOBits;
+	vbo_conv = RenderVBOConv;
+	vbo_dsa = RenderVBODSA;
 	LLVertexBuffer::sUseVAO = gSavedSettings.getBOOL("RenderUseVAO") && gSavedSettings.getBOOL("VertexShaderEnable"); //Temporary workaround for vaos being broken when shaders are off
 	LLVertexBuffer::sPreferStreamDraw = gSavedSettings.getBOOL("RenderPreferStreamDraw");
 	sRenderAttachedLights = gSavedSettings.getBOOL("RenderAttachedLights");
@@ -2563,7 +2572,7 @@ void LLPipeline::doOcclusion(LLCamera& camera)
 {
 	if (LLGLSLShader::sNoFixedFunction && LLPipeline::sUseOcclusion > 1 && sCull->hasOcclusionGroups())
 	{
-		LLVertexBuffer::unbind();
+		//LLVertexBuffer::unbind();
 
 		if (hasRenderDebugMask(LLPipeline::RENDER_DEBUG_OCCLUSION))
 		{
@@ -2648,11 +2657,6 @@ void LLPipeline::updateGL()
 			glu->mInQ = FALSE;
 			LLGLUpdate::sGLQ.pop_front();
 		}
-	}
-
-	{ //seed VBO Pools
-		LL_RECORD_BLOCK_TIME(FTM_SEED_VBO_POOLS);
-		LLVertexBuffer::seedPools();
 	}
 }
 
@@ -4065,7 +4069,7 @@ void LLPipeline::renderGeom(LLCamera& camera, BOOL forceVBOUpdate)
 	stop_glerror();
 	gFrameStats.start(LLFrameStats::RENDER_SYNC);
 
-	LLVertexBuffer::unbind();
+	//LLVertexBuffer::unbind();
 
 	// Do verification of GL state
 	LLGLState::checkStates();
@@ -4172,7 +4176,7 @@ void LLPipeline::renderGeom(LLCamera& camera, BOOL forceVBOUpdate)
 			
 				for( S32 i = 0; i < poolp->getNumPasses(); i++ )
 				{
-					LLVertexBuffer::unbind();
+					//LLVertexBuffer::unbind();
 					if(gDebugGL)check_blend_funcs();
 					poolp->beginRenderPass(i);
 					for (iter2 = iter1; iter2 != mPools.end(); iter2++)
@@ -4186,7 +4190,7 @@ void LLPipeline::renderGeom(LLCamera& camera, BOOL forceVBOUpdate)
 					}
 					poolp->endRenderPass(i);
 					if(gDebugGL)check_blend_funcs();
-					LLVertexBuffer::unbind();
+					//LLVertexBuffer::unbind();
 					if (gDebugGL)
 					{
 						std::string msg = llformat("%s pass %d", gPoolNames[cur_type].c_str(), i);
@@ -4214,7 +4218,7 @@ void LLPipeline::renderGeom(LLCamera& camera, BOOL forceVBOUpdate)
 	
 	LLAppViewer::instance()->pingMainloopTimeout("Pipeline:RenderDrawPoolsEnd");
 
-	LLVertexBuffer::unbind();
+	//LLVertexBuffer::unbind();
 		
 		gGLLastMatrix = NULL;
 		gGL.loadMatrix(glh_get_current_modelview());
@@ -4229,7 +4233,7 @@ void LLPipeline::renderGeom(LLCamera& camera, BOOL forceVBOUpdate)
 		}
 	}
 
-	LLVertexBuffer::unbind();
+	//LLVertexBuffer::unbind();
 	LLGLState::checkStates();
 	//LLGLState::checkTextureChannels();
 	//LLGLState::checkClientArrays();
@@ -4259,7 +4263,7 @@ void LLPipeline::renderGeom(LLCamera& camera, BOOL forceVBOUpdate)
 	
 		renderDebug();
 
-		LLVertexBuffer::unbind();
+		//LLVertexBuffer::unbind();
 	
 		if (!LLPipeline::sReflectionRender && !LLPipeline::sRenderDeferred)
 		{
@@ -4291,7 +4295,7 @@ void LLPipeline::renderGeom(LLCamera& camera, BOOL forceVBOUpdate)
 		}
 	}
 
-	LLVertexBuffer::unbind();
+	//LLVertexBuffer::unbind();
 
 	LLGLState::checkStates();
 	//LLGLState::checkTextureChannels();
@@ -4325,7 +4329,7 @@ void LLPipeline::renderGeomDeferred(LLCamera& camera)
 	static const LLCachedControl<U32> fsaa_samples("RenderFSAASamples",0);
 	LLGLEnable multisample(fsaa_samples > 0 ? GL_MULTISAMPLE_ARB : 0);
 
-	LLVertexBuffer::unbind();
+	//LLVertexBuffer::unbind();
 
 	LLGLState::checkStates();
 	LLGLState::checkTextureChannels();
@@ -4353,7 +4357,7 @@ void LLPipeline::renderGeomDeferred(LLCamera& camera)
 		
 			for( S32 i = 0; i < poolp->getNumDeferredPasses(); i++ )
 			{
-				LLVertexBuffer::unbind();
+				//LLVertexBuffer::unbind();
 				poolp->beginDeferredPass(i);
 				for (iter2 = iter1; iter2 != mPools.end(); iter2++)
 				{
@@ -4366,7 +4370,7 @@ void LLPipeline::renderGeomDeferred(LLCamera& camera)
 					p->renderDeferred(i);
 				}
 				poolp->endDeferredPass(i);
-				LLVertexBuffer::unbind();
+				//LLVertexBuffer::unbind();
 
 				if (gDebugGL || gDebugPipeline)
 				{
@@ -4442,7 +4446,7 @@ void LLPipeline::renderGeomPostDeferred(LLCamera& camera, bool do_occlusion)
 		
 			for( S32 i = 0; i < poolp->getNumPostDeferredPasses(); i++ )
 			{
-				LLVertexBuffer::unbind();
+				//LLVertexBuffer::unbind();
 				poolp->beginPostDeferredPass(i);
 				for (iter2 = iter1; iter2 != mPools.end(); iter2++)
 				{
@@ -4455,7 +4459,7 @@ void LLPipeline::renderGeomPostDeferred(LLCamera& camera, bool do_occlusion)
 					p->renderPostDeferred(i);
 				}
 				poolp->endPostDeferredPass(i);
-				LLVertexBuffer::unbind();
+				//LLVertexBuffer::unbind();
 
 				if (gDebugGL || gDebugPipeline)
 				{
@@ -4500,7 +4504,7 @@ void LLPipeline::renderGeomShadow(LLCamera& camera)
 	
 	LLGLEnable cull(GL_CULL_FACE);
 
-	LLVertexBuffer::unbind();
+	//LLVertexBuffer::unbind();
 
 	pool_set_t::iterator iter1 = mPools.begin();
 	
@@ -4520,7 +4524,7 @@ void LLPipeline::renderGeomShadow(LLCamera& camera)
 		
 			for( S32 i = 0; i < poolp->getNumShadowPasses(); i++ )
 			{
-				LLVertexBuffer::unbind();
+				//LLVertexBuffer::unbind();
 				poolp->beginShadowPass(i);
 				for (iter2 = iter1; iter2 != mPools.end(); iter2++)
 				{
@@ -4533,7 +4537,7 @@ void LLPipeline::renderGeomShadow(LLCamera& camera)
 					p->renderShadow(i);
 				}
 				poolp->endShadowPass(i);
-				LLVertexBuffer::unbind();
+				//LLVertexBuffer::unbind();
 
 				LLGLState::checkStates();
 			}
@@ -4733,7 +4737,7 @@ void LLPipeline::renderDebug()
 
 	if (hasRenderDebugMask(LLPipeline::RENDER_DEBUG_SHADOW_FRUSTA))
 	{
-		LLVertexBuffer::unbind();
+		//LLVertexBuffer::unbind();
 
 		LLGLEnable blend(GL_BLEND);
 		LLGLDepthTest depth(TRUE, FALSE);
@@ -4908,7 +4912,7 @@ void LLPipeline::renderDebug()
 		U32 size = mGroupQ2.size();
 		LLColor4 col;
 
-		LLVertexBuffer::unbind();
+		//LLVertexBuffer::unbind();
 		LLGLEnable blend(GL_BLEND);
 		gGL.setSceneBlendType(LLRender::BT_ALPHA);
 		LLGLDepthTest depth(GL_TRUE, GL_FALSE);
@@ -6699,6 +6703,35 @@ void LLPipeline::resetVertexBuffers()
 
 static LLTrace::BlockTimerStatHandle FTM_RESET_VB("Reset VB");
 
+U32 sRebuildNum = 0;
+extern std::vector<LLSpatialGroup*> sGroupList;
+extern std::vector<LLSpatialPartition*> sPartitionList;
+extern std::map<LLVertexBuffer*, const char*> sVboList;
+
+class LLOctreeFindGroup : public OctreeTraveler
+{
+public:
+	LLOctreeFindGroup(LLSpatialGroup* group) : mGroup(group), mFound(false)
+	{}
+	virtual void visit(const OctreeNode* node)
+	{
+		LLSpatialGroup* group = (LLSpatialGroup*)node->getListener(0);
+		if (group == mGroup)
+		{
+			LL_INFOS() << "Found in SpatialPartition" << LL_ENDL;
+			mFound = true;
+		}
+
+		for (LLSpatialGroup::bridge_list_t::iterator i = group->mBridgeList.begin(); i != group->mBridgeList.end(); ++i)
+		{
+			LLSpatialBridge* bridge = *i;
+			traverse(bridge->mOctree);
+		}
+	}
+	LLSpatialGroup* mGroup;
+	bool mFound;
+};
+
 void LLPipeline::doResetVertexBuffers()
 {
 	if (!mResetVertexBuffers)
@@ -6749,18 +6782,68 @@ void LLPipeline::doResetVertexBuffers()
 		LL_WARNS() << "VBO wipe failed -- " << LLVertexBuffer::sGLCount << " buffers remaining. " << LLVertexBuffer::sCount << LL_ENDL;
 	}
 
-	LLVertexBuffer::unbind();	
+	for (std::map<LLVertexBuffer*, const char*>::iterator it = sVboList.begin(); it != sVboList.end(); ++it)
+	{
+		LL_INFOS() << "0x" << std::hex << it->first << " : " << std::dec << it->second << LL_ENDL;
+		for (std::vector<LLSpatialGroup*>::iterator it2 = sGroupList.begin(); it2 != sGroupList.end(); ++it2)
+		{
+			bool in_part = (*it2)->mVertexBuffer == it->first;
+			if (in_part)
+				LL_INFOS() << "Found in group" << LL_ENDL;
+			for (LLSpatialGroup::buffer_map_t::iterator it3 = (*it2)->mBufferMap.begin(); it3 != (*it2)->mBufferMap.end(); ++it3)
+				for (LLSpatialGroup::buffer_texture_map_t::iterator it4 = it3->second.begin(); it4 != it3->second.end(); ++it4)
+					if (std::find(it4->second.begin(), it4->second.end(), it->first) != it4->second.end())
+					{
+						LL_INFOS() << "Found in group buffer map" << LL_ENDL;
+						in_part = true;
+					}
+			if (in_part)
+			{
+				for (std::vector<LLSpatialPartition*>::iterator it3 = sPartitionList.begin(); it3 != sPartitionList.end(); ++it3)
+				{
+					LLOctreeFindGroup find(*it2);
+					find.traverse((*it3)->mOctree);
+					if (find.mFound)
+					{
+						LL_INFOS() << typeid(**it3).name() << LL_ENDL;
+						for (LLWorld::region_list_t::const_iterator iter = LLWorld::getInstance()->getRegionList().begin();
+							iter != LLWorld::getInstance()->getRegionList().end(); ++iter)
+						{
+							LLViewerRegion* region = *iter;
+							for (U32 i = 0; i < LLViewerRegion::NUM_PARTITIONS; i++)
+							{
+								LLSpatialPartition* part = region->getSpatialPartition(i);
+								if (part == (*it3))
+								{
+									LL_INFOS() << "Found in regions" << LL_ENDL;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	//LLVertexBuffer::unbind();	
 
 	sRenderBump = gSavedSettings.getBOOL("RenderObjectBump");
 	LLVertexBuffer::sUseStreamDraw = gSavedSettings.getBOOL("ShyotlRenderUseStreamVBO");
+	static LLCachedControl<LLVector3> RenderVBOBits("RenderVBOBits", LLVector3(1, 1, 1));
+	static LLCachedControl<LLVector3> RenderVBOConv("RenderVBOConv", LLVector3(0, 0, 0));
+	static LLCachedControl<bool> RenderVBODSA("RenderVBODSA", false);
+	extern LLVector3 vbo_bits;
+	extern LLVector3 vbo_conv;
+	extern bool vbo_dsa;
+	vbo_bits = RenderVBOBits;
+	vbo_conv = RenderVBOConv;
+	vbo_dsa = RenderVBODSA;
 	LLVertexBuffer::sUseVAO = gSavedSettings.getBOOL("RenderUseVAO") && LLGLSLShader::sNoFixedFunction; //Temporary workaround for vaos being broken when shaders are off
 	LLVertexBuffer::sPreferStreamDraw = gSavedSettings.getBOOL("RenderPreferStreamDraw");
-	LLVertexBuffer::sEnableVBOs = gSavedSettings.getBOOL("RenderVBOEnable");
-	LLVertexBuffer::sDisableVBOMapping = LLVertexBuffer::sEnableVBOs;// && gSavedSettings.getBOOL("RenderVBOMappingDisable") ; //Temporary workaround for vbo mapping being straight up broken
 	sNoAlpha = gSavedSettings.getBOOL("RenderNoAlpha");
 	LLPipeline::sTextureBindTest = gSavedSettings.getBOOL("RenderDebugTextureBind");
 
-	LLVertexBuffer::initClass(LLVertexBuffer::sEnableVBOs, LLVertexBuffer::sDisableVBOMapping);
+	LLVertexBuffer::initClass(gSavedSettings.getBOOL("RenderVBOEnable"), gSavedSettings.getBOOL("RenderVBOMappingDisable"));
 
 	LLVOPartGroup::restoreGL();
 
@@ -6890,7 +6973,7 @@ void LLPipeline::renderBloom(BOOL for_snapshot, F32 zoom_factor, int subfield, b
 	static const LLCachedControl<F32> CameraDoFResScale("CameraDoFResScale",.7f);
 	static const LLCachedControl<U32> RenderFSAASamples("RenderFSAASamples",0);
 			
-	LLVertexBuffer::unbind();
+	//LLVertexBuffer::unbind();
 	LLGLState::checkStates();
 	LLGLState::checkTextureChannels();
 
@@ -6953,7 +7036,7 @@ void LLPipeline::renderBloom(BOOL for_snapshot, F32 zoom_factor, int subfield, b
 			LLGLEnable blend(GL_BLEND);
 			gGL.setSceneBlendType(LLRender::BT_ADD);
 						
-			LLPointer<LLVertexBuffer> buff = new LLVertexBuffer(AUX_VB_MASK, 0);
+			LLPointer<LLVertexBuffer> buff = new LL_VERTEXBUFFER(AUX_VB_MASK, 0);
 			buff->allocateBuffer(4, 0, true);
 			LLStrider<LLVector3> vert;
 			LLStrider<LLVector2> texcoord0, texcoord1;
@@ -7087,7 +7170,7 @@ void LLPipeline::renderBloom(BOOL for_snapshot, F32 zoom_factor, int subfield, b
 
 	gGL.flush();
 	
-	LLVertexBuffer::unbind();
+	//LLVertexBuffer::unbind();
 
 	if (LLPipeline::sRenderDeferred)
 	{
@@ -7603,7 +7686,7 @@ void LLPipeline::renderBloom(BOOL for_snapshot, F32 zoom_factor, int subfield, b
 	gGL.matrixMode(LLRender::MM_MODELVIEW);
 	gGL.popMatrix();
 
-	LLVertexBuffer::unbind();
+	//LLVertexBuffer::unbind();
 
 	LLGLState::checkStates();
 	LLGLState::checkTextureChannels();
@@ -7879,7 +7962,7 @@ void LLPipeline::renderDeferredLighting()
 		gGL.setColorMask(true, true);
 		
 		//draw a cube around every light
-		LLVertexBuffer::unbind();
+		//LLVertexBuffer::unbind();
 
 		LLGLEnable cull(GL_CULL_FACE);
 		LLGLEnable blend(GL_BLEND);
@@ -8091,7 +8174,7 @@ void LLPipeline::renderDeferredLighting()
 
 			std::list<LLVector4> light_colors;
 
-			LLVertexBuffer::unbind();
+			//LLVertexBuffer::unbind();
 
 			{
 				bindDeferredShader(gDeferredLightProgram);
@@ -8405,7 +8488,7 @@ void LLPipeline::renderDeferredLighting()
 
 		renderDebug();
 
-		LLVertexBuffer::unbind();
+		//LLVertexBuffer::unbind();
 
 		if (gPipeline.hasRenderDebugFeatureMask(LLPipeline::RENDER_DEBUG_FEATURE_UI))
 		{
@@ -8461,7 +8544,7 @@ void LLPipeline::renderDeferredLightingToRT(LLRenderTarget* target)
 		gGL.setColorMask(true, true);
 		
 		//draw a cube around every light
-		LLVertexBuffer::unbind();
+		//LLVertexBuffer::unbind();
 
 		LLGLEnable cull(GL_CULL_FACE);
 		LLGLEnable blend(GL_BLEND);
@@ -8633,7 +8716,7 @@ void LLPipeline::renderDeferredLightingToRT(LLRenderTarget* target)
 
 			std::list<LLVector4> light_colors;
 
-			LLVertexBuffer::unbind();
+			//LLVertexBuffer::unbind();
 
 			{
 				bindDeferredShader(gDeferredLightProgram);
@@ -9159,7 +9242,7 @@ void LLPipeline::generateWaterReflection(LLCamera& camera_in)
 		{
 			gAgentAvatarp->updateAttachmentVisibility(CAMERA_MODE_THIRD_PERSON);
 		}
-		LLVertexBuffer::unbind();
+		//LLVertexBuffer::unbind();
 
 		LLGLState::checkStates();
 		LLGLState::checkTextureChannels();
@@ -9520,7 +9603,7 @@ void LLPipeline::renderShadow(const LLMatrix4a& view, const LLMatrix4a& proj, LL
 	
 	stop_glerror();
 	
-	LLVertexBuffer::unbind();
+	//LLVertexBuffer::unbind();
 
 	{
 		if (!use_shader)
@@ -10857,7 +10940,7 @@ void LLPipeline::generateImpostor(LLVOAvatar* avatar)
 	avatar->mNeedsImpostorUpdate = FALSE;
 	avatar->cacheImpostorValues();
 
-	LLVertexBuffer::unbind();
+	//LLVertexBuffer::unbind();
 	LLGLState::checkStates();
 	LLGLState::checkTextureChannels();
 	LLGLState::checkClientArrays();
@@ -11104,7 +11187,7 @@ void LLPipeline::drawFullScreenRect()
 {
 	if(mAuxScreenRectVB.isNull())
 	{
-		mAuxScreenRectVB = new LLVertexBuffer(AUX_VB_MASK, 0);
+		mAuxScreenRectVB = new LL_VERTEXBUFFER(AUX_VB_MASK, 0);
 		mAuxScreenRectVB->allocateBuffer(3, 0, true);
 		LLStrider<LLVector3> vert;
 		mAuxScreenRectVB->getVertexStrider(vert);

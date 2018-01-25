@@ -106,6 +106,8 @@ public:
 	BOOL mHasTextureRectangle;
 	BOOL mHasTransformFeedback;
 	S32 mMaxIntegerSamples;
+	BOOL mHasBufferStorage;
+	BOOL mHasDSA;
 
 	// Other extensions.
 	BOOL mHasAnisotropic;

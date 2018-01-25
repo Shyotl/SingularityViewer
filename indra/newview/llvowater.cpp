@@ -174,16 +174,12 @@ BOOL LLVOWater::updateGeometry(LLDrawable *drawable)
 	LLVertexBuffer* buff = face->getVertexBuffer();
 	if (!buff || !buff->isWriteable())
 	{
-		buff = new LLVertexBuffer(LLDrawPoolWater::VERTEX_DATA_MASK, GL_DYNAMIC_DRAW_ARB);
-		buff->allocateBuffer(face->getGeomCount(), face->getIndicesCount(), TRUE);
+		buff = new LL_VERTEXBUFFER(LLDrawPoolWater::VERTEX_DATA_MASK, GL_STATIC_DRAW_ARB);
 		face->setIndicesIndex(0);
 		face->setGeomIndex(0);
 		face->setVertexBuffer(buff);
 	}
-	else
-	{
-		buff->resizeBuffer(face->getGeomCount(), face->getIndicesCount());
-	}
+	buff->resizeBuffer(face->getGeomCount(), face->getIndicesCount());
 		
 	index_offset = face->getGeometry(verticesp,normalsp,texCoordsp, indicesp);
 		
@@ -308,7 +304,7 @@ U32 LLVOVoidWater::getPartitionType() const
 }
 
 LLWaterPartition::LLWaterPartition(LLViewerRegion* regionp)
-: LLSpatialPartition(0, FALSE, GL_DYNAMIC_DRAW_ARB, regionp)
+: LLSpatialPartition(FALSE, 0, GL_STATIC_DRAW_ARB, regionp)
 {
 	mInfiniteFarClip = TRUE;
 	mDrawableType = LLPipeline::RENDER_TYPE_WATER;

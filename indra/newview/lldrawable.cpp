@@ -1123,9 +1123,9 @@ LLSpatialPartition* LLDrawable::getSpatialPartition()
 // Spatial Partition Bridging Drawable
 //=======================================
 
-LLSpatialBridge::LLSpatialBridge(LLDrawable* root, BOOL render_by_group, U32 data_mask, LLViewerRegion* regionp) : 
+LLSpatialBridge::LLSpatialBridge(LLDrawable* root, BOOL render_by_group, U32 data_mask, LLViewerRegion* regionp, U32 usage) :
 	LLDrawable(root->getVObj()),
-	LLSpatialPartition(data_mask, render_by_group, GL_STREAM_DRAW_ARB, regionp)
+	LLSpatialPartition(render_by_group, data_mask, usage, regionp)
 {
 	mBridge = this;
 	mDrawable = root;
@@ -1635,7 +1635,7 @@ void LLDrawable::updateFaceSize(S32 idx)
 }
 
 LLBridgePartition::LLBridgePartition(LLViewerRegion* regionp)
-: LLSpatialPartition(0, FALSE, 0, regionp) 
+: LLSpatialPartition(FALSE, 0, 0, regionp) 
 { 
 	mDrawableType = LLPipeline::RENDER_TYPE_VOLUME;
 	mPartitionType = LLViewerRegion::PARTITION_BRIDGE;

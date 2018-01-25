@@ -1166,7 +1166,7 @@ void LLFace::cacheFaceInVRAM(const LLVolumeFace& vf)
 		mask |= LLVertexBuffer::MAP_WEIGHT4;
 	}
 
-	LLVertexBuffer* buff = new LLVertexBuffer(mask, GL_STATIC_DRAW_ARB);
+	LLVertexBuffer* buff = new LL_VERTEXBUFFER(mask, GL_STATIC_DRAW_ARB);
 	vf.mVertexBuffer = buff;
 
 	buff->allocateBuffer(vf.mNumVertices, 0, true);
@@ -1579,8 +1579,7 @@ BOOL LLFace::getGeometryVolume(const LLVolume& volume,
 						if (!do_xform)
 						{
 							LL_RECORD_BLOCK_TIME(FTM_FACE_TEX_QUICK_NO_XFORM);
-							S32 tc_size = (num_vertices*2*sizeof(F32)+0xF) & ~0xF;
-							LLVector4a::memcpyNonAliased16((F32*) tex_coords0.get(), (F32*) vf.mTexCoords, tc_size);
+							LLVector4a::memcpyNonAliased16((F32*) tex_coords0.get(), (F32*) vf.mTexCoords, LLVertexBuffer::calcTypeBlockSize(LLVertexBuffer::TYPE_TEXCOORD0, num_vertices));
 						}
 						else
 						{

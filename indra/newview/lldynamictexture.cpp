@@ -226,7 +226,7 @@ BOOL LLViewerDynamicTexture::updateAllInstances()
 	}
 
 	LLGLSLShader::bindNoShader();
-	LLVertexBuffer::unbind();
+	//LLVertexBuffer::unbind();
 	
 	BOOL result = FALSE;
 	BOOL ret = FALSE ;
@@ -251,7 +251,7 @@ BOOL LLViewerDynamicTexture::updateAllInstances()
 					sNumRenders++;
 				}
 				gGL.flush();
-				LLVertexBuffer::unbind();
+				//LLVertexBuffer::unbind();
 				
 				dynamicTexture->postRender(result);
 			}

@@ -432,10 +432,8 @@ void LLViewerJointMesh::updateFaceData(LLFace *face, F32 pixel_area, BOOL damp_w
 			F32* v = (F32*) verticesp.get();
 			F32* n = (F32*) normalsp.get();
 			
-			U32 words = num_verts*4;
-
-			LLVector4a::memcpyNonAliased16(v, (F32*) mMesh->getCoords(), words*sizeof(F32));
-			LLVector4a::memcpyNonAliased16(n, (F32*) mMesh->getNormals(), words*sizeof(F32));
+			LLVector4a::memcpyNonAliased16(v, (F32*) mMesh->getCoords(), LLVertexBuffer::calcTypeBlockSize(LLVertexBuffer::TYPE_VERTEX, num_verts));
+			LLVector4a::memcpyNonAliased16(n, (F32*) mMesh->getNormals(), LLVertexBuffer::calcTypeBlockSize(LLVertexBuffer::TYPE_VERTEX, num_verts));
 						
 			
 			if (!terse_update)
@@ -448,11 +446,9 @@ void LLViewerJointMesh::updateFaceData(LLFace *face, F32 pixel_area, BOOL damp_w
 				F32* vw = (F32*) vertex_weightsp.get();
 				F32* cw = (F32*) clothing_weightsp.get();	
 
-				S32 tc_size = (num_verts*2*sizeof(F32)+0xF) & ~0xF;
-				LLVector4a::memcpyNonAliased16(tc, (F32*) mMesh->getTexCoords(), tc_size);
-				S32 vw_size = (num_verts*sizeof(F32)+0xF) & ~0xF;	
-				LLVector4a::memcpyNonAliased16(vw, (F32*) mMesh->getWeights(), vw_size);	
-				LLVector4a::memcpyNonAliased16(cw, (F32*) mMesh->getClothingWeights(), num_verts*4*sizeof(F32));	
+				LLVector4a::memcpyNonAliased16(tc, (F32*)mMesh->getTexCoords(), LLVertexBuffer::calcTypeBlockSize(LLVertexBuffer::TYPE_TEXCOORD0, num_verts));
+				LLVector4a::memcpyNonAliased16(vw, (F32*)mMesh->getWeights(), LLVertexBuffer::calcTypeBlockSize(LLVertexBuffer::TYPE_WEIGHT, num_verts));
+				LLVector4a::memcpyNonAliased16(cw, (F32*)mMesh->getClothingWeights(), LLVertexBuffer::calcTypeBlockSize(LLVertexBuffer::TYPE_CLOTHWEIGHT, num_verts));
 			}
 
 			const U32 idx_count = mMesh->getNumFaces()*3;

@@ -318,7 +318,7 @@ BOOL LLVOWLSky::updateGeometry(LLDrawable * drawable)
 
 #if DOME_SLICES
 	{
-		mFanVerts = new LLVertexBuffer(LLDrawPoolWLSky::SKY_VERTEX_DATA_MASK, GL_STATIC_DRAW_ARB);
+		mFanVerts = new LL_VERTEXBUFFER(LLDrawPoolWLSky::SKY_VERTEX_DATA_MASK, GL_STATIC_DRAW_ARB);
 		mFanVerts->allocateBuffer(getFanNumVerts(), getFanNumIndices(), TRUE);
 
 		BOOL success = mFanVerts->getVertexStrider(vertices)
@@ -360,7 +360,7 @@ BOOL LLVOWLSky::updateGeometry(LLDrawable * drawable)
 
 		for (U32 i = 0; i < strips_segments ;++i)
 		{
-			LLVertexBuffer * segment = new LLVertexBuffer(LLDrawPoolWLSky::SKY_VERTEX_DATA_MASK, GL_STATIC_DRAW_ARB);
+			LLVertexBuffer * segment = new LL_VERTEXBUFFER(LLDrawPoolWLSky::SKY_VERTEX_DATA_MASK, GL_STATIC_DRAW_ARB);
 			mStripsVerts[i] = segment;
 
 			U32 num_stacks_this_seg = stacks_per_seg;
@@ -402,11 +402,11 @@ BOOL LLVOWLSky::updateGeometry(LLDrawable * drawable)
 		LL_INFOS() << "completed in " << llformat("%.2f", timer.getElapsedTimeF32()) << "seconds" << LL_ENDL;
 	}
 #else
-	mStripsVerts = new LLVertexBuffer(LLDrawPoolWLSky::SKY_VERTEX_DATA_MASK, GL_STATIC_DRAW_ARB);
+	mStripsVerts = new LL_VERTEXBUFFER(LLDrawPoolWLSky::SKY_VERTEX_DATA_MASK, GL_STATIC_DRAW_ARB);
 	
 	const F32 RADIUS = LLWLParamManager::sParamMgr->getDomeRadius();
 
-	LLPointer<LLVertexBuffer> temp = new LLVertexBuffer(LLVertexBuffer::MAP_VERTEX, 0);
+	LLPointer<LLVertexBuffer> temp = new LL_VERTEXBUFFER(LLVertexBuffer::MAP_VERTEX, 0);
 	temp->allocateBuffer(12, 60, TRUE);
 
 	BOOL success = temp->getVertexStrider(vertices)
@@ -430,7 +430,7 @@ BOOL LLVOWLSky::updateGeometry(LLDrawable * drawable)
 	
 	for (U32 i = 0; i < 8; i++)
 	{
-		temp2 = new LLVertexBuffer(LLVertexBuffer::MAP_VERTEX, 0);
+		temp2 = new LL_VERTEXBUFFER(LLVertexBuffer::MAP_VERTEX, 0);
 		subdivide(*temp, temp2);
 		temp = temp2;
 	}
@@ -443,7 +443,7 @@ BOOL LLVOWLSky::updateGeometry(LLDrawable * drawable)
 		vertices[i] = v*RADIUS;
 	}
 
-	temp2 = new LLVertexBuffer(LLVertexBuffer::MAP_VERTEX, 0);
+	temp2 = new LL_VERTEXBUFFER(LLVertexBuffer::MAP_VERTEX, 0);
 	chop(*temp, temp2);
 
 	mStripsVerts->allocateBuffer(temp2->getNumVerts(), temp2->getNumIndices(), TRUE);
@@ -534,7 +534,7 @@ void LLVOWLSky::drawDome(void)
 		mStripsVerts->getIndicesPointer());
 #endif
 
-	LLVertexBuffer::unbind();
+	//LLVertexBuffer::unbind();
 }
 
 void LLVOWLSky::initStars()
@@ -778,7 +778,7 @@ BOOL LLVOWLSky::updateStarGeometry(LLDrawable *drawable)
 
 	if (mStarsVerts.isNull() || !mStarsVerts->isWriteable())
 	{
-		mStarsVerts = new LLVertexBuffer(LLDrawPoolWLSky::STAR_VERTEX_DATA_MASK, GL_DYNAMIC_DRAW);
+		mStarsVerts = new LL_VERTEXBUFFER(LLDrawPoolWLSky::STAR_VERTEX_DATA_MASK, GL_DYNAMIC_DRAW);
 		mStarsVerts->allocateBuffer(getStarsNumVerts()*6, 0, TRUE);
 	}
 

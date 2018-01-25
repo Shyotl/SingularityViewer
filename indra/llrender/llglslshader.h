@@ -39,24 +39,24 @@
 class LLShaderFeatures
 {
 public:
-	bool atmosphericHelpers;
-	bool calculatesLighting;
-	bool calculatesAtmospherics;
-	bool hasLighting; // implies no transport (it's possible to have neither though)
-	bool isAlphaLighting; // indicates lighting shaders need not be linked in (lighting performed directly in alpha shader to match deferred lighting functions)
-	bool isShiny;
-	bool isFullbright; // implies no lighting
-	bool isSpecular;
-	bool hasWaterFog; // implies no gamma
-	bool hasTransport; // implies no lighting (it's possible to have neither though)
-	bool hasSkinning;	
-	bool hasObjectSkinning;
-	bool hasAtmospherics;
-	bool hasGamma;
+	bool atmosphericHelpers : 1;
+	bool calculatesLighting : 1;
+	bool calculatesAtmospherics : 1;
+	bool hasLighting : 1;		// implies no transport (it's possible to have neither though)
+	bool isAlphaLighting : 1;	// indicates lighting shaders need not be linked in (lighting performed directly in alpha shader to match deferred lighting functions)
+	bool isShiny : 1;
+	bool isFullbright : 1;		 // implies no lighting
+	bool isSpecular : 1;
+	bool hasWaterFog : 1;		// implies no gamma
+	bool hasTransport : 1;		// implies no lighting (it's possible to have neither though)
+	bool hasSkinning : 1;
+	bool hasObjectSkinning : 1;
+	bool hasAtmospherics : 1;
+	bool hasGamma : 1;
+	bool disableTextureIndex : 1;
+	bool hasAlphaMask : 1;
+	bool attachNothing : 1;
 	S32 mIndexedTextureChannels;
-	bool disableTextureIndex;
-	bool hasAlphaMask;
-	bool attachNothing;
 
 	// char numLights;
 	

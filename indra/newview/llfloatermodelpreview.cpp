@@ -2267,7 +2267,7 @@ void LLModelPreview::genLODs(S32 which_lod, U32 decimation, bool enforce_tri_lim
 		return;
 	}
 
-	LLVertexBuffer::unbind();
+	//LLVertexBuffer::unbind();
 
 	bool no_ff = LLGLSLShader::sNoFixedFunction;
 	LLGLSLShader* shader = LLGLSLShader::sCurBoundShaderPtr;
@@ -2395,7 +2395,7 @@ void LLModelPreview::genLODs(S32 which_lod, U32 decimation, bool enforce_tri_lim
 				U32 num_indices = mVertexBuffer[5][mdl][i]->getNumIndices();
 				if (num_indices > 2)
 				{
-					glodInsertElements(mObject[mdl], i, GL_TRIANGLES, num_indices, GL_UNSIGNED_SHORT, (U8*) mVertexBuffer[5][mdl][i]->getIndicesPointer(), 0, 0.f);
+					glodInsertElements(mObject[mdl], i, GL_TRIANGLES, num_indices, GL_UNSIGNED_SHORT, (U8*) mVertexBuffer[5][mdl][i]->getIndicesClientPointer(), 0, 0.f);
 				}
 				tri_count += num_indices/3;
 				stop_gloderror();
@@ -2516,20 +2516,20 @@ void LLModelPreview::genLODs(S32 which_lod, U32 decimation, bool enforce_tri_lim
 			{
 				type_mask = mVertexBuffer[5][base][i]->getTypeMask();
 
-				LLPointer<LLVertexBuffer> buff = new LLVertexBuffer(type_mask, 0);
+				LLPointer<LLVertexBuffer> buff = new LL_VERTEXBUFFER(type_mask, 0);
 
 				if (sizes[i*2 + 1] > 0 && sizes[i*2] > 0)
 				{
 					buff->allocateBuffer(sizes[i*2 + 1], sizes[i*2], true);
 					buff->setBuffer(type_mask);
-					glodFillElements(mObject[base], names[i], GL_UNSIGNED_SHORT, (U8*) buff->getIndicesPointer());
+					glodFillElements(mObject[base], names[i], GL_UNSIGNED_SHORT, (U8*) buff->getIndicesClientPointer());
 					stop_gloderror();
 				}
 				else
 				{	//this face was eliminated, create a dummy triangle (one vertex, 3 indices, all 0)
 					buff->allocateBuffer(1, 3, true);
-					memset((U8*) buff->getMappedData(), 0, buff->getSize());
-					memset((U8*) buff->getIndicesPointer(), 0, buff->getIndicesSize());
+					memset((U8*) buff->getVerticesClientPointer(), 0, buff->getSize());
+					memset((U8*) buff->getIndicesClientPointer(), 0, buff->getIndicesSize());
 				}
 
 				buff->validateRange(0, buff->getNumVerts() - 1, buff->getNumIndices(), 0);
@@ -2606,8 +2606,9 @@ void LLModelPreview::genLODs(S32 which_lod, U32 decimation, bool enforce_tri_lim
 
 	mResourceCost = calcResourceCost();
 
-	LLVertexBuffer::unbind();
 	LLGLSLShader::sNoFixedFunction = no_ff;
+	if (no_ff)
+		LLVertexBuffer::unbind();
 	if (shader)
 	{
 		shader->bind();
@@ -2667,7 +2668,7 @@ void LLModelPreview::genModelBBox()
 	U16 Idx[] = { 0, 1, 2, 3, 0, 2, };
 
 	U32 type_mask = LLVertexBuffer::MAP_VERTEX | LLVertexBuffer::MAP_NORMAL | LLVertexBuffer::MAP_TEXCOORD0;
-	LLPointer<LLVertexBuffer> buff = new LLVertexBuffer(type_mask, 0);
+	LLPointer<LLVertexBuffer> buff = new LL_VERTEXBUFFER(type_mask, 0);
 	buff->allocateBuffer(4, 6, true);
 
 	LLStrider<LLVector3> pos;
@@ -3380,7 +3381,7 @@ void LLModelPreview::genBuffers(S32 lod, bool include_skin_weights)
 				mask |= LLVertexBuffer::MAP_WEIGHT4;
 			}
 
-			vb = new LLVertexBuffer(mask, 0);
+			vb = new LL_VERTEXBUFFER(mask, 0);
 
 			vb->allocateBuffer(num_vertices, num_indices, TRUE);
 
@@ -3398,19 +3399,18 @@ void LLModelPreview::genBuffers(S32 lod, bool include_skin_weights)
 				vb->getWeight4Strider(weights_strider);
 			}
 
-			LLVector4a::memcpyNonAliased16((F32*) vertex_strider.get(), (F32*) vf.mPositions, num_vertices*4*sizeof(F32));
+			LLVector4a::memcpyNonAliased16((F32*) vertex_strider.get(), (F32*) vf.mPositions, LLVertexBuffer::calcTypeBlockSize(LLVertexBuffer::TYPE_VERTEX, num_vertices));
 
 			if (vf.mTexCoords)
 			{
 				vb->getTexCoord0Strider(tc_strider);
-				S32 tex_size = (num_vertices*2*sizeof(F32)+0xF) & ~0xF;
-				LLVector4a::memcpyNonAliased16((F32*) tc_strider.get(), (F32*) vf.mTexCoords, tex_size);
+				LLVector4a::memcpyNonAliased16((F32*) tc_strider.get(), (F32*) vf.mTexCoords, LLVertexBuffer::calcTypeBlockSize(LLVertexBuffer::TYPE_TEXCOORD0, num_vertices));
 			}
 
 			if (vf.mNormals)
 			{
 				vb->getNormalStrider(normal_strider);
-				LLVector4a::memcpyNonAliased16((F32*) normal_strider.get(), (F32*) vf.mNormals, num_vertices*4*sizeof(F32));
+				LLVector4a::memcpyNonAliased16((F32*) normal_strider.get(), (F32*) vf.mNormals, LLVertexBuffer::calcTypeBlockSize(LLVertexBuffer::TYPE_NORMAL, num_vertices));
 			}
 
 			if (skinned)
@@ -3593,11 +3593,11 @@ void LLModelPreview::addEmptyFace( LLModel* pTarget )
 {
 	U32 type_mask = LLVertexBuffer::MAP_VERTEX | LLVertexBuffer::MAP_NORMAL | LLVertexBuffer::MAP_TEXCOORD0;
 
-	LLPointer<LLVertexBuffer> buff = new LLVertexBuffer(type_mask, 0);
+	LLPointer<LLVertexBuffer> buff = new LL_VERTEXBUFFER(type_mask, 0);
 
 	buff->allocateBuffer(1, 3, true);
-	memset( (U8*) buff->getMappedData(), 0, buff->getSize() );
-	memset( (U8*) buff->getIndicesPointer(), 0, buff->getIndicesSize() );
+	memset( (U8*) buff->getVerticesClientPointer(), 0, buff->getSize() );
+	memset( (U8*) buff->getIndicesClientPointer(), 0, buff->getIndicesSize() );
 
 	buff->validateRange(0, buff->getNumVerts() - 1, buff->getNumIndices(), 0);
 

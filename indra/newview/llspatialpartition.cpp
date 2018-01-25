@@ -119,8 +119,10 @@ S32 LLSphereAABB(const LLVector3& center, const LLVector3& size, const LLVector3
 	return ret;
 }
 
+std::vector<LLSpatialGroup*> sGroupList;
 LLSpatialGroup::~LLSpatialGroup()
 {
+	sGroupList.erase(std::find(sGroupList.begin(), sGroupList.end(), this));
 	/*if (sNoDelete)
 	{
 		LL_ERRS() << "Illegal deletion of LLSpatialGroup!" << LL_ENDL;
@@ -333,15 +335,10 @@ void LLSpatialPartition::rebuildGeom(LLSpatialGroup* group)
 				!group->mVertexBuffer->isWriteable() ||
 				(group->mBufferUsage != group->mVertexBuffer->getUsage() && LLVertexBuffer::sEnableVBOs))
 			{
-				group->mVertexBuffer = createVertexBuffer(mVertexDataMask, group->mBufferUsage);
-				group->mVertexBuffer->allocateBuffer(vertex_count, index_count, true);
+				group->mVertexBuffer = createVertexBuffer(mVertexDataMask, group->mBufferUsage, __FUNCTION__);
 				stop_glerror();
 			}
-			else
-			{
-				group->mVertexBuffer->resizeBuffer(vertex_count, index_count);
-				stop_glerror();
-			}
+			group->mVertexBuffer->resizeBuffer(vertex_count, index_count);
 		}
 
 		{
@@ -542,6 +539,7 @@ LLSpatialGroup::LLSpatialGroup(OctreeNode* node, LLSpatialPartition* part) : LLO
 	mLastUpdateDistance(-1.f), 
 	mLastUpdateTime(gFrameTimeSeconds)
 {
+	sGroupList.push_back(this);
 	ll_assert_aligned(this,16);
 	
 	sNodeCount++;
@@ -815,9 +813,11 @@ void LLSpatialGroup::destroyGL(bool keep_occlusion)
 
 //==============================================
 
-LLSpatialPartition::LLSpatialPartition(U32 data_mask, BOOL render_by_group, U32 buffer_usage, LLViewerRegion* regionp)
+std::vector<LLSpatialPartition*> sPartitionList;
+LLSpatialPartition::LLSpatialPartition(BOOL render_by_group, U32 data_mask, U32 buffer_usage, LLViewerRegion* regionp)
 : mRenderByGroup(render_by_group), mBridge(NULL)
 {
+	sPartitionList.push_back(this);
 	mRegionp = regionp;		
 	mPartitionType = LLViewerRegion::PARTITION_NONE;
 	mVertexDataMask = data_mask;
@@ -832,6 +832,7 @@ LLSpatialPartition::LLSpatialPartition(U32 data_mask, BOOL render_by_group, U32 
 
 LLSpatialPartition::~LLSpatialPartition()
 {
+	sPartitionList.erase(std::find(sPartitionList.begin(), sPartitionList.end(), this));
 }
 
 
@@ -1175,7 +1176,7 @@ public:
 
 void drawBox(const LLVector3& c, const LLVector3& r)
 {
-	LLVertexBuffer::unbind();
+	//LLVertexBuffer::unbind();
 
 	gGL.begin(LLRender::TRIANGLE_STRIP);
 	//left front
@@ -1285,6 +1286,10 @@ public:
 			if(!drawable)
 			{
 				continue;
+			}
+			if (drawable->getVObj().notNull())
+			{
+				drawable->getVObj()->resetVertexBuffers();
 			}
 			if (!mNoRebuild && drawable->getVObj().notNull() && !group->getSpatialPartition()->mRenderByGroup)
 			{
@@ -1452,7 +1457,7 @@ void pushVerts(LLDrawable* drawable, U32 mask)
 
 void pushVerts(LLVolume* volume)
 {
-	LLVertexBuffer::unbind();
+	//LLVertexBuffer::unbind();
 	for (S32 i = 0; i < volume->getNumVolumeFaces(); ++i)
 	{
 		const LLVolumeFace& face = volume->getVolumeFace(i);
@@ -3621,9 +3626,9 @@ void LLDrawInfo::validate()
 	mVertexBuffer->validateRange(mStart, mEnd, mCount, mOffset);
 }
 
-LLVertexBuffer* LLGeometryManager::createVertexBuffer(U32 type_mask, U32 usage)
+LLVertexBuffer* LLGeometryManager::createVertexBuffer(U32 type_mask, U32 usage, const char* caller)
 {
-	return new LLVertexBuffer(type_mask, usage);
+	return new LLVertexBuffer(type_mask, usage, caller);
 }
 
 

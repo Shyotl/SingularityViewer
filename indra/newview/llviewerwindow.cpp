@@ -555,13 +555,13 @@ public:
 			
 			}
 
-			addText(xpos, ypos, llformat("%d MB Index Data (%d MB Pooled, %d KIndices)", LLVertexBuffer::sAllocatedIndexBytes/(1024*1024), LLVBOPool::sIndexBytesPooled/(1024*1024), LLVertexBuffer::sIndexCount/1024));
+			addText(xpos, ypos, llformat("%d MB Vertex Data (%d KVerts)", LLVertexBuffer::sAllocatedBytes[LLVertexBuffer::BUFFER_VERTICES] / (1024 * 1024), LLVertexBuffer::sElementCount[LLVertexBuffer::BUFFER_VERTICES] / 1024));
 			ypos += y_inc;
 
-			addText(xpos, ypos, llformat("%d MB Vertex Data (%d MB Pooled, %d KVerts)", LLVertexBuffer::sAllocatedBytes/(1024*1024), LLVBOPool::sBytesPooled/(1024*1024), LLVertexBuffer::sVertexCount/1024));
+			addText(xpos, ypos, llformat("%d MB index Data (%d KIndices_", LLVertexBuffer::sAllocatedBytes[LLVertexBuffer::BUFFER_INDICES] / (1024 * 1024), LLVertexBuffer::sElementCount[LLVertexBuffer::BUFFER_INDICES] / 1024));
 			ypos += y_inc;
 
-			addText(xpos, ypos, llformat("%d Vertex Buffers", LLVertexBuffer::sGLCount));
+			addText(xpos, ypos, llformat("%d LLVertexBuffers, %d GL Vertex Buffers", LLVertexBuffer::sCount, LLVertexBuffer::sGLCount));
 			ypos += y_inc;
 
 			addText(xpos, ypos, llformat("%d Mapped Buffers", LLVertexBuffer::sMappedCount));

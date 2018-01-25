@@ -102,7 +102,7 @@ U8* get_box_fan_indices_ptr(LLCamera* camera, const LLVector4a& center)
 //create a vertex buffer for efficiently rendering cubes
 LLVertexBuffer* ll_create_cube_vb(U32 type_mask, U32 usage)
 {
-	LLVertexBuffer* ret = new LLVertexBuffer(type_mask, usage);
+	LLVertexBuffer* ret = new LL_VERTEXBUFFER(type_mask, usage);
 
 	ret->allocateBuffer(8, 64, true);
 

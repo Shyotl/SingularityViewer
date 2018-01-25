@@ -606,7 +606,7 @@ BOOL LLVOTree::updateGeometry(LLDrawable *drawable)
 			max_vertices += sLODVertexCount[lod];
 		}
 		
-		mReferenceBuffer = new LLVertexBuffer(LLDrawPoolTree::VERTEX_DATA_MASK, GL_STATIC_DRAW_ARB);
+		mReferenceBuffer = new LL_VERTEXBUFFER(LLDrawPoolTree::VERTEX_DATA_MASK, GL_STATIC_DRAW_ARB);
 		mReferenceBuffer->allocateBuffer(max_vertices, max_indices, TRUE);
 
 		LLStrider<LLVector3> vertices;
@@ -974,7 +974,7 @@ void LLVOTree::updateMesh()
 	}
 	else
 	{
-		buff = new LLVertexBuffer(LLDrawPoolTree::VERTEX_DATA_MASK, GL_STATIC_DRAW_ARB);
+		buff = new LL_VERTEXBUFFER(LLDrawPoolTree::VERTEX_DATA_MASK, GL_STATIC_DRAW_ARB);
 		buff->allocateBuffer(vert_count, index_count, TRUE);
 		facep->setVertexBuffer(buff);
 
@@ -1261,7 +1261,7 @@ U32 LLVOTree::getPartitionType() const
 }
 
 LLTreePartition::LLTreePartition(LLViewerRegion* regionp)
-: LLSpatialPartition(0, FALSE, GL_DYNAMIC_DRAW_ARB, regionp)
+: LLSpatialPartition(FALSE, 0, GL_DYNAMIC_DRAW_ARB, regionp)
 {
 	mDrawableType = LLPipeline::RENDER_TYPE_TREE;
 	mPartitionType = LLViewerRegion::PARTITION_TREE;

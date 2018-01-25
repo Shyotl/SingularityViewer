@@ -750,7 +750,7 @@ BOOL LLImagePreviewAvatar::render()
 	LLViewerCamera::getInstance()->setView(LLViewerCamera::getInstance()->getDefaultFOV() / mCameraZoom);
 	LLViewerCamera::getInstance()->setPerspective(FALSE, mOrigin.mX, mOrigin.mY, mFullWidth, mFullHeight, FALSE);
 
-	LLVertexBuffer::unbind();
+	//LLVertexBuffer::unbind();
 	avatarp->updateLOD();
 	
 	if (avatarp->mDrawable.notNull())
@@ -855,7 +855,7 @@ void LLImagePreviewSculpted::setPreviewTarget(LLImageRaw* imagep, F32 distance)
 	U32 num_indices = vf.mNumIndices;
 	U32 num_vertices = vf.mNumVertices;
 
-	mVertexBuffer = new LLVertexBuffer(LLVertexBuffer::MAP_VERTEX | LLVertexBuffer::MAP_NORMAL | LLVertexBuffer::MAP_TEXCOORD0, 0);
+	mVertexBuffer = new LL_VERTEXBUFFER(LLVertexBuffer::MAP_VERTEX | LLVertexBuffer::MAP_NORMAL | LLVertexBuffer::MAP_TEXCOORD0, 0);
 	mVertexBuffer->allocateBuffer(num_vertices, num_indices, TRUE);
 
 	LLStrider<LLVector3> vertex_strider;

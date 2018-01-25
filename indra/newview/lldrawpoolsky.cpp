@@ -125,7 +125,7 @@ void LLDrawPoolSky::render(S32 pass)
 
 	S32 face_count = (S32)mDrawFace.size();
 
-	LLVertexBuffer::unbind();
+	//LLVertexBuffer::unbind();
 	gGL.diffuseColor4f(1,1,1,1);
 
 	for (S32 i = 0; i < llmin(6, face_count); ++i)

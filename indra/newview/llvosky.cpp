@@ -1240,7 +1240,7 @@ void LLVOSky::createDummyVertexBuffer()
 
 	if(!mFace[FACE_DUMMY]->getVertexBuffer())
 	{
-		LLVertexBuffer* buff = new LLVertexBuffer(LLDrawPoolSky::VERTEX_DATA_MASK, GL_DYNAMIC_DRAW_ARB);
+		LLVertexBuffer* buff = new LL_VERTEXBUFFER(LLDrawPoolSky::VERTEX_DATA_MASK, GL_DYNAMIC_DRAW_ARB);
 		buff->allocateBuffer(1, 1, TRUE);
 		mFace[FACE_DUMMY]->setVertexBuffer(buff);
 	}
@@ -1315,7 +1315,7 @@ BOOL LLVOSky::updateGeometry(LLDrawable *drawable)
 			face->setSize(4, 6);
 			face->setGeomIndex(0);
 			face->setIndicesIndex(0);
-			LLVertexBuffer* buff = new LLVertexBuffer(LLDrawPoolSky::VERTEX_DATA_MASK, GL_STREAM_DRAW_ARB);
+			LLVertexBuffer* buff = new LL_VERTEXBUFFER(LLDrawPoolSky::VERTEX_DATA_MASK, GL_STREAM_DRAW_ARB);
 			buff->allocateBuffer(4, 6, TRUE);
 			face->setVertexBuffer(buff);
 
@@ -1480,7 +1480,7 @@ BOOL LLVOSky::updateHeavenlyBodyGeometry(LLDrawable *drawable, const S32 f, cons
 	if (!facep->getVertexBuffer())
 	{
 		facep->setSize(4, 6);	
-		LLVertexBuffer* buff = new LLVertexBuffer(LLDrawPoolWLSky::STAR_VERTEX_DATA_MASK, GL_STREAM_DRAW_ARB); //Singu Note: Using LLDrawPoolWLSky::STAR_VERTEX_DATA_MASK on purpose.
+		LLVertexBuffer* buff = new LL_VERTEXBUFFER(LLDrawPoolWLSky::STAR_VERTEX_DATA_MASK, GL_STREAM_DRAW_ARB); //Singu Note: Using LLDrawPoolWLSky::STAR_VERTEX_DATA_MASK on purpose.
 		buff->allocateBuffer(facep->getGeomCount(), facep->getIndicesCount(), TRUE);
 		facep->setGeomIndex(0);
 		facep->setIndicesIndex(0);
@@ -1650,7 +1650,7 @@ void LLVOSky::updateSunHaloGeometry(LLDrawable *drawable )
 		face->setSize(4, 6);
 		face->setGeomIndex(0);
 		face->setIndicesIndex(0);
-		face->mVertexBuffer = new LLVertexBuffer(LLDrawPoolWater::VERTEX_DATA_MASK, GL_STREAM_DRAW_ARB);
+		face->mVertexBuffer = new LL_VERTEXBUFFER(LLDrawPoolWater::VERTEX_DATA_MASK, GL_STREAM_DRAW_ARB);
 		face->mVertexBuffer->allocateBuffer(4, 6, TRUE);
 	}
 
@@ -1893,7 +1893,7 @@ void LLVOSky::updateReflectionGeometry(LLDrawable *drawable, F32 H,
 	if (!face->getVertexBuffer() || quads*4 != face->getGeomCount())
 	{
 		face->setSize(quads * 4, quads * 6);
-		LLVertexBuffer* buff = new LLVertexBuffer(LLDrawPoolWater::VERTEX_DATA_MASK, GL_STREAM_DRAW_ARB);
+		LLVertexBuffer* buff = new LL_VERTEXBUFFER(LLDrawPoolWater::VERTEX_DATA_MASK, GL_STREAM_DRAW_ARB);
 		buff->allocateBuffer(face->getGeomCount(), face->getIndicesCount(), TRUE);
 		face->setIndicesIndex(0);
 		face->setGeomIndex(0);

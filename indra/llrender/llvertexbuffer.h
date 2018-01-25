@@ -40,6 +40,8 @@
 
 #define LL_MAX_VERTEX_ATTRIB_LOCATION 64
 
+#define LL_VERTEXBUFFER(mask, usage) LLVertexBuffer(mask, usage, __FUNCTION__);
+
 //============================================================================
 // NOTES
 // Threading:
@@ -50,64 +52,32 @@
 
 
 //============================================================================
-// gl name pools for dynamic and streaming buffers
-class LLVBOPool
+// abstract class 
+class IAttrBuffer
 {
 public:
-	static U32 sBytesPooled;
-	static U32 sIndexBytesPooled;
-	
-	LLVBOPool(U32 vboUsage, U32 vboType);
-		
-	const U32 mUsage;
-	const U32 mType;
+	virtual ~IAttrBuffer() {};
+	virtual bool setSize(U32 new_size) = 0;
 
-	//size MUST be a power of 2
-	volatile U8* allocate(U32& name, U32 size, bool for_seed = false);
-	
-	//size MUST be the size provided to allocate that returned the given name
-	void release(U32 name, volatile U8* buffer, U32 size);
-	
-	//batch allocate buffers to be provided to the application on demand
-	void seedPool();
-
-	//destroy all records in mFreeList
-	void cleanup();
-
-	U32 genBuffer();
-	void deleteBuffer(U32 name);
-
-	class Record
-	{
-	public:
-		U32 mGLName;
-		volatile U8* mClientData;
-	};
-
-	typedef std::list<Record> record_list_t;
-	std::vector<record_list_t> mFreeList;
-	std::vector<U32> mMissCount;
-
+	virtual bool bind() = 0;
+	virtual bool bindForEdit() = 0;
+	virtual void unbind() = 0;
+	virtual U8* map(U32 offset, U32 size, bool range_update) = 0;
+	virtual void unmap() = 0;
+	virtual U8* getClientPtr() = 0;
+	virtual U8* getAttribPtr() = 0;
+	virtual void preDraw() = 0;
+	virtual void placeFence() = 0;
 };
-
 
 //============================================================================
 // base class 
 class LLVertexBuffer : public LLRefCount
 {
+	friend class VAO;
 public:
-	class MappedRegion
-	{
-	public:
-		S32 mType;
-		S32 mIndex;
-		S32 mCount;
-		
-		MappedRegion(S32 type, S32 index, S32 count);
-	};
-
 	LLVertexBuffer(const LLVertexBuffer& rhs)
-		: mUsage(rhs.mUsage)
+		: mUsage(rhs.mUsage), drawn_frame(U32_MAX)
 	{
 		*this = rhs;
 	}
@@ -120,11 +90,6 @@ public:
 
 	static const std::string& getTypeName(U8 i);
 
-	static LLVBOPool sStreamVBOPool;
-	static LLVBOPool sDynamicVBOPool;
-	static LLVBOPool sStreamIBOPool;
-	static LLVBOPool sDynamicIBOPool;
-
 	static std::list<U32> sAvailableVAOName;
 	static U32 sCurVAOName;
 
@@ -132,14 +97,12 @@ public:
 	static bool sUseVAO;
 	static bool	sPreferStreamDraw;
 
-	static void seedPools();
-
 	static U32 getVAOName();
 	static void releaseVAOName(U32 name);
 
 	static void initClass(bool use_vbo, bool no_vbo_mapping);
 	static void cleanupClass();
-	static void setupClientArrays(U32 data_mask);
+	static void setupClientArrays(U32 data_mask, bool for_vao_setup = false);
 	static void drawArrays(U32 mode, const std::vector<LLVector3>& pos, const std::vector<LLVector3>& norm);
 	static void drawElements(U32 mode, const S32 num_vertices, const LLVector4a* pos, const LLVector2* tc, S32 num_indices, const U16* indicesp);
 
@@ -153,7 +116,8 @@ public:
 	// indexed by the following enum
 	static S32 calcOffsets(const U32& typemask, S32* offsets, S32 num_vertices);		
 
-	
+	static U32 calcTypeBlockSize(const U32& type, const U32& count) { return ((count * sAttribProp[type].mDataSize) + 0xF) & ~0xF; }
+
 	//WARNING -- when updating these enums you MUST 
 	// 1 - update LLVertexBuffer::sTypeSize
 	// 2 - add a strider accessor
@@ -194,8 +158,25 @@ public:
 		MAP_CLOTHWEIGHT = (1<<TYPE_CLOTHWEIGHT),
 		MAP_TEXTURE_INDEX = (1<<TYPE_TEXTURE_INDEX),
 	};
+	enum buffer_type_t
+	{
+		BUFFER_VERTICES,
+		BUFFER_INDICES,
+		BUFFER_TYPE_MAX
+	};
 	
 protected:
+
+	struct buffer_data_t
+	{
+		buffer_data_t() : mImpl(0), mSize(0), mElementCount(0), mIsLocked(false), mType(BUFFER_TYPE_MAX) {}
+		IAttrBuffer* mImpl;
+		S32 mSize;
+		S32 mElementCount;		// Number of elements allocated
+		bool mIsLocked : 1;		// if true, vertex buffer is being or has been written to in client memory
+		buffer_type_t mType;
+	};
+
 	friend class LLRender;
 
 	virtual ~LLVertexBuffer(); // use unref()
@@ -203,34 +184,25 @@ protected:
 	virtual void setupVertexBuffer(U32 data_mask); // pure virtual, called from mapBuffer()
 	void setupVertexArray();
 	
-	void	genBuffer(U32 size);
-	void	genIndices(U32 size);
-	bool	bindGLBuffer(bool force_bind = false);
-	bool	bindGLIndices(bool force_bind = false);
-	bool	bindGLArray();
-	void	releaseBuffer();
-	void	releaseIndices();
-	void	createGLBuffer(U32 size);
-	void	createGLIndices(U32 size);
-	void 	destroyGLBuffer();
-	void 	destroyGLIndices();
-	void	updateNumVerts(S32 nverts);
-	void	updateNumIndices(S32 nindices); 
+	bool	bindBuffer(const buffer_data_t& buffer, bool for_draw, bool force_bind = false) const;
+	bool	bindGLArray() const;
+	void	releaseBuffer(buffer_data_t& buffer);
+	IAttrBuffer*	createImplBuffer(buffer_data_t& buffer, U32 size);
+	bool	updateNumElements(buffer_data_t& buffer, S32 elements);
 	void	unmapBuffer();
 		
 public:
 
-	LLVertexBuffer(U32 typemask, S32 usage);
+	LLVertexBuffer(U32 typemask, S32 usage, const char* caller);
 	
 	// map for data access
-	volatile U8*		mapVertexBuffer(S32 type, S32 index, S32 count, bool map_range);
-	volatile U8*		mapIndexBuffer(S32 index, S32 count, bool map_range);
+	volatile U8*		mapBuffer(buffer_type_t buffer_type, S32 type, S32 index, S32 count, bool map_range);
 
 	// set for rendering
 	virtual void	setBuffer(U32 data_mask); 	// calls  setupVertexBuffer() if data_mask is not 0
 	void flush(); //flush pending data to GL memory
 	// allocate buffer
-	void	allocateBuffer(S32 nverts, S32 nindices, bool create);
+	void	allocateBuffer(S32 nverts, S32 nindices, bool new_buffer = false);
 	virtual void resizeBuffer(S32 newnverts, S32 newnindices);
 			
 	// Only call each getVertexPointer, etc, once before calling unmapBuffer()
@@ -257,94 +229,72 @@ public:
 	bool getClothWeightStrider(LLStrider<LLVector4a>& strider, S32 index=0, S32 count = -1, bool map_range = false);
 	
 
-	bool	useVBOs() const;
-	bool isEmpty() const					{ return mEmpty; }
-	bool isLocked() const					{ return mVertexLocked || mIndexLocked; }
-	S32 getNumVerts() const					{ return mNumVerts; }
-	S32 getNumIndices() const				{ return mNumIndices; }
+	bool useVBOs() const;
+	bool isLocked() const					{ for (U32 i = 0; i < BUFFER_TYPE_MAX; ++i)if (mBuffer[i].mIsLocked) return true; return false; }
+	S32 getNumVerts() const					{ return mBuffer[BUFFER_VERTICES].mElementCount; }
+	S32 getNumIndices() const				{ return mBuffer[BUFFER_INDICES].mElementCount; }
 	
-	volatile U8* getIndicesPointer() const			{ return useVBOs() ? (U8*) mAlignedIndexOffset : mMappedIndexData; }
-	volatile U8* getVerticesPointer() const			{ return useVBOs() ? (U8*) mAlignedOffset : mMappedData; }
+	volatile U8* getIndicesClientPointer() const;
+	volatile U8* getVerticesClientPointer() const;
+	volatile U8* getIndicesAttribPointer() const;
+	volatile U8* getVerticesAttribPointer() const;
+
 	U32 getTypeMask() const					{ return mTypeMask; }
 	bool hasDataType(S32 type) const		{ return ((1 << type) & getTypeMask()); }
-	S32 getSize() const;
-	S32 getIndicesSize() const				{ return mIndicesSize; }
-	volatile U8* getMappedData() const				{ return mMappedData; }
-	volatile U8* getMappedIndices() const			{ return mMappedIndexData; }
+	S32 getSize() const						{ return mBuffer[BUFFER_VERTICES].mSize; }
+	S32 getIndicesSize() const				{ return mBuffer[BUFFER_INDICES].mSize; }
 	S32 getOffset(S32 type) const			{ return mOffsets[type]; }
 	S32 getUsage() const					{ return mUsage; }
-	bool isWriteable() const				{ return (mMappable || mUsage == GL_STREAM_DRAW_ARB) ? true : false; }
+	bool isWriteable() const				{ return mUsage == GL_STREAM_DRAW_ARB; }
 
 	void draw(U32 mode, U32 count, U32 indices_offset) const;
 	void drawArrays(U32 mode, U32 offset, U32 count) const;
 	void drawRange(U32 mode, U32 start, U32 end, U32 count, U32 indices_offset) const;
 
 	//for debugging, validate data in given range is valid
-	void validateRange(U32 start, U32 end, U32 count, U32 offset) const;
+	void validateRange(U32 start, U32 end, U32 count, U32 offset, U32 mode = 0) const;
 
-	
-
+	buffer_data_t	mBuffer[BUFFER_TYPE_MAX];
 protected:	
-	S32		mNumVerts;		// Number of vertices allocated
-	S32		mNumIndices;	// Number of indices allocated
-	
-	ptrdiff_t mAlignedOffset;
-	ptrdiff_t mAlignedIndexOffset;
-	S32		mSize;
-	S32		mIndicesSize;
-	U32		mTypeMask;
-
-	const S32		mUsage;			// GL usage
-	
-	U32		mGLBuffer;		// GL VBO handle
-	U32		mGLIndices;		// GL IBO handle
-	U32		mGLArray;		// GL VAO handle
-	
-	volatile U8* mMappedData;	// pointer to currently mapped data (NULL if unmapped)
-	volatile U8* mMappedIndexData;	// pointer to currently mapped indices (NULL if unmapped)
-
-	U32		mMappedDataUsingVBOs : 1;
-	U32		mMappedIndexDataUsingVBOs : 1;
-	U32		mVertexLocked : 1;			// if true, vertex buffer is being or has been written to in client memory
-	U32		mIndexLocked : 1;			// if true, index buffer is being or has been written to in client memory
-	U32		mFinal : 1;			// if true, buffer can not be mapped again
-	U32		mEmpty : 1;			// if true, client buffer is empty (or NULL). Old values have been discarded.	
-	
-	mutable bool	mMappable;     // if true, use memory mapping to upload data (otherwise doublebuffer and use glBufferSubData)
-
-	S32		mOffsets[TYPE_MAX];
-
-	std::vector<MappedRegion> mMappedVertexRegions;
-	std::vector<MappedRegion> mMappedIndexRegions;
-
-	mutable LLGLFence* mFence;
-
-	void placeFence() const;
-	void waitFence() const;
+	U32			mTypeMask;
+	const S32	mUsage;		// GL usage
+	U32			mGLArray;	// GL VAO handle
+	S32			mOffsets[TYPE_INDEX + 1];
+	bool			mNeedsSetup;
+	U32				mRebuiltIDX;
+	VAO*			mParentVAO;
 
 	static S32 determineUsage(S32 usage);
+
+private:
+	U32 drawn_frame;
 
 public:
 	static S32 sCount;
 	static S32 sGLCount;
 	static S32 sMappedCount;
-	static bool sMapped;
-	typedef std::list<LLVertexBuffer*> buffer_list_t;
 		
 	static bool sDisableVBOMapping; //disable glMapBufferARB
 	static bool sEnableVBOs;
-	static S32 sTypeSize[TYPE_MAX];
+
+	static struct attrib_prop_t
+	{
+		std::string mName;
+		U8 mNumComp;			//Number of components actually used
+								//NOTE: each component must be AT LEAST 4 bytes in size to avoid a performance penalty on AMD hardware
+		U32 mDataSize;			//Real datatype size
+		U32 mCompType;			//GL type of each component
+		U32 mIsInteger : 1;		//If integer, use glVertexAttribPointer
+		U32 mIsNormalized : 1;	//If not an integer, determines if normalized or not.
+	}sAttribProp[TYPE_INDEX + 1];
 	static U32 sGLMode[LLRender::NUM_MODES];
-	static U32 sGLRenderBuffer;
+	static IAttrBuffer* sGLBoundBuffer[BUFFER_TYPE_MAX];
 	static U32 sGLRenderArray;
-	static U32 sGLRenderIndices;
-	static bool sVBOActive;
-	static bool sIBOActive;
 	static U32 sLastMask;
-	static U32 sAllocatedBytes;
-	static U32 sAllocatedIndexBytes;
-	static U32 sVertexCount;
-	static U32 sIndexCount;
+	static U8* sLastOffset;
+	static bool sLastNoFixedFunction;
+	static U32 sAllocatedBytes[BUFFER_TYPE_MAX];
+	static U32 sElementCount[BUFFER_TYPE_MAX];
 	static U32 sBindCount;
 	static U32 sSetCount;
 

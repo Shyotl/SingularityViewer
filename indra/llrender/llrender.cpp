@@ -1164,7 +1164,7 @@ void LLRender::restoreVertexBuffers()
 {
 	llassert_always(mBuffer.isNull());
 	stop_glerror();
-	mBuffer = new LLVertexBuffer(immediate_mask, 0);
+	mBuffer = new LL_VERTEXBUFFER(immediate_mask, 0);
 	mBuffer->allocateBuffer(4096, 0, TRUE);
 	mBuffer->getVertexStrider(mVerticesp);
 	mBuffer->getTexCoord0Strider(mTexcoordsp);

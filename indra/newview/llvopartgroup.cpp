@@ -75,7 +75,7 @@ void LLVOPartGroup::restoreGL()
 {
 
 	//TODO: optimize out binormal mask here.  Specular and normal coords as well.
-	sVB = new LLVertexBuffer(VERTEX_DATA_MASK | LLVertexBuffer::MAP_TANGENT | LLVertexBuffer::MAP_TEXCOORD1 | LLVertexBuffer::MAP_TEXCOORD2, GL_STREAM_DRAW_ARB);
+	sVB = new LL_VERTEXBUFFER(VERTEX_DATA_MASK | LLVertexBuffer::MAP_TANGENT | LLVertexBuffer::MAP_TEXCOORD1 | LLVertexBuffer::MAP_TEXCOORD2, GL_STREAM_DRAW_ARB);
 	U32 count = LL_MAX_PARTICLE_COUNT;
 	sVB->allocateBuffer(count*4, count*6, true);
 
@@ -740,7 +740,7 @@ U32 LLVOPartGroup::getPartitionType() const
 }
 
 LLParticlePartition::LLParticlePartition(LLViewerRegion* regionp)
-: LLSpatialPartition(LLDrawPoolAlpha::VERTEX_DATA_MASK | LLVertexBuffer::MAP_TEXTURE_INDEX, TRUE, GL_STREAM_DRAW_ARB, regionp)
+: LLSpatialPartition(TRUE, LLDrawPoolAlpha::VERTEX_DATA_MASK | LLVertexBuffer::MAP_TEXTURE_INDEX, GL_STREAM_DRAW_ARB, regionp)
 {
 	mRenderPass = LLRenderPass::PASS_ALPHA;
 	mDrawableType = LLPipeline::RENDER_TYPE_PARTICLES;

@@ -629,9 +629,9 @@ void LLHUDText::renderAllHUD()
 		}
 	}
 	
-	LLVertexBuffer::unbind();
+	//LLVertexBuffer::unbind();
 
-    LLVertexBuffer::unbind();
+    //LLVertexBuffer::unbind();
 
 	LLGLState::checkStates();
 	LLGLState::checkTextureChannels();

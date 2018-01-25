@@ -583,7 +583,7 @@ void LLDrawPoolAlpha::renderAlpha(U32 mask, S32 pass)
 
 	gGL.setSceneBlendType(LLRender::BT_ALPHA);
 
-	LLVertexBuffer::unbind();	
+	//LLVertexBuffer::unbind();	
 		
 	if (!light_enabled)
 	{

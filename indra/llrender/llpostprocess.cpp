@@ -404,7 +404,7 @@ void LLPostProcess::initialize(unsigned int width, unsigned int height)
 
 	//Setup our VBO.
 	{
-		mVBO = new LLVertexBuffer(LLVertexBuffer::MAP_VERTEX | LLVertexBuffer::MAP_TEXCOORD0 | LLVertexBuffer::MAP_TEXCOORD1,GL_STREAM_DRAW_ARB);
+		mVBO = new LL_VERTEXBUFFER(LLVertexBuffer::MAP_VERTEX | LLVertexBuffer::MAP_TEXCOORD0 | LLVertexBuffer::MAP_TEXCOORD1,GL_STREAM_DRAW_ARB);
 		mVBO->allocateBuffer(4,0,TRUE);
 
 		LLStrider<LLVector3> v;
@@ -560,7 +560,7 @@ void LLPostProcess::renderEffects(unsigned int width, unsigned int height)
 
 void LLPostProcess::doEffects(void)
 {
-	LLVertexBuffer::unbind();
+	//LLVertexBuffer::unbind();
 
 	mNoiseTextureScale = (1.f - (mSelectedEffectInfo["noise_size"].asFloat() - 1.f) *(9.f/990.f)) / (float)NOISE_SIZE;
 

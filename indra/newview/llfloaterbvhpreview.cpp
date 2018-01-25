@@ -1401,7 +1401,7 @@ BOOL	LLPreviewAnimation::render()
 	{
 		avatarp->updateLOD();
 		
-		LLVertexBuffer::unbind();
+		//LLVertexBuffer::unbind();
 		LLGLDepthTest gls_depth(GL_TRUE);
 
 		LLFace* face = avatarp->mDrawable->getFace(0);

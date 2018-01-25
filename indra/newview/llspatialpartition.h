@@ -377,14 +377,14 @@ public:
 	virtual void getGeometry(LLSpatialGroup* group) = 0;
 	virtual void addGeometryCount(LLSpatialGroup* group, U32 &vertex_count, U32 &index_count);
 	
-	virtual LLVertexBuffer* createVertexBuffer(U32 type_mask, U32 usage);
+	virtual LLVertexBuffer* createVertexBuffer(U32 type_mask, U32 usage, const char* caller);
 };
 
 class LLSpatialPartition: public LLViewerOctreePartition, public LLGeometryManager
 {
 public:
 	//static BOOL sFreezeState; //if true, no spatialgroup state updates will be made
-	LLSpatialPartition(U32 data_mask,  BOOL render_by_group, U32 mBufferUsage, LLViewerRegion* regionp);
+	LLSpatialPartition(BOOL render_by_group, U32 data_mask, U32 buffer_usage, LLViewerRegion* regionp);
 	virtual ~LLSpatialPartition();
 
 	LLSpatialGroup *put(LLDrawable *drawablep, BOOL was_visible = FALSE);
@@ -449,7 +449,7 @@ protected:
 public:
 	typedef std::vector<LLPointer<LLSpatialBridge> > bridge_vector_t;
 	
-	LLSpatialBridge(LLDrawable* root, BOOL render_by_group, U32 data_mask, LLViewerRegion* regionp);
+	LLSpatialBridge(LLDrawable* root, BOOL render_by_group, U32 data_mask, LLViewerRegion* regionp, U32 usage);
 	
 	void destroyTree();
 
@@ -556,7 +556,7 @@ class LLTerrainPartition : public LLSpatialPartition
 public:
 	LLTerrainPartition(LLViewerRegion* regionp);
 	virtual void getGeometry(LLSpatialGroup* group);
-	virtual LLVertexBuffer* createVertexBuffer(U32 type_mask, U32 usage);
+	virtual LLVertexBuffer* createVertexBuffer(U32 type_mask, U32 usage, const char* caller);
 };
 
 //spatial partition for trees

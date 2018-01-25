@@ -775,7 +775,7 @@ void LLGLSLShader::bind()
 	gGL.flush();
 	if (gGLManager.mHasShaderObjects)
 	{
-		LLVertexBuffer::unbind();
+		//LLVertexBuffer::unbind();
 		glUseProgramObjectARB(mProgramObject);
 		sCurBoundShader = mProgramObject;
 		sCurBoundShaderPtr = this;
@@ -801,7 +801,7 @@ void LLGLSLShader::unbind()
 				stop_glerror();
 			}
 		}
-		LLVertexBuffer::unbind();
+		//LLVertexBuffer::unbind();
 		glUseProgramObjectARB(0);
 		sCurBoundShader = 0;
 		sCurBoundShaderPtr = NULL;

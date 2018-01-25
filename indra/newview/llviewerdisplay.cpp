@@ -171,7 +171,7 @@ void display_startup()
 	gViewerWindow->draw();
 	gGL.flush();
 
-	LLVertexBuffer::unbind();
+	//LLVertexBuffer::unbind();
 
 	LLGLState::checkStates();
 	LLGLState::checkTextureChannels();
@@ -302,7 +302,7 @@ void display(BOOL rebuild, F32 zoom_factor, int subfield, BOOL for_snapshot, boo
 	LLGLSDefault gls_default;
 	LLGLDepthTest gls_depth(GL_TRUE, GL_TRUE, GL_LEQUAL);
 	
-	LLVertexBuffer::unbind();
+	//LLVertexBuffer::unbind();
 
 	LLGLState::checkStates();
 	LLGLState::checkTextureChannels();
@@ -775,7 +775,7 @@ void display(BOOL rebuild, F32 zoom_factor, int subfield, BOOL for_snapshot, boo
 					gPipeline.generateSunShadow(*LLViewerCamera::getInstance());
 				}
 
-				LLVertexBuffer::unbind();
+				//LLVertexBuffer::unbind();
 
 				LLGLState::checkStates();
 				LLGLState::checkTextureChannels();
@@ -1405,7 +1405,7 @@ void render_ui(F32 zoom_factor, int subfield, bool tiling)
 			gViewerWindow->drawDebugText();
 		}
 
-		LLVertexBuffer::unbind();
+		//LLVertexBuffer::unbind();
 	}
 
 	if (!gSnapshot)

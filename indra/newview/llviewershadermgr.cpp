@@ -319,7 +319,7 @@ void LLViewerShaderMgr::setShaders()
 	LL_INFOS("ShaderLoading") << "\n~~~~~~~~~~~~~~~~~~\n Loading Shaders:\n~~~~~~~~~~~~~~~~~~" << LL_ENDL;
 	LL_INFOS("ShaderLoading") << llformat("Using GLSL %d.%d", gGLManager.mGLSLVersionMajor, gGLManager.mGLSLVersionMinor) << LL_ENDL;
 
-	LLVertexBuffer::unbind();
+	//LLVertexBuffer::unbind();
 	
 	if (want_shaders)
 	{

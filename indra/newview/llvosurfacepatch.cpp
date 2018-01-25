@@ -57,7 +57,7 @@ class LLVertexBufferTerrain : public LLVertexBuffer
 {
 public:
 	LLVertexBufferTerrain() :
-		LLVertexBuffer(MAP_VERTEX | MAP_NORMAL | MAP_TEXCOORD0 | MAP_TEXCOORD1 | MAP_COLOR, GL_DYNAMIC_DRAW_ARB)
+		LLVertexBuffer(MAP_VERTEX | MAP_NORMAL | MAP_TEXCOORD0 | MAP_TEXCOORD1 | MAP_COLOR, GL_STATIC_DRAW_ARB, __FUNCTION__)
 	{
 		//texture coordinates 2 and 3 exist, but use the same data as texture coordinate 1
 	};
@@ -71,7 +71,7 @@ public:
 			return;
 		}
 
-		volatile U8* base = useVBOs() ? (U8*) mAlignedOffset : mMappedData;
+		volatile U8* base = getVerticesAttribPointer();
 
 		//assume tex coords 2 and 3 are present
 		U32 type_mask = mTypeMask | MAP_TEXCOORD2 | MAP_TEXCOORD3;
@@ -81,47 +81,15 @@ public:
 			LL_ERRS() << "LLVertexBuffer::setupVertexBuffer missing required components for supplied data mask." << LL_ENDL;
 		}
 
-		if (data_mask & MAP_NORMAL)
-		{
-			glNormalPointer(GL_FLOAT, LLVertexBuffer::sTypeSize[TYPE_NORMAL], (void*)(base + mOffsets[TYPE_NORMAL]));
-		}
-		if (data_mask & MAP_TEXCOORD3)
-		{ //substitute tex coord 1 for tex coord 3
-			glClientActiveTextureARB(GL_TEXTURE3_ARB);
-			glTexCoordPointer(2,GL_FLOAT, LLVertexBuffer::sTypeSize[TYPE_TEXCOORD1], (void*)(base + mOffsets[TYPE_TEXCOORD1]));
-			glClientActiveTextureARB(GL_TEXTURE0_ARB);
-		}
-		if (data_mask & MAP_TEXCOORD2)
-		{ //substitute tex coord 0 for tex coord 2
-			glClientActiveTextureARB(GL_TEXTURE2_ARB);
-			glTexCoordPointer(2,GL_FLOAT, LLVertexBuffer::sTypeSize[TYPE_TEXCOORD0], (void*)(base + mOffsets[TYPE_TEXCOORD0]));
-			glClientActiveTextureARB(GL_TEXTURE0_ARB);
-		}
-		if (data_mask & MAP_TEXCOORD1)
-		{
-			glClientActiveTextureARB(GL_TEXTURE1_ARB);
-			glTexCoordPointer(2,GL_FLOAT, LLVertexBuffer::sTypeSize[TYPE_TEXCOORD1], (void*)(base + mOffsets[TYPE_TEXCOORD1]));
-			glClientActiveTextureARB(GL_TEXTURE0_ARB);
-		}
-		if (data_mask & MAP_TANGENT)
-		{
-			glClientActiveTextureARB(GL_TEXTURE2_ARB);
-			glTexCoordPointer(3,GL_FLOAT, LLVertexBuffer::sTypeSize[TYPE_TANGENT], (void*)(base + mOffsets[TYPE_TANGENT]));
-			glClientActiveTextureARB(GL_TEXTURE0_ARB);
-		}
-		if (data_mask & MAP_TEXCOORD0)
-		{
-			glTexCoordPointer(2,GL_FLOAT, LLVertexBuffer::sTypeSize[TYPE_TEXCOORD0], (void*)(base + mOffsets[TYPE_TEXCOORD0]));
-		}
-		if (data_mask & MAP_COLOR)
-		{
-			glColorPointer(4, GL_UNSIGNED_BYTE, LLVertexBuffer::sTypeSize[TYPE_COLOR], (void*)(base + mOffsets[TYPE_COLOR]));
-		}
-		
-		if (data_mask & MAP_VERTEX)
-		{
-			glVertexPointer(3,GL_FLOAT, LLVertexBuffer::sTypeSize[TYPE_VERTEX], (void*)(base + 0));
-		}
+		attrib_prop_t& prop = sAttribProp[MAP_TEXCOORD0];
+		//substitute tex coord 1 for tex coord 3
+		glClientActiveTextureARB(GL_TEXTURE3_ARB);
+		glTexCoordPointer(prop.mNumComp, prop.mCompType, prop.mDataSize, (void*)(base + mOffsets[TYPE_TEXCOORD1]));
+		//substitute tex coord 0 for tex coord 2
+		glClientActiveTextureARB(GL_TEXTURE2_ARB);
+		glTexCoordPointer(prop.mNumComp, prop.mCompType, prop.mDataSize, (void*)(base + mOffsets[TYPE_TEXCOORD0]));
+		glClientActiveTextureARB(GL_TEXTURE0_ARB);
+		LLVertexBuffer::setupVertexBuffer(data_mask & ~(MAP_TEXCOORD2 | MAP_TEXCOORD3));
 	}
 };
 
@@ -1063,7 +1031,7 @@ U32 LLVOSurfacePatch::getPartitionType() const
 }
 
 LLTerrainPartition::LLTerrainPartition(LLViewerRegion* regionp)
-: LLSpatialPartition(LLDrawPoolTerrain::VERTEX_DATA_MASK, FALSE, GL_DYNAMIC_DRAW_ARB, regionp)
+: LLSpatialPartition(FALSE, LLDrawPoolTerrain::VERTEX_DATA_MASK, GL_STATIC_DRAW_ARB, regionp)
 {
 	mOcclusionEnabled = FALSE;
 	mInfiniteFarClip = TRUE;
@@ -1071,7 +1039,7 @@ LLTerrainPartition::LLTerrainPartition(LLViewerRegion* regionp)
 	mPartitionType = LLViewerRegion::PARTITION_TERRAIN;
 }
 
-LLVertexBuffer* LLTerrainPartition::createVertexBuffer(U32 type_mask, U32 usage)
+LLVertexBuffer* LLTerrainPartition::createVertexBuffer(U32 type_mask, U32 usage, const char* caller)
 {
 	return new LLVertexBufferTerrain();
 }

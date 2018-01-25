@@ -627,7 +627,7 @@ U32 LLVOGrass::getPartitionType() const
 }
 
 LLGrassPartition::LLGrassPartition(LLViewerRegion* regionp)
-: LLSpatialPartition(LLDrawPoolAlpha::VERTEX_DATA_MASK | LLVertexBuffer::MAP_TEXTURE_INDEX, TRUE, GL_STREAM_DRAW_ARB, regionp)
+: LLSpatialPartition(TRUE, LLDrawPoolAlpha::VERTEX_DATA_MASK | LLVertexBuffer::MAP_TEXTURE_INDEX, GL_STATIC_DRAW_ARB, regionp)
 {
 	mDrawableType = LLPipeline::RENDER_TYPE_GRASS;
 	mPartitionType = LLViewerRegion::PARTITION_GRASS;

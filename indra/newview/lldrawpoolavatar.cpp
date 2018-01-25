@@ -59,7 +59,6 @@
 #include "llviewercontrol.h" // for gSavedSettings
 
 static U32 sDataMask = LLDrawPoolAvatar::VERTEX_DATA_MASK;
-static U32 sBufferUsage = GL_STREAM_DRAW_ARB;
 static U32 sShaderLevel = 0;
 
 LLGLSLShader* LLDrawPoolAvatar::sVertexProgram = NULL;
@@ -131,19 +130,9 @@ S32 LLDrawPoolAvatar::getVertexShaderLevel() const
 
 void LLDrawPoolAvatar::prerender()
 {
-	mVertexShaderLevel = LLViewerShaderMgr::instance()->getVertexShaderLevel(LLViewerShaderMgr::SHADER_AVATAR);
+	mVertexShaderLevel = getVertexShaderLevel();
 	
 	sShaderLevel = mVertexShaderLevel;
-	
-	if (sShaderLevel > 0)
-	{
-		sBufferUsage = GL_DYNAMIC_DRAW_ARB;
-		//sBufferUsage = GL_STATIC_DRAW_ARB;
-	}
-	else
-	{
-		sBufferUsage = GL_STREAM_DRAW_ARB;
-	}
 
 	if (!mDrawFace.empty())
 	{
@@ -318,7 +307,7 @@ void LLDrawPoolAvatar::beginDeferredRiggedMaterialAlpha(S32 pass)
 }
 void LLDrawPoolAvatar::endDeferredRiggedAlpha()
 {
-	LLVertexBuffer::unbind();
+	//LLVertexBuffer::unbind();
 	gPipeline.unbindDeferredShader(*sVertexProgram);
 	sDiffuseChannel = 0;
 	normal_channel = -1;
@@ -438,7 +427,7 @@ void LLDrawPoolAvatar::endShadowPass(S32 pass)
 	}
 	else
 	{
-		LLVertexBuffer::unbind();
+		//LLVertexBuffer::unbind();
 		sVertexProgram->unbind();
 		sVertexProgram = NULL;
 	}
@@ -526,7 +515,7 @@ void LLDrawPoolAvatar::beginRenderPass(S32 pass)
 {
 	LL_RECORD_BLOCK_TIME(FTM_RENDER_CHARACTERS);
 	//reset vertex buffer mappings
-	LLVertexBuffer::unbind();
+	//LLVertexBuffer::unbind();
 
 	if (LLPipeline::sImpostorRender)
 	{ //impostor render does not have impostors or rigid rendering
@@ -814,7 +803,7 @@ void LLDrawPoolAvatar::beginRiggedSimple()
 
 void LLDrawPoolAvatar::endRiggedSimple()
 {
-	LLVertexBuffer::unbind();
+	//LLVertexBuffer::unbind();
 
 	if(!sVertexProgram)
 		return;
@@ -899,7 +888,7 @@ void LLDrawPoolAvatar::beginRiggedFullbright()
 
 void LLDrawPoolAvatar::endRiggedFullbright()
 {
-	LLVertexBuffer::unbind();
+	//LLVertexBuffer::unbind();
 
 	if(!sVertexProgram)
 		return;
@@ -925,7 +914,7 @@ void LLDrawPoolAvatar::beginRiggedShinySimple()
 
 void LLDrawPoolAvatar::endRiggedShinySimple()
 {
-	LLVertexBuffer::unbind();
+	//LLVertexBuffer::unbind();
 
 	if(!sVertexProgram)
 		return;
@@ -968,7 +957,7 @@ void LLDrawPoolAvatar::beginRiggedFullbrightShiny()
 
 void LLDrawPoolAvatar::endRiggedFullbrightShiny()
 {
-	LLVertexBuffer::unbind();
+	//LLVertexBuffer::unbind();
 
 	if(!sVertexProgram)
 		return;
@@ -988,7 +977,7 @@ void LLDrawPoolAvatar::beginDeferredRiggedSimple()
 
 void LLDrawPoolAvatar::endDeferredRiggedSimple()
 {
-	LLVertexBuffer::unbind();
+	//LLVertexBuffer::unbind();
 	sVertexProgram->unbind();
 	sVertexProgram = NULL;
 }
@@ -1003,7 +992,7 @@ void LLDrawPoolAvatar::beginDeferredRiggedBump()
 
 void LLDrawPoolAvatar::endDeferredRiggedBump()
 {
-	LLVertexBuffer::unbind();
+	//LLVertexBuffer::unbind();
 	sVertexProgram->disableTexture(LLViewerShaderMgr::BUMP_MAP);
 	sVertexProgram->disableTexture(LLViewerShaderMgr::DIFFUSE_MAP);
 	sVertexProgram->unbind();
@@ -1040,7 +1029,7 @@ void LLDrawPoolAvatar::endDeferredRiggedMaterial(S32 pass)
 	{
 		return;
 	}
-	LLVertexBuffer::unbind();
+	//LLVertexBuffer::unbind();
 	sVertexProgram->disableTexture(LLViewerShaderMgr::BUMP_MAP);
 	sVertexProgram->disableTexture(LLViewerShaderMgr::SPECULAR_MAP);
 	sVertexProgram->disableTexture(LLViewerShaderMgr::DIFFUSE_MAP);
@@ -1365,20 +1354,10 @@ void LLDrawPoolAvatar::getRiggedGeometry(LLFace* face, LLPointer<LLVertexBuffer>
 
 		if (buffer.isNull() || buffer->getTypeMask() != data_mask || !buffer->isWriteable())
 		{ //make a new buffer
-			if (sShaderLevel > 0)
-			{
-				buffer = new LLVertexBuffer(data_mask, GL_DYNAMIC_DRAW_ARB);
-			}
-			else
-			{
-				buffer = new LLVertexBuffer(data_mask, GL_STREAM_DRAW_ARB);
-			}
-			buffer->allocateBuffer(vol_face.mNumVertices, vol_face.mNumIndices, true);
+			buffer = new LL_VERTEXBUFFER(data_mask, (sShaderLevel > 0) ? GL_DYNAMIC_DRAW_ARB: GL_STREAM_DRAW_ARB);
 		}
-		else //resize existing buffer
-		{
-			buffer->resizeBuffer(vol_face.mNumVertices, vol_face.mNumIndices);
-		}
+		buffer->resizeBuffer(vol_face.mNumVertices, vol_face.mNumIndices);
+		buffer->setBuffer(data_mask);
 
 		face->setSize(vol_face.mNumVertices, vol_face.mNumIndices);
 		face->setVertexBuffer(buffer);
@@ -1423,7 +1402,7 @@ void LLDrawPoolAvatar::updateRiggedFaceVertexBuffer(LLVOAvatar* avatar, LLFace* 
 	U32 data_mask = face->getRiggedVertexBufferDataMask();
 	
 	if (buffer.isNull() || 
-		buffer->getTypeMask() != data_mask ||
+		((buffer->getTypeMask() & data_mask) != data_mask) ||
 		buffer->getNumVerts() != vol_face.mNumVertices ||
 		buffer->getNumIndices() != vol_face.mNumIndices ||
 		(drawable && drawable->isState(LLDrawable::REBUILD_ALL)))
@@ -1900,7 +1879,7 @@ void LLDrawPoolAvatar::removeRiggedFace(LLFace* facep)
 
 LLVertexBufferAvatar::LLVertexBufferAvatar()
 : LLVertexBuffer(sDataMask, 
-	GL_STREAM_DRAW_ARB) //avatars are always stream draw due to morph targets
+	GL_STREAM_DRAW_ARB, __FUNCTION__) //avatars are always stream draw due to morph targets
 {
 
 }

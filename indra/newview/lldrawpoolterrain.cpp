@@ -613,7 +613,7 @@ void LLDrawPoolTerrain::renderFull4TU()
 		drawLoop();
 	}
 
-	LLVertexBuffer::unbind();
+	//LLVertexBuffer::unbind();
 	// Disable multitexture
 	gGL.getTexUnit(3)->unbind(LLTexUnit::TT_TEXTURE);
 	gGL.getTexUnit(3)->disable();
