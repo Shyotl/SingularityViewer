@@ -559,7 +559,10 @@ public:
 	void orphan()
 	{
 		if (!mOrphaned)
+		{
+			FenceType::clear();
 			mGLBuffer.bufferData(mGLBufferAllocatedSize, NULL, mUsage);
+		}
 		mOrphaned = true;
 	}
 	void copySubData(U32 offset, U32 size)
@@ -618,7 +621,7 @@ public:
 	{
 		if (new_size > 0 && (new_size > mClientDataSize || new_size * 2 < mClientDataSize))
 		{
-			FenceType::wait();	//Defer deletion until absolute sure it's safe.
+			FenceType::clear();
 			ll_aligned_free<4096>(mClientData);
 			mClientDataSize = new_size;
 			mClientData = (U8*)ll_aligned_malloc<4096>(new_size);
@@ -714,6 +717,7 @@ public:
 		mGLBufferSize = new_size;
 		if (new_size > 0 && (new_size > mGLBufferAllocatedSize || new_size * 2 < mGLBufferAllocatedSize))
 		{
+			FenceType::clear();
 			mGLBufferAllocatedSize = new_size;
 			if (mMappedData)
 				mGLBuffer.unmap();
