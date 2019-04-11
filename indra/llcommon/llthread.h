@@ -477,6 +477,11 @@ public:
 		mMutex = &mutex;
 		lock();
 	}
+	LLMutexLock(const std::unique_ptr<LLMutex>& mutex)
+	{
+		mMutex = mutex.get();
+		lock();
+	}
 	~LLMutexLock()
 	{
 		if (mMutex) mMutex->unlock();
