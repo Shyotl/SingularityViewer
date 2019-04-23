@@ -825,7 +825,7 @@ void LLFloaterAO::onNotecardLoadComplete(LLVFS *vfs,const LLUUID& asset_uuid,LLA
 {
 	if(status == LL_ERR_NOERR)
 	{
-		S32 size = vfs->getSize(asset_uuid, type);
+		S64 size = vfs->getSize(asset_uuid, type);
 		U8* buffer = new U8[size];
 		vfs->getData(asset_uuid, type, buffer, 0, size);
 

@@ -60,12 +60,12 @@ int vfs_seek(void *datasource, ogg_int64_t offset, int whence)
 	LLVFile *file = (LLVFile *)datasource;
 
 	// vfs has 31-bit files
-	if (offset > S32_MAX)
+	/*if (offset > S32_MAX)
 	{
 		return -1;
-	}
+	}*/
 
-	S32 origin;
+	S64 origin;
 	switch (whence) {
 	case SEEK_SET:
 		origin = 0;
@@ -81,7 +81,7 @@ int vfs_seek(void *datasource, ogg_int64_t offset, int whence)
 		return -1;
 	}
 
-	if (file->seek((S32)offset, origin))
+	if (file->seek(offset, origin))
 	{
 		return 0;
 	}
@@ -100,7 +100,7 @@ int vfs_close (void *datasource)
 	return 0;
 }
 
-long vfs_tell (void *datasource)
+U64 vfs_tell (void *datasource)
 {
 	LLVFile *file = (LLVFile *)datasource;
 

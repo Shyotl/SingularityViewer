@@ -3345,16 +3345,16 @@ bool LLAppViewer::initCache()
 	LLSplashScreen::update(LLTrans::getString("StartupInitializingTextureCache"));
 	
 	// Init the texture cache
-	// Allocate 80% of the cache size for textures
-	const U32 MB = 1024 * 1024;
-	const U64 MIN_CACHE_SIZE = 64 * MB;
-	const U64 MAX_CACHE_SIZE = 9984ll * MB;
-	const U64 MAX_VFS_SIZE = 1024 * MB; // 1 GB
+	// Allocate 75% of the cache size for textures
+	const U64 MB = 1024 * 1024;
+	const U64 MIN_CACHE_SIZE = 64ll * MB;
+	const U64 MAX_CACHE_SIZE = 20480ll * MB; // 20 GB
+	const U64 MAX_VFS_SIZE = 5120ll * MB; // 5 GB
 
 	U64 cache_size = (U64)(gSavedSettings.getU32("CacheSize")) * MB;
 	cache_size = llclamp(cache_size, MIN_CACHE_SIZE, MAX_CACHE_SIZE);
 
-	U64 texture_cache_size = ((cache_size * 8) / 10);
+	U64 texture_cache_size = ((cache_size * 3) / 4);
 	U64 vfs_size = cache_size - texture_cache_size;
 
 	if (vfs_size > MAX_VFS_SIZE)
@@ -3375,14 +3375,13 @@ bool LLAppViewer::initCache()
 	// Init the VFS
 	vfs_size = llmin(vfs_size + extra, MAX_VFS_SIZE);
 	vfs_size = (vfs_size / MB) * MB; // make sure it is MB aligned
-	U32 vfs_size_u32 = (U32)vfs_size;
-	U32 old_vfs_size = gSavedSettings.getU32("VFSOldSize") * MB;
-	bool resize_vfs = (vfs_size_u32 != old_vfs_size);
+	U64 old_vfs_size = U64(gSavedSettings.getU32("VFSOldSize")) * MB;
+	bool resize_vfs = (vfs_size != old_vfs_size);
 	if (resize_vfs)
 	{
-		gSavedSettings.setU32("VFSOldSize", vfs_size_u32 / MB);
+		gSavedSettings.setU32("VFSOldSize", vfs_size / MB);
 	}
-	LL_INFOS("AppCache") << "VFS CACHE SIZE: " << vfs_size / (1024*1024) << " MB" << LL_ENDL;
+	LL_INFOS("AppCache") << "VFS CACHE SIZE: " << vfs_size / MB << " MB" << LL_ENDL;
 	
 	// This has to happen BEFORE starting the vfs
 	// time_t	ltime;
@@ -3492,7 +3491,7 @@ bool LLAppViewer::initCache()
 	gSavedSettings.setU32("VFSSalt", new_salt);
 
 	// Don't remove VFS after viewer crashes.  If user has corrupt data, they can reinstall. JC
-	gVFS = LLVFS::createLLVFS(new_vfs_index_file, new_vfs_data_file, false, vfs_size_u32, false);
+	gVFS = LLVFS::createLLVFS(new_vfs_index_file, new_vfs_data_file, false, vfs_size, false);
 	if (!gVFS)
 	{
 		return false;

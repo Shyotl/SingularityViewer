@@ -201,7 +201,7 @@ private:
 	std::string mTexturesDirName;
 	typedef std::map<LLUUID,S32> size_map_t;
 	size_map_t mTexturesSizeMap;
-	S64 mTexturesSizeTotal;
+	U64 mTexturesSizeTotal;
 	LLAtomic32<bool> mDoPurge;
 
 	typedef std::map<S32, Entry> idx_entry_map_t;
@@ -210,7 +210,7 @@ private:
 	// Statics
 	static F32 sHeaderCacheVersion;
 	static U32 sCacheMaxEntries;
-	static S64 sCacheMaxTexturesSize;
+	static U64 sCacheMaxTexturesSize;
 };
 
 extern const S32 TEXTURE_CACHE_ENTRY_SIZE;

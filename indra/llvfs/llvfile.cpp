@@ -84,7 +84,7 @@ LLVFile::~LLVFile()
 	mVFS->decLock(mFileID, mFileType, VFSLOCK_OPEN);
 }
 
-BOOL LLVFile::read(U8 *buffer, S32 bytes, BOOL async, F32 priority)
+BOOL LLVFile::read(U8 *buffer, S64 bytes, BOOL async, F32 priority)
 {
 	if (! (mMode & READ))
 	{
@@ -124,11 +124,11 @@ BOOL LLVFile::read(U8 *buffer, S32 bytes, BOOL async, F32 priority)
 }
 
 //static
-U8* LLVFile::readFile(LLVFS *vfs, LLPrivateMemoryPool* poolp, const LLUUID &uuid, LLAssetType::EType type, S32* bytes_read)
+U8* LLVFile::readFile(LLVFS *vfs, LLPrivateMemoryPool* poolp, const LLUUID &uuid, LLAssetType::EType type, S64* bytes_read)
 {
 	U8 *data;
 	LLVFile file(vfs, uuid, type, LLVFile::READ);
-	S32 file_size = file.getSize();
+	S64 file_size = file.getSize();
 	if (file_size == 0)
 	{
 		// File is empty.
@@ -139,7 +139,7 @@ U8* LLVFile::readFile(LLVFS *vfs, LLPrivateMemoryPool* poolp, const LLUUID &uuid
 		data = (U8*)ALLOCATE_MEM(poolp, file_size);
 		file.read(data, file_size);	/* Flawfinder: ignore */ 
 		
-		if (file.getLastBytesRead() != (S32)file_size)
+		if (file.getLastBytesRead() != file_size)
 		{
 			FREE_MEM(poolp, data);
 			data = NULL;
@@ -184,7 +184,7 @@ BOOL LLVFile::isReadComplete()
 	return res;
 }
 
-S32 LLVFile::getLastBytesRead()
+S64 LLVFile::getLastBytesRead()
 {
 	return mBytesRead;
 }
@@ -194,7 +194,7 @@ BOOL LLVFile::eof()
 	return mPosition >= getSize();
 }
 
-BOOL LLVFile::write(const U8 *buffer, S32 bytes)
+BOOL LLVFile::write(const U8 *buffer, S64 bytes)
 {
 	if (! (mMode & WRITE))
 	{
@@ -212,7 +212,7 @@ BOOL LLVFile::write(const U8 *buffer, S32 bytes)
 	{	
 		U8* writebuf = new U8[bytes];
 		memcpy(writebuf, buffer, bytes);
-		S32 offset = -1;
+		S64 offset = -1;
 		mHandle = sVFSThread->write(mVFS, mFileID, mFileType,
 									writebuf, offset, bytes,
 									LLVFSThread::FLAG_AUTO_COMPLETE | LLVFSThread::FLAG_AUTO_DELETE);
@@ -224,9 +224,9 @@ BOOL LLVFile::write(const U8 *buffer, S32 bytes)
 		waitForLock(VFSLOCK_READ);
 		waitForLock(VFSLOCK_APPEND);
 
-		S32 pos = (mMode & APPEND) == APPEND ? -1 : mPosition;
+		S64 pos = (mMode & APPEND) == APPEND ? -1 : mPosition;
 
-		S32 wrote = sVFSThread->writeImmediate(mVFS, mFileID, mFileType, (U8*)buffer, pos, bytes);
+		S64 wrote = sVFSThread->writeImmediate(mVFS, mFileID, mFileType, (U8*)buffer, pos, bytes);
 
 		mPosition += wrote;
 		
@@ -241,14 +241,14 @@ BOOL LLVFile::write(const U8 *buffer, S32 bytes)
 }
 
 //static
-BOOL LLVFile::writeFile(const U8 *buffer, S32 bytes, LLVFS *vfs, const LLUUID &uuid, LLAssetType::EType type)
+BOOL LLVFile::writeFile(const U8 *buffer, S64 bytes, LLVFS *vfs, const LLUUID &uuid, LLAssetType::EType type)
 {
 	LLVFile file(vfs, uuid, type, LLVFile::WRITE);
 	file.setMaxSize(bytes);
 	return file.write(buffer, bytes);
 }
 
-BOOL LLVFile::seek(S32 offset, S32 origin)
+BOOL LLVFile::seek(S64 offset, S64 origin)
 {
 	if (mMode == APPEND)
 	{
@@ -261,9 +261,9 @@ BOOL LLVFile::seek(S32 offset, S32 origin)
 		origin = mPosition;
 	}
 
-	S32 new_pos = origin + offset;
+	S64 new_pos = origin + offset;
 
-	S32 size = getSize(); // Calls waitForLock(VFSLOCK_APPEND)
+	S64 size = getSize(); // Calls waitForLock(VFSLOCK_APPEND)
 
 	if (new_pos > size)
 	{
@@ -284,27 +284,27 @@ BOOL LLVFile::seek(S32 offset, S32 origin)
 	return TRUE;
 }
 
-S32 LLVFile::tell() const
+S64 LLVFile::tell() const
 {
 	return mPosition;
 }
 
-S32 LLVFile::getSize()
+S64 LLVFile::getSize()
 {
 	waitForLock(VFSLOCK_APPEND);
-	S32 size = mVFS->getSize(mFileID, mFileType);
+	S64 size = mVFS->getSize(mFileID, mFileType);
 
 	return size;
 }
 
-S32 LLVFile::getMaxSize()
+S64 LLVFile::getMaxSize()
 {
-	S32 size = mVFS->getMaxSize(mFileID, mFileType);
+	S64 size = mVFS->getMaxSize(mFileID, mFileType);
 
 	return size;
 }
 
-BOOL LLVFile::setMaxSize(S32 size)
+BOOL LLVFile::setMaxSize(S64 size)
 {
 	if (! (mMode & WRITE))
 	{

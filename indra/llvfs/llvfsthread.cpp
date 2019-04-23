@@ -77,7 +77,7 @@ LLVFSThread::~LLVFSThread()
 //----------------------------------------------------------------------------
 
 LLVFSThread::handle_t LLVFSThread::read(LLVFS* vfs, const LLUUID &file_id, const LLAssetType::EType file_type,
-										U8* buffer, S32 offset, S32 numbytes, U32 priority, U32 flags)
+										U8* buffer, S64 offset, S64 numbytes, U32 priority, U32 flags)
 {
 	handle_t handle = generateHandle();
 
@@ -97,7 +97,7 @@ LLVFSThread::handle_t LLVFSThread::read(LLVFS* vfs, const LLUUID &file_id, const
 }
 
 S32 LLVFSThread::readImmediate(LLVFS* vfs, const LLUUID &file_id, const LLAssetType::EType file_type,
-							   U8* buffer, S32 offset, S32 numbytes)
+							   U8* buffer, S64 offset, S64 numbytes)
 {
 	handle_t handle = generateHandle();
 
@@ -120,7 +120,7 @@ S32 LLVFSThread::readImmediate(LLVFS* vfs, const LLUUID &file_id, const LLAssetT
 }
 
 LLVFSThread::handle_t LLVFSThread::write(LLVFS* vfs, const LLUUID &file_id, const LLAssetType::EType file_type,
-										 U8* buffer, S32 offset, S32 numbytes, U32 flags)
+										 U8* buffer, S64 offset, S64 numbytes, U32 flags)
 {
 	handle_t handle = generateHandle();
 
@@ -139,7 +139,7 @@ LLVFSThread::handle_t LLVFSThread::write(LLVFS* vfs, const LLUUID &file_id, cons
 }
 
 S32 LLVFSThread::writeImmediate(LLVFS* vfs, const LLUUID &file_id, const LLAssetType::EType file_type,
-								 U8* buffer, S32 offset, S32 numbytes)
+								 U8* buffer, S64 offset, S64 numbytes)
 {
 	handle_t handle = generateHandle();
 
@@ -188,7 +188,7 @@ S32 LLVFSThread::writeImmediate(LLVFS* vfs, const LLUUID &file_id, const LLAsset
 LLVFSThread::Request::Request(handle_t handle, U32 priority, U32 flags,
 							  operation_t op, LLVFS* vfs,
 							  const LLUUID &file_id, const LLAssetType::EType file_type,
-							  U8* buffer, S32 offset, S32 numbytes) :
+							  U8* buffer, S64 offset, S64 numbytes) :
 	QueuedRequest(handle, priority, flags),
 	mOperation(op),
 	mVFS(vfs),
@@ -210,7 +210,7 @@ LLVFSThread::Request::Request(handle_t handle, U32 priority, U32 flags,
 	}
 	if (mOperation == FILE_WRITE)
 	{
-		S32 blocksize =  mVFS->getMaxSize(mFileID, mFileType);
+		S64 blocksize =  mVFS->getMaxSize(mFileID, mFileType);
 		if (blocksize < 0)
 		{
 			LL_WARNS() << "VFS write to temporary block (shouldn't happen)" << LL_ENDL;

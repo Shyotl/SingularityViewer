@@ -874,10 +874,10 @@ BOOL LLTextureCache::isInLocal(const LLUUID& id)
 //////////////////////////////////////////////////////////////////////////////
 
 //static
-const S32 MAX_REASONABLE_FILE_SIZE = 512*1024*1024; // 512 MB
+const U64 MAX_REASONABLE_FILE_SIZE = 20480ll*1024*1024; // 512 MB
 F32 LLTextureCache::sHeaderCacheVersion = 1.8f;
 U32 LLTextureCache::sCacheMaxEntries = MAX_REASONABLE_FILE_SIZE / TEXTURE_CACHE_ENTRY_SIZE;
-S64 LLTextureCache::sCacheMaxTexturesSize = 0; // no limit
+U64 LLTextureCache::sCacheMaxTexturesSize = 0; // no limit
 const char* entries_filename = "texture.entries";
 const char* cache_filename = "texture.cache";
 const char* old_textures_dirname = "textures";
