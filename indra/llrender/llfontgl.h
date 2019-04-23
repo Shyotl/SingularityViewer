@@ -214,7 +214,8 @@ public:
 	static F32 sScaleX;
 	static F32 sScaleY;
 	static BOOL     sDisplayFont ;
-	static std::string sAppDir;			// For loading fonts
+	static std::string sFontDir;			// For loading fonts
+
 private:
 	friend class LLFontRegistry;
 	friend class LLTextBillboard;
@@ -235,7 +236,6 @@ protected:
 
 	// Registry holds all instantiated fonts.
 	static LLFontRegistry* sFontRegistry;
-
 };
 
 #endif

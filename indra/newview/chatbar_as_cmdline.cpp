@@ -632,7 +632,7 @@ bool cmd_line_chat(std::string data, EChatType type)
 // even if they are out of draw distance.
 LLUUID cmdline_partial_name2key(std::string partial_name)
 {
-	std::vector<LLUUID> avatars;
+	uuid_vec_t avatars;
 	std::string av_name;
 	LLStringUtil::toLower(partial_name);
 	LLWorld::getInstance()->getAvatars(&avatars);

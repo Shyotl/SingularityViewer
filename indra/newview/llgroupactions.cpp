@@ -601,3 +601,8 @@ LLFloaterGroupInfo* LLGroupActions::openGroupProfile(const LLUUID& group_id)
 	return fgi;
 }
 
+std::string LLGroupActions::getSLURL(const LLUUID& id)
+{
+	return llformat("secondlife:///app/group/%s/about", id.asString().c_str());
+}
+

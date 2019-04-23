@@ -42,7 +42,6 @@
 //#include "llviewertexturelist.h"
 #include "llsafehandle.h"
 
-typedef std::set<LLUUID, lluuid_less> uuid_list_t;
 const F32 CACHE_REFRESH_TIME	= 2.5f;
 
 class LLButton;
@@ -172,7 +171,7 @@ public:
 	static void onClickSet(void* data);
 	static void onClickClear(void* data);
 	static void onClickShow(void* data);
-	static void callbackAvatarPick(const std::vector<std::string>& names, const std::vector<LLUUID>& ids, void* data);
+	static void callbackAvatarPick(const std::vector<std::string>& names, const uuid_vec_t& ids, void* data);
 	static void finalizeAvatarPick(void* data);
 	static void callbackHighlightTransferable(S32 option, void* userdata);
 	static void onClickStartAuction(void*);

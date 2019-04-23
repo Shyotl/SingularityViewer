@@ -110,7 +110,7 @@ protected:
 	LLButton* mCloseBtn;
 
 	// Object Queue
-	std::vector<LLUUID> mObjectIDs;
+	uuid_vec_t mObjectIDs;
 	LLUUID mCurrentObjectID;
 	bool mDone;
 

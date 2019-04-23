@@ -129,7 +129,7 @@ public:
 	void closeAllFolders();
 	void openDefaultFolderForType(LLAssetType::EType);
 	void setSelection(const LLUUID& obj_id, BOOL take_keyboard_focus);
-	void setSelectCallback(const boost::function<void (const std::deque<LLFolderViewItem*>& items, BOOL user_action)>& cb);
+	void setSelectCallback(const std::function<void (const std::deque<LLFolderViewItem*>& items, BOOL user_action)>& cb);
 	void clearSelection();
 	bool isSelectionRemovable();
 	LLInventoryFilter& getFilter();
@@ -211,7 +211,7 @@ protected:
 	LLScrollContainer*	mScroller;
 
     LLPointer<LLFolderViewGroupedItemBridge> mGroupedItemBridge;
-	std::map<LLUUID, LLFolderViewItem*> mItemMap;
+	boost::unordered_map<LLUUID, LLFolderViewItem*> mItemMap;
 	/**
 	 * Pointer to LLInventoryFolderViewModelBuilder.
 	 *

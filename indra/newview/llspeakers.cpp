@@ -564,12 +564,12 @@ void LLSpeakerMgr::updateSpeakerList()
 	// Are we bound to the currently active voice channel?
 	if ((!mVoiceChannel && LLVoiceClient::getInstance()->inProximalChannel()) || (mVoiceChannel && mVoiceChannel->isActive()))
 	{
-		std::set<LLUUID> participants;
+		uuid_set_t participants;
 		LLVoiceClient::getInstance()->getParticipantList(participants);
 		// If we are, add all voice client participants to our list of known speakers
 		std::vector<speaker_entry_t> speakers;
 		speakers.reserve(participants.size());
-		for (std::set<LLUUID>::iterator participant_it = participants.begin(); participant_it != participants.end(); ++participant_it)
+		for (auto participant_it = participants.begin(); participant_it != participants.end(); ++participant_it)
 		{
 			speakers.emplace_back(
 				*participant_it,

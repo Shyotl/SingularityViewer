@@ -11,6 +11,9 @@
 		<column name="altitude" label="Alt." tool_tip="Altitud"/>
 		<column name="activity" label="Act." tool_tip="Actividad"/>
 		<column name="voice" tool_tip="Estado de Voz"/>
+		<column name="notes" tool_tip="Indica si has añadido o no una nota en el perfil de este avatar"/>
+		<column name="age" label="Age" width="45" tool_tip="Age"/>
+		<column name="time" label="Time" width="52" tool_tip="Time since arrival in the sim."/>
 		<column name="age" label="Edad" tool_tip="Edad"/>
 		<column name="time" label="Tiempo" tool_tip="Tiempo transcurrido desde su arrivo al sim."/>		
 		<column name="client" label="Cliente" tool_tip="Cliente-Visor que el avatar posiblemente esté usando"/>

@@ -272,6 +272,7 @@ BOOL LLScriptEdCore::postBuild()
 
 	mEditor = getChild<LLViewerTextEditor>("Script Editor");
 	mEditor->setHandleEditKeysDirectly(TRUE);
+	mEditor->setParseHighlights(TRUE);
 
 	childSetCommitCallback("lsl errors", &LLScriptEdCore::onErrorList, this);
 	childSetAction("Save_btn", boost::bind(&LLScriptEdCore::doSave,this,FALSE));
@@ -480,9 +481,33 @@ bool LLScriptEdCore::writeToFile(const std::string& filename)
 	std::string utf8text = mEditor->getText();
 
 	// Special case for a completely empty script - stuff in one space so it can store properly.  See SL-46889
-	if (utf8text.size() == 0)
+	if (utf8text.empty())
 	{
-		utf8text = " ";
+		utf8text.push_back(' ');
+	}
+	else // We cut the fat ones down to size
+	{
+		std::stringstream strm(utf8text);
+		utf8text.clear();
+		bool quote = false;
+		for (std::string line; std::getline(strm, line);)
+		{
+			//if ((std::count(line.begin(), line.end(), '"') % 2) == 0) quote = !quote; // This would work if escaping wasn't a thing
+			bool backslash = false;
+			for (const auto& ch : line)
+			{
+				switch (ch)
+				{
+				case '\\': backslash = !backslash; break;
+				case '"': if (!backslash) quote = !quote; // Fall through
+				default: backslash = false; break;
+				}
+			}
+			if (!quote) LLStringUtil::trimTail(line);
+			if (!utf8text.empty()) utf8text += '\n';
+			utf8text += line;
+		}
+		if (utf8text.empty()) utf8text.push_back(' ');
 	}
 
 	fputs(utf8text.c_str(), fp);

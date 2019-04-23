@@ -1606,7 +1606,7 @@ void LLPanelLandObjects::processParcelObjectOwnersReply(LLMessageSystem *msg, vo
 	}
 
 	LLVector3d mypos = gAgent.getPositionGlobal();
-	std::vector<LLUUID> avatar_ids;
+	uuid_vec_t avatar_ids;
 	LLWorld::instance().getAvatars(&avatar_ids, NULL, mypos, F32_MAX);
 
 	for(S32 i = 0; i < rows; ++i)

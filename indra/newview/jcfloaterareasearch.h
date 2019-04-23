@@ -38,6 +38,7 @@
 #include "lluuid.h"
 #include "llstring.h"
 #include "llframetimer.h"
+#include <boost/unordered_map.hpp>
 
 class LLTextBox;
 class LLScrollListCtrl;
@@ -91,8 +92,8 @@ private:
 		LLUUID owner_id;
 		LLUUID group_id;
 	};
-	std::set<LLUUID> mPendingObjects;
-	std::map<LLUUID, ObjectData> mCachedObjects;
+	uuid_set_t mPendingObjects;
+	boost::unordered_map<LLUUID, ObjectData> mCachedObjects;
 
 	std::string mFilterStrings[LIST_OBJECT_COUNT];
 };

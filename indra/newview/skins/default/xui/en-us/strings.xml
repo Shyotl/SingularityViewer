@@ -3094,6 +3094,64 @@ Where tag = tag string to match.  Removes bot's matching the tag.
 	<string name="AvatarSetBusy">Busy</string>
 
 
+	<!-- Wearable Types -->
+	<string name="shape">Shape</string>
+	<string name="skin">Skin</string>
+	<string name="hair">Hair</string>
+	<string name="eyes">Eyes</string>
+	<string name="shirt">Shirt</string>
+	<string name="pants">Pants</string>
+	<string name="shoes">Shoes</string>
+	<string name="socks">Socks</string>
+	<string name="jacket">Jacket</string>
+	<string name="gloves">Gloves</string>
+	<string name="undershirt">Undershirt</string>
+	<string name="underpants">Underpants</string>
+	<string name="skirt">Skirt</string>
+	<string name="alpha">Alpha</string>
+	<string name="tattoo">Tattoo</string>
+  <string name="physics">Physics</string>
+  <string name="invalid">invalid</string>
+  <string name="unknown">unknown</string>
+  <string name="none">none</string>
+
+  <!-- Not Worn Wearable Types -->
+	<string name="shirt_not_worn">Shirt not worn</string>
+	<string name="pants_not_worn">Pants not worn</string>
+	<string name="shoes_not_worn">Shoes not worn</string>
+	<string name="socks_not_worn">Socks not worn</string>
+	<string name="jacket_not_worn">Jacket not worn</string>
+	<string name="gloves_not_worn">Gloves not worn</string>
+	<string name="undershirt_not_worn">Undershirt not worn</string>
+	<string name="underpants_not_worn">Underpants not worn</string>
+	<string name="skirt_not_worn">Skirt not worn</string>
+	<string name="alpha_not_worn">Alpha not worn</string>
+	<string name="tattoo_not_worn">Tattoo not worn</string>
+  <string name="physics_not_worn">Physics not worn</string>
+	<string name="invalid_not_worn">invalid</string>
+
+	<!-- Create new wearable of the specified type -->
+	<string name="create_new_shape">Create new shape</string>
+	<string name="create_new_skin">Create new skin</string>
+	<string name="create_new_hair">Create new hair</string>
+	<string name="create_new_eyes">Create new eyes</string>
+	<string name="create_new_shirt">Create new shirt</string>
+	<string name="create_new_pants">Create new pants</string>
+	<string name="create_new_shoes">Create new shoes</string>
+	<string name="create_new_socks">Create new socks</string>
+	<string name="create_new_jacket">Create new jacket</string>
+	<string name="create_new_gloves">Create new gloves</string>
+	<string name="create_new_undershirt">Create new undershirt</string>
+	<string name="create_new_underpants">Create new underpants</string>
+	<string name="create_new_skirt">Create new skirt</string>
+	<string name="create_new_alpha">Create new alpha</string>
+	<string name="create_new_tattoo">Create new tattoo</string>
+  <string name="create_new_physics">Create new physics</string>
+	<string name="create_new_invalid">invalid</string>
+
+  <!-- Wearable List-->
+  <string name="NewWearable">New [WEARABLE_ITEM]</string>
+
 	<!-- LLGroupNotify -->
 	<!-- used in the construction of a Group Notice blue dialog box, buttons, tooltip etc. Seems to be no longer utilized by code in Viewer 2.0 -->
 	<string name="next">Next</string>
@@ -3130,31 +3188,23 @@ Where tag = tag string to match.  Removes bot's matching the tag.
 	<string name="InventoryOutboxNotMerchantTitle">Anyone can sell items on the Marketplace.</string>
 	<string name="InventoryOutboxNotMerchantTooltip"></string>
 	<string name="InventoryOutboxNotMerchant">
-If you'd like to become a merchant, you'll need to
+If you'd like to become a merchant, you'll need to [[MARKETPLACE_CREATE_STORE_URL] create a Marketplace store].
 	</string>
-	<string name="InventoryOutboxNotMerchantSubs">create a Marketplace store</string>
-	<string name="InventoryOutboxNotMerchant2">.</string>
 	<string name="InventoryOutboxNoItemsTitle">Your outbox is empty.</string>
 	<string name="InventoryOutboxNoItemsTooltip"></string>
 	<string name="InventoryOutboxNoItems">
-Drag folders to this area and click "Send to Marketplace" to list them for sale on the
+Drag folders to this area and click "Send to Marketplace" to list them for sale on the [[MARKETPLACE_DASHBOARD_URL] Marketplace].
 	</string>
-	<string name="InventoryOutboxNoItemsSubs">Marketplace</string>
-	<string name="InventoryOutboxNoItems2">.</string>
 	<string name="InventoryOutboxInitializingTitle">Initializing Marketplace.</string>
 	<string name="InventoryOutboxInitializingTooltip"></string>
 	<string name="InventoryOutboxInitializing">
-We are accessing your account on the
+We are accessing your account on the [[MARKETPLACE_CREATE_STORE_URL] Marketplace store].
 	</string>
-	<string name="InventoryOutboxInitializingSubs">Marketplace store</string>
-	<string name="InventoryOutboxInitializing2">.</string>
 	<string name="InventoryOutboxErrorTitle">Marketplace Errors.</string>
 	<string name="InventoryOutboxErrorTooltip"></string>
 	<string name="InventoryOutboxError">
-The
+The [[MARKETPLACE_CREATE_STORE_URL] Marketplace store] is returning errors.
 	</string>
-	<string name="InventoryOutboxErrorSubs">Marketplace store</string>
-	<string name="InventoryOutboxError2">is returning errors.</string>
 	<string name="InventoryMarketplaceError">
 An error occurred while opening Marketplace Listings.
 If you continue to receive this message, please contact Second Life support for assistance at http://support.secondlife.com
@@ -3317,7 +3367,7 @@ If you continue to receive this message, please contact Second Life support for 
   <string name="AcctTypeResident">Resident</string>
   <string name="AcctTypeTrial">Trial</string>
   <string name="AcctTypeCharterMember">Charter Member</string>
-  <string name="AcctTypeEmployee">Linden Lab Employee</string>
+  <string name="AcctTypeEmployee">[GRID_OWNER] Employee</string>
   <string name="PaymentInfoUsed">Payment Info Used</string>
   <string name="PaymentInfoOnFile">Payment Info On File</string>
   <string name="NoPaymentInfoOnFile">No Payment Info On File</string>
@@ -4236,6 +4286,9 @@ If you continue to receive this message, contact the [SUPPORT_SITE].
   <string name="OfflineStatus">Offline</string>
 	<string name="not_online_msg">User not online - message will be stored and delivered later.</string>
 	<string name="not_online_inventory">User not online - inventory has been saved.</string>
+
+	<string name="ReceivedGift">You've received a gift! [USER] has given you "[PRODUCT]", and says "[MESSAGE]". You can find your gift in your Received Items folder.</string>
+	<string name="ReceivedPurchase">Your purchase of [PRODUCT] has been delivered to your Received Items folder.</string>
 
 	<!-- voice calls -->
 

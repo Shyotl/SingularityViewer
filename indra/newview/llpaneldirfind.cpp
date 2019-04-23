@@ -243,9 +243,6 @@ BOOL LLPanelDirFind::postBuild()
 		// need to handle secondlife:///app/ URLs for direct teleports
 		mWebBrowser->setTrustedContent( true );
 
-		// redirect 404 pages from S3 somewhere else
-		mWebBrowser->set404RedirectUrl( getString("redirect_404_url") );
-
 		navigateToDefaultPage();
 	}
 

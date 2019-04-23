@@ -32,6 +32,7 @@
 
 #include "linden_common.h"
 #include "lluistring.h"
+#include "llfasttimer.h"
 #include "llsd.h"
 #include "lltrans.h"
 

@@ -70,7 +70,7 @@
 #include "lldxhardware.h"
 #endif
 
-#include "cef/llceflib.h"
+#include "cef/dullahan.h"
 
 extern LLMemoryInfo gSysMemory;
 extern U32 gPacketsIn;
@@ -286,8 +286,17 @@ LLFloaterAbout::LLFloaterAbout()
 	support.append( gAudiop ? gAudiop->getDriverName(want_fullname) : "(none)" );
 	support += '\n';
 
-	support.append("LLCEFLib/CEF Version: ");
-	support.append(LLCEFLIB_VERSION);
+	std::stringstream supportstrm;
+	supportstrm << "Dullahan: "
+			<< DULLAHAN_VERSION_MAJOR
+			<< '.'
+			<< DULLAHAN_VERSION_MINOR
+			<< '.'
+			<< DULLAHAN_VERSION_BUILD
+
+			<< " / CEF: " << CEF_VERSION
+			<< " / Chrome: " << CHROME_VERSION_MAJOR;
+	support += supportstrm.str();
 	support += '\n';
 
 	if (gPacketsIn > 0)

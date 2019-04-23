@@ -111,7 +111,7 @@ protected:
 	typedef boost::unordered_map<TEMaterialPair, get_callback_te_t*, TEMaterialPairHasher> get_callback_te_map_t;
 	get_callback_te_map_t mGetTECallbacks;
 
-	typedef std::set<LLUUID> getall_queue_t;
+	typedef uuid_set_t getall_queue_t;
 	getall_queue_t        mGetAllQueue;
 	getall_queue_t        mGetAllRequested;
 	typedef std::map<LLUUID, F64> getall_pending_map_t;

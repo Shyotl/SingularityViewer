@@ -250,7 +250,6 @@ public:
 	BOOL			getRightMouseDown()	const	{ return mRightMouseDown; }
 
 	const LLPickInfo&	getLastPick() const { return mLastPick; }
-	const LLPickInfo&	getHoverPick() const { return mHoverPick; }
 
 	void			setup2DViewport(S32 x_offset = 0, S32 y_offset = 0);
 	void			setup3DViewport(S32 x_offset = 0, S32 y_offset = 0);
@@ -464,7 +463,6 @@ protected:
 	BOOL			mHideCursorPermanent;	// true during drags, mouselook
 	BOOL            mCursorHidden;
 	LLPickInfo		mLastPick;
-	LLPickInfo		mHoverPick;
 	std::vector<LLPickInfo> mPicks;
 	LLRect			mPickScreenRegion; // area of frame buffer for rendering pick frames (generally follows mouse to avoid going offscreen)
 	LLTimer         mPickTimer;        // timer for scheduling n picks per second

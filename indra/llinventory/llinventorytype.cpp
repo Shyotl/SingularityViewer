@@ -191,7 +191,7 @@ LLInventoryType::EType LLInventoryType::defaultForAssetType(LLAssetType::EType a
 	}
 	else
 	{
-		return IT_NONE;
+		return IT_UNKNOWN;
 	}
 }
 
@@ -208,6 +208,12 @@ bool LLInventoryType::cannotRestrictPermissions(LLInventoryType::EType type)
 		default:
 			return false;
 	}
+}
+
+// Should show permissions that apply only to objects rezed in world.
+bool LLInventoryType::showInWorldPermissions(LLInventoryType::EType type)
+{
+    return (type != IT_SETTINGS);
 }
 
 bool inventory_and_asset_types_match(LLInventoryType::EType inventory_type,

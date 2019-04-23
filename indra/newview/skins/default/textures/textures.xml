@@ -295,6 +295,7 @@ with the same filename but different name
   <texture name="icon_auction.tga"/>
   <texture name="icon_day_cycle.tga"/>
   <texture name="icon_event.tga"/>
+  <texture name="icon_event_adult.tga"/>
   <texture name="icon_event_mature.tga"/>
   <texture name="icon_groupnotice.tga"/>
   <texture name="icon_groupnoticeinventory.tga"/>

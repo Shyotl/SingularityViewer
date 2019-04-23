@@ -1545,7 +1545,7 @@ void LLSnapshotLivePreview::saveTextureDone(LLUUID const& asset_id, void* user_d
 
 	// Call the default call back.
 	LLAssetStorage::LLStoreAssetCallback asset_callback = temporary ? &temp_upload_callback : &upload_done_callback;
-	(*asset_callback)(asset_id, user_data, status, ext_status);
+	asset_callback(asset_id, user_data, status, ext_status);
 }
 
 // This callback used when the capability NewFileAgentInventory is available and it wasn't a temporary.

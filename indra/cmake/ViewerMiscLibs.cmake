@@ -15,3 +15,5 @@ else (NOT STANDALONE)
   endif(LINUX AND ${ARCH} STREQUAL "x86_64")
   set(STANDALONE ON)
 endif(NOT STANDALONE)
+
+use_prebuilt_binary(fonts)

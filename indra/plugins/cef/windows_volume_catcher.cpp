@@ -26,33 +26,35 @@
  * @endcond
  */
 
+#include "linden_common.h"
+
 #include "volume_catcher.h"
-#include <windows.h>
 #include "llsingleton.h"
+
+#include "llwin32headers.h"
+#include <mmsystem.h>
+
 class VolumeCatcherImpl : public LLSingleton<VolumeCatcherImpl>
 {
-friend LLSingleton<VolumeCatcherImpl>;
+	friend LLSingleton<VolumeCatcherImpl>;
+	VolumeCatcherImpl();
+	// This is a singleton class -- both callers and the component implementation should use getInstance() to find the instance.
+	~VolumeCatcherImpl();
+
 public:
 
 	void setVolume(F32 volume);
 	void setPan(F32 pan);
 	
 private:
-	// This is a singleton class -- both callers and the component implementation should use getInstance() to find the instance.
-	VolumeCatcherImpl();
-	~VolumeCatcherImpl();
-
 	F32 	mVolume;
 	F32 	mPan;
 };
-
-
 
 VolumeCatcherImpl::VolumeCatcherImpl()
 :	mVolume(1.0f),			// default volume is max
 	mPan(0.f)				// default pan is centered
 {
-
 }
 
 VolumeCatcherImpl::~VolumeCatcherImpl()
@@ -68,7 +70,7 @@ void VolumeCatcherImpl::setVolume(F32 volume)
 	DWORD left_channel  = (DWORD)(mVolume * 65535.0f);
 	DWORD right_channel =  (DWORD)(mVolume * 65535.0f);
 	DWORD hw_volume = left_channel << 16 | right_channel;
-	::waveOutSetVolume(NULL, hw_volume);
+	waveOutSetVolume(NULL, hw_volume);
 }
 
 void VolumeCatcherImpl::setPan(F32 pan)

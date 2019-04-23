@@ -127,9 +127,9 @@ protected:
 	struct ExtraParameter
 	{
 		BOOL in_use;
-		LLNetworkData *data;
+		std::unique_ptr<LLNetworkData> data;
 	};
-	std::map<U16, ExtraParameter*> mExtraParameterList;
+	std::vector<std::unique_ptr<ExtraParameter> > mExtraParameterList;
 
 public:
 	typedef std::list<LLPointer<LLViewerObject> > child_list_t;

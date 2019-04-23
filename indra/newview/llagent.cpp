@@ -3094,7 +3094,7 @@ LLQuaternion LLAgent::getHeadRotation()
 	return rot;
 }
 
-void LLAgent::sendAnimationRequests(const std::vector<LLUUID> &anim_ids, EAnimRequest request)
+void LLAgent::sendAnimationRequests(const uuid_vec_t &anim_ids, EAnimRequest request)
 {
 	if (gAgentID.isNull())
 	{
@@ -4457,7 +4457,7 @@ void LLAgent::stopCurrentAnimations()
 	// avatar, propagating this change back to the server.
 	if (isAgentAvatarValid())
 	{
-		std::vector<LLUUID> anim_ids;
+		uuid_vec_t anim_ids;
 
 		for ( LLVOAvatar::AnimIterator anim_it =
 			      gAgentAvatarp->mPlayingAnimations.begin();
@@ -4556,12 +4556,12 @@ void LLAgent::fidget()
 
 void LLAgent::stopFidget()
 {
-	std::vector<LLUUID> anims;
-	anims.reserve(4);
-	anims.push_back(ANIM_AGENT_STAND_1);
-	anims.push_back(ANIM_AGENT_STAND_2);
-	anims.push_back(ANIM_AGENT_STAND_3);
-	anims.push_back(ANIM_AGENT_STAND_4);
+	const uuid_vec_t anims {
+		ANIM_AGENT_STAND_1,
+		ANIM_AGENT_STAND_2,
+		ANIM_AGENT_STAND_3,
+		ANIM_AGENT_STAND_4,
+	};
 
 	gAgent.sendAnimationRequests(anims, ANIM_REQUEST_STOP);
 }

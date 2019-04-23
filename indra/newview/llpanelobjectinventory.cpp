@@ -1710,7 +1710,7 @@ void LLPanelObjectInventory::updateInventory()
 	//		<< " panel UUID: " << panel->mTaskUUID << "\n"
 	//		<< " task  UUID: " << object->mID << LL_ENDL;
 	// We're still interested in this task's inventory.
-	std::set<LLUUID> selected_items;
+	uuid_set_t selected_items;
 	BOOL inventory_has_focus = FALSE;
 	if (mHaveInventory)
 	{
@@ -1748,11 +1748,10 @@ void LLPanelObjectInventory::updateInventory()
 	}
 
 	// restore previous selection
-	std::set<LLUUID>::iterator selection_it;
 	bool first_item = true;
-	for (selection_it = selected_items.begin(); selection_it != selected_items.end(); ++selection_it)
+	for (const auto id : selected_items)
 	{
-		LLFolderViewItem* selected_item = mFolders->getItemByID(*selection_it);
+		LLFolderViewItem* selected_item = mFolders->getItemByID(id);
 
 		if (selected_item)
 		{

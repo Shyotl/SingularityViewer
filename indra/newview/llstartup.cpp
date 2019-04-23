@@ -640,21 +640,34 @@ bool idle_startup()
 		//
 		LL_DEBUGS("AppInit") << "Initializing messaging system..." << LL_ENDL;
 
-		std::string message_template_path = gDirUtilp->getExpandedFilename(LL_PATH_APP_SETTINGS,"message_template.msg");
+		auto app_settings_path = gDirUtilp->getExpandedFilename(LL_PATH_APP_SETTINGS, LLStringUtil::null);
+		std::string message_template_path = gDirUtilp->add(app_settings_path, "message_template.msg");
 
 		LLFILE* found_template = NULL;
 		found_template = LLFile::fopen(message_template_path, "r");		/* Flawfinder: ignore */
 		
+		if (!found_template)
+		{
+			app_settings_path = gDirUtilp->getExpandedFilename(LL_PATH_EXECUTABLE,
 		#if LL_WINDOWS
-			// On the windows dev builds, unpackaged, the message_template.msg 
+			// On the windows dev builds, unpackaged, the message_template.msg
 			// file will be located in:
 			// indra/build-vc**/newview/<config>/app_settings.
-			if (!found_template)
-			{
-				message_template_path = gDirUtilp->getExpandedFilename(LL_PATH_EXECUTABLE, "app_settings", "message_template.msg");
-				found_template = LLFile::fopen(message_template_path.c_str(), "r");		/* Flawfinder: ignore */
-			}	
+			"app_settings"
+		#elif LL_DARWIN
+			// On Mac dev builds, message_template.msg lives in:
+			// indra/build-*/newview/<config>/Second Life/Contents/Resources/app_settings
+			"../Resources/app_settings"
+		#else // LL_LINUX and other
+			// On the linux dev builds, the message_template.msg
+			// file will be located in:
+			// indra/build-linux**/newview/packaged/app_settings.
+			"../app_settings"
 		#endif
+			, LLStringUtil::null);
+			message_template_path = gDirUtilp->add(app_settings_path, "message_template.msg");
+			found_template = LLFile::fopen(message_template_path.c_str(), "r");		/* Flawfinder: ignore */
+		}
 
 		if (found_template)
 		{
@@ -695,22 +708,8 @@ bool idle_startup()
 				LLAppViewer::instance()->earlyExit("LoginFailedNoNetwork", LLSD().with("DIAGNOSTIC", diagnostic));
 			}
 
-			#if LL_WINDOWS
-				// On the windows dev builds, unpackaged, the message.xml file will 
-				// be located in indra/build-vc**/newview/<config>/app_settings.
-				std::string message_path = gDirUtilp->getExpandedFilename(LL_PATH_APP_SETTINGS,"message.xml");
-							
-				if (!LLFile::isfile(message_path.c_str())) 
-				{
-					LLMessageConfig::initClass("viewer", gDirUtilp->getExpandedFilename(LL_PATH_EXECUTABLE, "app_settings", ""));
-				}
-				else
-				{
-					LLMessageConfig::initClass("viewer", gDirUtilp->getExpandedFilename(LL_PATH_APP_SETTINGS, ""));
-				}
-			#else			
-				LLMessageConfig::initClass("viewer", gDirUtilp->getExpandedFilename(LL_PATH_APP_SETTINGS, ""));
-			#endif
+			// Take into account dev checkout status on all platforms, by using app_settings_path ~Liru
+			LLMessageConfig::initClass("viewer", app_settings_path);
 
 		}
 		else
@@ -1141,9 +1140,7 @@ bool idle_startup()
 
 		// Load URL History File
 		LLURLHistory::loadFile("url_history.xml");
-		// Load media plugin cookies
-		LLViewerMedia::loadCookieFile();
-				
+
 		//-------------------------------------------------
 		// Handle startup progress screen
 		//-------------------------------------------------

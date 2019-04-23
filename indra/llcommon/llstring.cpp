@@ -233,7 +233,7 @@ llutf16string wstring_to_utf16str(const LLWString &utf32str, S32 len)
 		{
 			out += cur_char;
 		}
-		i++;
+		++i;
 	}
 	return out;
 }
@@ -493,7 +493,7 @@ std::string wstring_to_utf8str(const LLWString& utf32str, S32 len)
 	std::string out;
 	out.reserve(len);
 
-	for (S32 i = 0; i < len; i++)
+	for (S32 i = 0; i < len; ++i)
 	{
 		S32 n = wchar_to_utf8chars(utf32str[i], tchars);
 		tchars[n] = 0;
@@ -575,6 +575,78 @@ std::string utf8str_truncate(const std::string& utf8str, const S32 max_len)
 		return utf8str.substr(0, cur_char);
 	}
 }
+
+// [RLVa:KB] - Checked: RLVa-2.1.0
+std::string utf8str_substr(const std::string& utf8str, const S32 index, const S32 max_len)
+{
+	if (0 == max_len)
+	{
+		return std::string();
+	}
+	if (utf8str.length() - index  <= max_len)
+	{
+		return utf8str.substr(index, max_len);
+	}
+	else
+	{
+		S32 cur_char = max_len;
+
+		// If we're ASCII, we don't need to do anything
+		if ((U8)utf8str[index + cur_char] > 0x7f)
+		{
+			// If first two bits are (10), it's the tail end of a multibyte char.  We need to shift back
+			// to the first character
+			while (0x80 == (0xc0 & utf8str[index + cur_char]))
+			{
+				cur_char--;
+				// Keep moving forward until we hit the first char;
+				if (cur_char == 0)
+				{
+					// Make sure we don't trash memory if we've got a bogus string.
+					break;
+				}
+			}
+		}
+		// The byte index we're on is one we want to get rid of, so we only want to copy up to (cur_char-1) chars
+		return utf8str.substr(index, cur_char);
+	}
+}
+
+void utf8str_split(std::list<std::string>& split_list, const std::string& utf8str, size_t maxlen, char split_token)
+{
+	split_list.clear();
+
+	std::string::size_type lenMsg = utf8str.length(), lenIt = 0;
+
+	const char* pstrIt = utf8str.c_str(); std::string strTemp;
+	while (lenIt < lenMsg)
+	{
+		if (lenIt + maxlen < lenMsg)
+		{
+			// Find the last split character
+			const char* pstrTemp = pstrIt + maxlen;
+			while ( (pstrTemp > pstrIt) && (*pstrTemp != split_token) )
+				pstrTemp--;
+
+			if (pstrTemp > pstrIt)
+				strTemp = utf8str.substr(lenIt, pstrTemp - pstrIt);
+			else
+				strTemp = utf8str_substr(utf8str, lenIt, maxlen);
+		}
+		else
+		{
+			strTemp = utf8str.substr(lenIt, std::string::npos);
+		}
+
+		split_list.push_back(strTemp);
+
+		lenIt += strTemp.length();
+		pstrIt = utf8str.c_str() + lenIt;
+		if (*pstrIt == split_token)
+			lenIt++;
+	}
+}
+// [/RLVa:KB]
 
 std::string utf8str_symbol_truncate(const std::string& utf8str, const S32 symbol_len)
 {
@@ -668,6 +740,12 @@ bool LLStringOps::isHexString(const std::string& str)
 }
 
 #if LL_WINDOWS
+
+std::string ll_convert_wide_to_string(const wchar_t* in)
+{
+	return ll_convert_wide_to_string(in, CP_UTF8);
+}
+
 std::string ll_convert_wide_to_string(const wchar_t* in, unsigned int code_page)
 {
 	std::string out;
@@ -705,6 +783,11 @@ std::string ll_convert_wide_to_string(const wchar_t* in, unsigned int code_page)
 	return out;
 }
 
+wchar_t* ll_convert_string_to_wide(const std::string& in)
+{
+	return ll_convert_string_to_wide(in, CP_UTF8);
+}
+
 wchar_t* ll_convert_string_to_wide(const std::string& in, unsigned int code_page)
 {
 	// From review:
@@ -726,6 +809,67 @@ wchar_t* ll_convert_string_to_wide(const std::string& in, unsigned int code_page
 	w_out[real_output_str_len] = 0;
 
 	return w_out;
+	return {&w_out[0]};
+}
+
+S32 wchartchars_to_llwchar(const std::wstring::value_type* inchars, llwchar* outchar)
+{
+	const std::wstring::value_type* base = inchars;
+	std::wstring::value_type cur_char = *inchars++;
+	llwchar char32 = cur_char;
+	if ((cur_char >= 0xD800) && (cur_char <= 0xDFFF))
+	{
+		// Surrogates
+		char32 = ((llwchar)(cur_char - 0xD800)) << 10;
+		cur_char = *inchars++;
+		char32 += (llwchar)(cur_char - 0xDC00) + 0x0010000UL;
+	}
+	else
+	{
+		char32 = (llwchar)cur_char;
+	}
+	*outchar = char32;
+	return inchars - base;
+}
+
+LLWString ll_convert_wide_to_wstring(const std::wstring& in)
+{
+	LLWString wout;
+	auto len = in.size();
+	if ((len <= 0) || in.empty()) return wout;
+
+	size_t i = 0;
+	// craziness to make gcc happy (llutf16string.c_str() is tweaked on linux):
+	const std::wstring::value_type* chars16 = &(*(in.begin()));
+	while (i < len)
+	{
+		llwchar cur_char;
+		i += wchartchars_to_llwchar(chars16 + i, &cur_char);
+		wout += cur_char;
+	}
+	return wout;
+}
+
+std::wstring ll_convert_wstring_to_wide(const LLWString& in)
+{
+	std::wstring out;
+
+	size_t i = 0;
+	while (i < in.size())
+	{
+		U32 cur_char = in[i];
+		if (cur_char > 0xFFFF)
+		{
+			out += (0xD7C0 + (cur_char >> 10));
+			out += (0xDC00 | (cur_char & 0x3FF));
+		}
+		else
+		{
+			out += cur_char;
+		}
+		i++;
+	}
+	return out;
 }
 
 std::string ll_convert_string_to_utf8_string(const std::string& in)
@@ -736,7 +880,108 @@ std::string ll_convert_string_to_utf8_string(const std::string& in)
 
 	return out_utf8;
 }
-#endif // LL_WINDOWS
+
+namespace
+{
+
+void HeapFree_deleter(void* ptr)
+{
+    // instead of LocalFree(), per https://stackoverflow.com/a/31541205
+    HeapFree(GetProcessHeap(), NULL, ptr);
+}
+
+} // anonymous namespace
+
+template<>
+std::wstring windows_message<std::wstring>(DWORD error)
+{
+    // derived from https://stackoverflow.com/a/455533
+    wchar_t* rawptr = nullptr;
+    auto okay = FormatMessageW(
+        // use system message tables for GetLastError() codes
+        FORMAT_MESSAGE_FROM_SYSTEM |
+        // internally allocate buffer and return its pointer
+        FORMAT_MESSAGE_ALLOCATE_BUFFER |
+        // you cannot pass insertion parameters (thanks Gandalf)
+        FORMAT_MESSAGE_IGNORE_INSERTS |
+        // ignore line breaks in message definition text
+        FORMAT_MESSAGE_MAX_WIDTH_MASK,
+        NULL,                       // lpSource, unused with FORMAT_MESSAGE_FROM_SYSTEM
+        error,                      // dwMessageId
+        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // dwLanguageId
+        (LPWSTR)&rawptr,         // lpBuffer: force-cast wchar_t** to wchar_t*
+        0,                // nSize, unused with FORMAT_MESSAGE_ALLOCATE_BUFFER
+        NULL);            // Arguments, unused
+
+    // make a unique_ptr from rawptr so it gets cleaned up properly
+    std::unique_ptr<wchar_t, void(*)(void*)> bufferptr(rawptr, HeapFree_deleter);
+
+    if (okay && bufferptr)
+    {
+        // got the message, return it ('okay' is length in characters)
+        return { bufferptr.get(), okay };
+    }
+
+    // did not get the message, synthesize one
+    auto format_message_error = GetLastError();
+    std::wostringstream out;
+    out << L"GetLastError() " << error << L" (FormatMessageW() failed with "
+        << format_message_error << L")";
+    return out.str();
+}
+
+boost::optional<std::wstring> llstring_getoptenv(const std::string& key)
+{
+    auto wkey = ll_convert_string_to_wide(key);
+    // Take a wild guess as to how big the buffer should be.
+    std::vector<wchar_t> buffer(1024);
+    auto n = GetEnvironmentVariableW(wkey, &buffer[0], buffer.size());
+    // If our initial guess was too short, n will indicate the size (in
+    // wchar_t's) that buffer should have been, including the terminating nul.
+    if (n > (buffer.size() - 1))
+    {
+        // make it big enough
+        buffer.resize(n);
+        // and try again
+        n = GetEnvironmentVariableW(wkey, &buffer[0], buffer.size());
+    }
+    // did that (ultimately) succeed?
+    if (n)
+    {
+        // great, return populated boost::optional
+        return boost::optional<std::wstring>(&buffer[0]);
+    }
+
+    // not successful
+    auto last_error = GetLastError();
+    // Don't bother warning for NOT_FOUND; that's an expected case
+    if (last_error != ERROR_ENVVAR_NOT_FOUND)
+    {
+        LL_WARNS() << "GetEnvironmentVariableW('" << key << "') failed: "
+                   << windows_message<std::string>(last_error) << LL_ENDL;
+    }
+    // return empty boost::optional
+    return {};
+}
+
+#else  // ! LL_WINDOWS
+
+boost::optional<std::string> llstring_getoptenv(const std::string& key)
+{
+    auto found = getenv(key.c_str());
+    if (found)
+    {
+        // return populated boost::optional
+        return boost::optional<std::string>(found);
+    }
+    else
+    {
+        // return empty boost::optional
+        return {};
+    }
+}
+
+#endif // ! LL_WINDOWS
 
 long LLStringOps::sPacificTimeOffset = 0;
 long LLStringOps::sLocalTimeOffset = 0;

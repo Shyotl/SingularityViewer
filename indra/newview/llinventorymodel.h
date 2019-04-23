@@ -27,7 +27,7 @@
 #ifndef LL_LLINVENTORYMODEL_H
 #define LL_LLINVENTORYMODEL_H
 
-#include <unordered_map>
+#include <boost/unordered_map.hpp>
 #include <set>
 #include <string>
 #include <vector>
@@ -76,7 +76,7 @@ public:
 
 	typedef std::vector<LLPointer<LLViewerInventoryCategory> > cat_array_t;
 	typedef std::vector<LLPointer<LLViewerInventoryItem> > item_array_t;
-	typedef std::set<LLUUID> changed_items_t;
+	typedef uuid_set_t changed_items_t;
 
 	class FetchItemHttpHandler : public LLHTTPClient::ResponderWithResult
 	{
@@ -154,13 +154,13 @@ private:
 	// the inventory using several different identifiers.
 	// mInventory member data is the 'master' list of inventory, and
 	// mCategoryMap and mItemMap store uuid->object mappings. 
-	typedef std::unordered_map<LLUUID, LLPointer<LLViewerInventoryCategory> > cat_map_t;
-	typedef std::unordered_map<LLUUID, LLPointer<LLViewerInventoryItem> > item_map_t;
+	typedef boost::unordered_map<LLUUID, LLPointer<LLViewerInventoryCategory> > cat_map_t;
+	typedef boost::unordered_map<LLUUID, LLPointer<LLViewerInventoryItem> > item_map_t;
 	cat_map_t mCategoryMap;
 	item_map_t mItemMap;
 	// This last set of indices is used to map parents to children.
-	typedef std::unordered_map<LLUUID, cat_array_t*> parent_cat_map_t;
-	typedef std::unordered_map<LLUUID, item_array_t*> parent_item_map_t;
+	typedef boost::unordered_map<LLUUID, cat_array_t*> parent_cat_map_t;
+	typedef boost::unordered_map<LLUUID, item_array_t*> parent_item_map_t;
 	parent_cat_map_t mParentChildCategoryTree;
 	parent_item_map_t mParentChildItemTree;
 
@@ -467,7 +467,7 @@ public:
 		LLInitializedS32& operator++() { ++mValue; return *this; }
 		LLInitializedS32& operator--() { --mValue; return *this; }
 	};
-	typedef std::unordered_map<LLUUID, LLInitializedS32> update_map_t;
+	typedef boost::unordered_map<LLUUID, LLInitializedS32> update_map_t;
 
 	// Call when there are category updates.  Call them *before* the 
 	// actual update so the method can do descendent accounting correctly.
@@ -592,8 +592,8 @@ protected:
 	cat_array_t* getUnlockedCatArray(const LLUUID& id);
 	item_array_t* getUnlockedItemArray(const LLUUID& id);
 private:
-	std::unordered_map<LLUUID, bool> mCategoryLock;
-	std::unordered_map<LLUUID, bool> mItemLock;
+	boost::unordered_map<LLUUID, bool> mCategoryLock;
+	boost::unordered_map<LLUUID, bool> mItemLock;
 	
 	//--------------------------------------------------------------------
 	// Debugging

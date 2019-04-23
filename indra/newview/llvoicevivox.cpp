@@ -3932,7 +3932,7 @@ void LLVivoxVoiceClient::sessionState::removeAllParticipants()
 	mParticipantList.shrink_to_fit();
 }
 
-void LLVivoxVoiceClient::getParticipantList(std::set<LLUUID> &participants)
+void LLVivoxVoiceClient::getParticipantList(uuid_set_t &participants)
 {
 	if(mAudioSession)
 	{

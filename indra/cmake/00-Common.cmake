@@ -108,7 +108,7 @@ if (WINDOWS)
   endif (USE_LTO)
 
   if (WORD_SIZE EQUAL 32)
-    add_compile_options(/arch:SSE3)
+    add_compile_options(/arch:SSE2)
   endif (WORD_SIZE EQUAL 32)
 
   if (NOT DISABLE_FATAL_WARNINGS)

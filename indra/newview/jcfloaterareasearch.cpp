@@ -217,7 +217,7 @@ void JCFloaterAreaSearch::results()
 				LLUUID object_id = objectp->getID();
 				if(!requestIfNeeded(object_id))
 				{
-					std::map<LLUUID,ObjectData>::iterator it = mCachedObjects.find(object_id);
+					auto it = mCachedObjects.find(object_id);
 					if(it != mCachedObjects.end())
 					{
 						//LL_INFOS() << "all entries are \"\" or we have data" << LL_ENDL;
@@ -281,7 +281,7 @@ void JCFloaterAreaSearch::processObjectPropertiesFamily(LLMessageSystem* msg, vo
 	LLUUID object_id;
 	msg->getUUIDFast(_PREHASH_ObjectData, _PREHASH_ObjectID, object_id);
 
-	std::set<LLUUID>::iterator it = floater->mPendingObjects.find(object_id);
+	auto it = floater->mPendingObjects.find(object_id);
 	if(it != floater->mPendingObjects.end())
 		floater->mPendingObjects.erase(it);
 	//else if(floater->mCachedObjects.count(object_id)) //Let entries update.

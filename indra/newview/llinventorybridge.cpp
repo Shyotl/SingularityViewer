@@ -128,7 +128,7 @@ bool isAddAction(const std::string& action)
 
 bool isRemoveAction(const std::string& action)
 {
-	return ("take_off" == action || "detach" == action || "deactivate" == action);
+	return ("take_off" == action || "detach" == action);
 }
 
 // Used by LLFolderBridge as callback for directory fetching recursion
@@ -531,7 +531,7 @@ BOOL LLInvFVBridge::isClipboardPasteable() const
 
 	// In normal mode, we need to check each element of the clipboard to know if we can paste or not
 	LLInventoryPanel* panel = dynamic_cast<LLInventoryPanel*>(mInventoryPanel.get());
-	std::vector<LLUUID> objects;
+	uuid_vec_t objects;
 	LLInventoryClipboard::instance().retrieve(objects);
 	S32 count = objects.size();
 	for(S32 i = 0; i < count; i++)
@@ -573,7 +573,7 @@ bool LLInvFVBridge::isClipboardPasteableAsCopy() const
 
 	// In copy mode, we need to check each element of the clipboard to know if it's a link
 	LLInventoryPanel* panel = dynamic_cast<LLInventoryPanel*>(mInventoryPanel.get());
-	std::vector<LLUUID> objects;
+	uuid_vec_t objects;
 	LLInventoryClipboard::instance().retrieve(objects);
 	const S32 count = objects.size();
 	for(S32 i = 0; i < count; i++)
@@ -611,7 +611,7 @@ BOOL LLInvFVBridge::isClipboardPasteableAsLink() const
 		return FALSE;
 	}
 
-	std::vector<LLUUID> objects;
+	uuid_vec_t objects;
 	LLInventoryClipboard::instance().retrieve(objects);
 	S32 count = objects.size();
 	for(S32 i = 0; i < count; i++)
@@ -2217,7 +2217,7 @@ BOOL LLFolderBridge::isClipboardPasteable() const
 			return FALSE;
 		}
 
-		std::vector<LLUUID> objects;
+		uuid_vec_t objects;
 		LLInventoryClipboard::instance().retrieve(objects);
 		const LLViewerInventoryCategory *current_cat = getCategory();
 
@@ -2265,7 +2265,7 @@ BOOL LLFolderBridge::isClipboardPasteableAsLink() const
 		const BOOL is_in_friend_folder = LLFriendCardsManager::instance().isCategoryInFriendFolder(current_cat);
 */
 		const LLUUID &current_cat_id = current_cat->getUUID();
-		std::vector<LLUUID> objects;
+		uuid_vec_t objects;
 		LLInventoryClipboard::instance().retrieve(objects);
 		S32 count = objects.size();
 		for (S32 i = 0; i < count; i++)
@@ -2905,10 +2905,10 @@ void LLInventoryCopyAndWearObserver::changed(U32 mask)
 	{
 		if (!mFolderAdded)
 		{
-			const std::set<LLUUID>& changed_items = gInventory.getChangedIDs();
+			const uuid_set_t& changed_items = gInventory.getChangedIDs();
 
-			std::set<LLUUID>::const_iterator id_it = changed_items.begin();
-			std::set<LLUUID>::const_iterator id_end = changed_items.end();
+			auto id_it = changed_items.begin();
+			auto id_end = changed_items.end();
 			for (;id_it != id_end; ++id_it)
 			{
 				if ((*id_it) == mCatID)
@@ -3370,9 +3370,9 @@ void LLFolderBridge::pasteFromClipboard(bool only_copies)
         if (clipboard.isCutMode())
         {
             //Items are not removed from folder on "cut", so we need update listing folder on "paste" operation
-            std::vector<LLUUID> objects;
+            uuid_vec_t objects;
             clipboard.retrieve(objects);
-            for (std::vector<LLUUID>::const_iterator iter = objects.begin(); iter != objects.end(); ++iter)
+            for (auto iter = objects.begin(); iter != objects.end(); ++iter)
             {
                 const LLUUID& item_id = (*iter);
                 if(gInventory.isObjectDescendentOf(item_id, marketplacelistings_id) && (LLMarketplaceData::instance().isInActiveFolder(item_id) ||
@@ -3420,7 +3420,7 @@ void LLFolderBridge::perform_pasteFromClipboard(bool only_copies)
 		const BOOL move_is_into_outfit = move_is_into_my_outfits || (getCategory() && getCategory()->getPreferredType()==LLFolderType::FT_OUTFIT);
 		const BOOL move_is_into_marketplacelistings = model->isObjectDescendentOf(mUUID, marketplacelistings_id);
 
-		std::vector<LLUUID> objects;
+		uuid_vec_t objects;
 		LLInventoryClipboard::instance().retrieve(objects);
 
 		LLViewerInventoryCategory* dest_folder = getCategory();
@@ -3429,7 +3429,7 @@ void LLFolderBridge::perform_pasteFromClipboard(bool only_copies)
 			std::string error_msg;
 			const LLViewerInventoryCategory* master_folder = model->getFirstDescendantOf(marketplacelistings_id, mUUID);
 			int index = 0;
-			for (std::vector<LLUUID>::const_iterator iter = objects.begin(); iter != objects.end(); ++iter)
+			for (auto iter = objects.begin(); iter != objects.end(); ++iter)
 			{
 				const LLUUID& item_id = (*iter);
 				LLInventoryItem *item = model->getItem(item_id);
@@ -3456,7 +3456,7 @@ void LLFolderBridge::perform_pasteFromClipboard(bool only_copies)
 		else
 		{
 			// Check that all items can be moved into that folder : for the moment, only stock folder mismatch is checked
-			for (std::vector<LLUUID>::const_iterator iter = objects.begin(); iter != objects.end(); ++iter)
+			for (auto iter = objects.begin(); iter != objects.end(); ++iter)
 			{
 				const LLUUID& item_id = (*iter);
 				LLInventoryItem *item = model->getItem(item_id);
@@ -3475,7 +3475,7 @@ void LLFolderBridge::perform_pasteFromClipboard(bool only_copies)
 
 		const LLUUID parent_id(mUUID);
 
-		for (std::vector<LLUUID>::const_iterator iter = objects.begin();
+		for (auto iter = objects.begin();
 			 iter != objects.end();
 			 ++iter)
 		{
@@ -3629,9 +3629,9 @@ void LLFolderBridge::pasteLinkFromClipboard()
 
 		const LLUUID parent_id(mUUID);
 
-		std::vector<LLUUID> objects;
+		uuid_vec_t objects;
 		LLInventoryClipboard::instance().retrieve(objects);
-		for (std::vector<LLUUID>::const_iterator iter = objects.begin();
+		for (auto iter = objects.begin();
 			 iter != objects.end();
 			 ++iter)
 		{
@@ -5654,7 +5654,7 @@ void LLGestureBridge::performAction(LLInventoryModel* model, std::string action)
 			// we need to inform server about gesture activating to be consistent with LLPreviewGesture and  LLGestureComboList.
 			BOOL inform_server = TRUE;
 			BOOL deactivate_similar = FALSE;
-			LLGestureMgr::instance().setGestureLoadedCallback(mUUID, boost::bind(&LLGestureBridge::playGesture, mUUID));
+			LLGestureMgr::instance().setGestureLoadedCallback(mUUID, std::bind(&LLGestureBridge::playGesture, mUUID));
 			LLViewerInventoryItem* item = gInventory.getItem(mUUID);
 			llassert(item);
 			if (item)

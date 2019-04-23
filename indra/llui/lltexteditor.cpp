@@ -1592,6 +1592,11 @@ BOOL LLTextEditor::handleMiddleMouseDown(S32 x, S32 y, MASK mask)
 	return TRUE;
 }
 
+bool always_underline_links()
+{
+	static const LLUICachedControl<bool> always_underline("SinguAlwaysUnderlineLinks");
+	return always_underline;
+}
 
 BOOL LLTextEditor::handleHover(S32 x, S32 y, MASK mask)
 {
@@ -1684,7 +1689,7 @@ BOOL LLTextEditor::handleHover(S32 x, S32 y, MASK mask)
 
 	if (old_hover != mHoverSegment)
 	{
-		if (old_hover)
+		if (old_hover && !always_underline_links())
 			old_hover->underlineOnHover(false);
 		if (mHoverSegment)
 			mHoverSegment->underlineOnHover(true);
@@ -1699,7 +1704,7 @@ BOOL LLTextEditor::handleHover(S32 x, S32 y, MASK mask)
 
 void LLTextEditor::onMouseLeave(S32 x, S32 y, MASK mask)
 {
-	if (mHoverSegment)
+	if (mHoverSegment && !always_underline_links())
 	{
 		mHoverSegment->underlineOnHover(false);
 		mHoverSegment = nullptr;
@@ -4308,7 +4313,9 @@ void LLTextEditor::appendTextImpl(const std::string &new_text, const LLStyleSP s
 			}
 			// Hack around colors looking bad on some backgrounds by allowing setting link color for this editor
 			if (mLinkColor) link_style->setColor(*mLinkColor);
-			appendAndHighlightText(link, part, link_style, true/*match.underlineOnHoverOnly()*/);
+			const auto always_underline(always_underline_links());
+			if (always_underline) link_style->mUnderline = true;
+			appendAndHighlightText(link, part, link_style, !always_underline/*match.underlineOnHoverOnly()*/);
 		};
 		const auto&& cb = force_replace_links ? boost::bind(&LLTextEditor::replaceUrl, this, _1, _2, _3) : LLUrlLabelCallback::slot_function_type();
 		while (!text.empty() && LLUrlRegistry::instance().findUrl(text, match, cb))
@@ -4477,9 +4484,22 @@ void LLTextEditor::replaceUrl(const std::string &url,
 		{
 			S32 start = seg->getStart();
 			S32 end = seg->getEnd();
-			text = text.substr(0, start) + wlabel + text.substr(end, text.size() - end + 1);
-			seg->setEnd(start + wlabel.size());
-			modified = true;
+			const auto& old_label = text.substr(start, end - start);
+			if (wlabel != old_label)
+			{
+				const auto difference = std::abs((S32)wlabel.length() - (S32)old_label.length());
+				if (mSelectionEnd >= end) // Selection stays at/after end
+				{
+					mSelectionEnd += difference;
+					if (mSelectionStart >= end)
+						mSelectionStart += difference;
+				}
+				if (mCursorPos >= end) // Cursor stays at/after end
+					mCursorPos += difference;
+				text.replace(start, end - start, wlabel);
+				seg->setEnd(start + wlabel.size());
+				modified = true;
+			}
 		}
 
 		/* Singu TODO: Icons with Urls?
@@ -4508,7 +4528,6 @@ void LLTextEditor::replaceUrl(const std::string &url,
 	{
 		mWText = text;
 		mTextIsUpToDate = FALSE;
-		deselect();
 		setCursorPos(mCursorPos);
 		needsReflow();
 	}

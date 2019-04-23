@@ -163,10 +163,10 @@ private:
 	map_t mRequestMap;
 
 	// Set of requests that require network data
-	typedef std::set<LLUUID> queue_t;
+	typedef uuid_set_t queue_t;
 	queue_t mNetworkQueue;
 	queue_t mHTTPTextureQueue;
-	typedef std::map<LLHost,std::set<LLUUID> > cancel_queue_t;
+	typedef std::map<LLHost,uuid_set_t > cancel_queue_t;
 	cancel_queue_t mCancelQueue;
 	LLTextureInfo mTextureInfo;
 

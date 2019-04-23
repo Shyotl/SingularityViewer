@@ -292,10 +292,7 @@ void LLFloaterChat::addChatHistory(const LLChat& chat, bool log_to_file)
 
 	history_editor->setParseHTML(TRUE);
 	history_editor_with_mute->setParseHTML(TRUE);
-	
-	history_editor->setParseHighlights(TRUE);
-	history_editor_with_mute->setParseHighlights(TRUE);
-	
+
 	if (!chat.mMuted)
 	{
 		add_timestamped_line(history_editor, chat, color);

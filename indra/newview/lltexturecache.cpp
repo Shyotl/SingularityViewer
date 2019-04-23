@@ -1064,9 +1064,9 @@ S32 LLTextureCache::openAndReadEntry(const LLUUID& id, Entry& entry, bool create
 			else
 			{
 				// Look for a still valid entry in the LRU
-				for (std::set<LLUUID>::iterator iter2 = mLRU.begin(); iter2 != mLRU.end();)
+				for (auto iter2 = mLRU.begin(); iter2 != mLRU.end();)
 				{
-					std::set<LLUUID>::iterator curiter2 = iter2++;
+					auto curiter2 = iter2++;
 					LLUUID oldid = *curiter2;
 					// Erase entry from LRU regardless
 					mLRU.erase(curiter2);

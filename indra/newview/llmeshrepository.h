@@ -316,6 +316,7 @@ public:
 
 	void runQueue(std::deque<std::pair<std::shared_ptr<MeshRequest>, F32> >(&queue)[2], U32& count, std::atomic<U32>& active_requests);
 	void runMap(const std::string& type, U32& count, LLMutex& mutex, std::map<LLUUID, MeshHeaderInfo>(&map)[2], parseFn parse_fn, retryFn retry_fn, bool parse_on_invalid = false);
+
 	void pushHeaderRequest(const LLVolumeParams& mesh_params, F32 delay = 0)
 	{
 		std::shared_ptr<LLMeshRepoThread::MeshRequest> req(new LLMeshRepoThread::HeaderRequest(mesh_params));
@@ -591,20 +592,20 @@ public:
 	std::vector<LLMeshRepoThread::LODRequest> mPendingRequests;
 	
 	//list of mesh ids awaiting skin info
-	typedef std::map<LLUUID, std::set<LLUUID> > skin_load_map;
+	typedef std::map<LLUUID, uuid_set_t > skin_load_map;
 	skin_load_map mLoadingSkins;
 
 	//list of mesh ids that need to send skin info fetch requests
 	std::queue<LLUUID> mPendingSkinRequests;
 
 	//list of mesh ids awaiting decompositions
-	std::set<LLUUID> mLoadingDecompositions;
+	uuid_set_t mLoadingDecompositions;
 
 	//list of mesh ids that need to send decomposition fetch requests
 	std::queue<LLUUID> mPendingDecompositionRequests;
 	
 	//list of mesh ids awaiting physics shapes
-	std::set<LLUUID> mLoadingPhysicsShapes;
+	uuid_set_t mLoadingPhysicsShapes;
 
 	//list of mesh ids that need to send physics shape fetch requests
 	std::queue<LLUUID> mPendingPhysicsShapeRequests;

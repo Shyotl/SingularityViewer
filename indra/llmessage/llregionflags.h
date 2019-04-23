@@ -42,6 +42,9 @@ const U64 REGION_FLAGS_RESET_HOME_ON_TELEPORT	= (1 << 3);
 // Does the sun move?
 const U64 REGION_FLAGS_SUN_FIXED				= (1 << 4);
 
+// Does the estate owner allow private parcels?
+const U64 REGION_FLAGS_ALLOW_ACCESS_OVERRIDE    = (1 << 5);
+
 // Can't change the terrain heightfield, even on owned parcels,
 // but can plant trees and grass.
 const U64 REGION_FLAGS_BLOCK_TERRAFORM			= (1 << 6);
@@ -51,6 +54,9 @@ const U64 REGION_FLAGS_BLOCK_LAND_RESELL		= (1 << 7);
 
 // All content wiped once per night
 const U64 REGION_FLAGS_SANDBOX					= (1 << 8);
+
+const U64 REGION_FLAGS_ALLOW_ENVIRONMENT_OVERRIDE = (1 << 9);
+
 const U64 REGION_FLAGS_GAMING					= (1 << 10); // Denotes a gaming region on certain grids
 const U64 REGION_FLAGS_HIDE_FROM_SEARCH			= (1 << 11); // Hides region from search on certain grids
 const U64 REGION_FLAGS_SKIP_COLLISIONS			= (1 << 12); // Pin all non agent rigid bodies

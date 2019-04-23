@@ -271,7 +271,7 @@ private:
 	// Update data
 	U32 mMarketPlaceDataFetched;
 	status_updated_signal_t* mDataFetchedSignal;
-	std::set<LLUUID> mPendingUpdateSet;
+	uuid_set_t mPendingUpdateSet;
 
 	// Listing folders waiting for validation
 	typedef std::map<LLUUID,S32> waiting_list_t;

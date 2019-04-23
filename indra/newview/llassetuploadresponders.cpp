@@ -223,6 +223,27 @@ LLAssetUploadResponder::~LLAssetUploadResponder()
 	}
 }
 
+void on_failure(const LLAssetType::EType& mAssetType, const LLSD& mPostData, const LLSD& args)
+{
+	switch (mAssetType)
+	{
+	case LLAssetType::AT_NOTECARD:
+	{
+		if (LLPreviewNotecard* nc = (LLPreviewNotecard*)LLPreview::find(mPostData["item_id"]))
+			nc->setEnabled(true);
+		break;
+	}
+	case LLAssetType::AT_SCRIPT:
+	case LLAssetType::AT_LSL_TEXT:
+	case LLAssetType::AT_LSL_BYTECODE:
+	{
+		if (LLPreviewLSL* lsl = (LLPreviewLSL*)LLPreview::find(mPostData["item_id"]))
+			lsl->callbackLSLCompileFailed(LLSD().with(0, "Upload Failure:").with(1, args["REASON"]));
+		break;
+	}
+	default: break;
+	}
+}
 // virtual
 void LLAssetUploadResponder::httpFailure()
 {
@@ -245,6 +266,7 @@ void LLAssetUploadResponder::httpFailure()
 			LLNotificationsUtil::add("CannotUploadReason", args);
 			break;
 	}
+	on_failure(mAssetType, mPostData, args);
 	LLUploadDialog::modalUploadFinished();
 }
 
@@ -313,6 +335,7 @@ void LLAssetUploadResponder::uploadFailure(const LLSD& content)
 		args["FILE"] = (mFileName.empty() ? mVFileID.asString() : mFileName);
 		args["REASON"] = content["message"].asString();
 		LLNotificationsUtil::add("CannotUploadReason", args);
+		on_failure(mAssetType, mPostData, args);
 	}
 }
 

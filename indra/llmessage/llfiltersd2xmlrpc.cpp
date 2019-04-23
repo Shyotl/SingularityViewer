@@ -84,6 +84,7 @@
 #include "llsd.h"
 #include "llsdserialize.h"
 #include "lluuid.h"
+#include "llfasttimer.h"
 
 // spammy mode
 //#define LL_SPEW_STREAM_OUT_DEBUGGING 1

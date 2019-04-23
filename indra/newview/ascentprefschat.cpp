@@ -128,9 +128,9 @@ void LLPrefsAscentChat::onCommitTimeDate(LLUICtrl* ctrl)
 
 	if (tempTimeFormat == 0)
     {
-        short_time = "%H:%M";
-        long_time  = "%H:%M:%S";
-        timestamp  = " %H:%M:%S";
+        short_time = "%R";
+        long_time  = "%T";
+        timestamp  = " %T";
     }
     else
     {
@@ -141,7 +141,7 @@ void LLPrefsAscentChat::onCommitTimeDate(LLUICtrl* ctrl)
 
 	if (tempDateFormat == 0)
     {
-        short_date = "%Y-%m-%d";
+        short_date = "%F";
         long_date  = "%A %d %B %Y";
         timestamp  = "%a %d %b %Y" + timestamp;
     }
@@ -153,7 +153,7 @@ void LLPrefsAscentChat::onCommitTimeDate(LLUICtrl* ctrl)
     }
     else
     {
-        short_date = "%m/%d/%Y";
+        short_date = "%D";
         long_date  = "%A, %B %d %Y";
         timestamp  = "%a %b %d %Y" + timestamp;
     }
@@ -218,11 +218,11 @@ void LLPrefsAscentChat::refreshValues()
     }
 
     format = gSavedSettings.getString("ShortDateFormat");
-    if (format.find("%m/%d/%") != std::string::npos)
+    if (format.find("%D") != std::string::npos || format.find("%m/%d/%") != std::string::npos)
     {
         mDateFormat = 2;
     }
-    else if (format.find("%d/%m/%") != -1)
+    else if (format.find("%d/%m/%") != std::string::npos)
     {
         mDateFormat = 1;
     }

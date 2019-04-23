@@ -20,10 +20,10 @@
 
 LLFloaterBlacklist* LLFloaterBlacklist::sInstance;
 
-std::vector<LLUUID> LLFloaterBlacklist::blacklist_textures;
-std::vector<LLUUID> LLFloaterBlacklist::blacklist_objects;
+uuid_vec_t LLFloaterBlacklist::blacklist_textures;
+uuid_vec_t LLFloaterBlacklist::blacklist_objects;
 
-std::map<LLUUID,LLSD> LLFloaterBlacklist::blacklist_entries;
+boost::unordered_map<LLUUID,LLSD> LLFloaterBlacklist::blacklist_entries;
 
 LLFloaterBlacklist::LLFloaterBlacklist()
 :	LLFloater()
@@ -88,7 +88,7 @@ void LLFloaterBlacklist::refresh()
 
 	LLScrollListCtrl* list = getChild<LLScrollListCtrl>("file_list");
 	list->clearRows();
-	for(std::map<LLUUID,LLSD>::iterator iter = blacklist_entries.begin(); iter != blacklist_entries.end(); ++iter)
+	for(auto iter = blacklist_entries.begin(); iter != blacklist_entries.end(); ++iter)
 	{
 		if(iter->first.isNull()) continue;
 		LLSD element;
@@ -246,7 +246,7 @@ void LLFloaterBlacklist::updateBlacklists()
 		blacklist_textures.clear();
 		blacklist_objects.clear();
 		gAssetStorage->mBlackListedAsset.clear();
-		for(std::map<LLUUID,LLSD>::iterator iter = blacklist_entries.begin(); iter != blacklist_entries.end(); ++iter)
+		for(auto iter = blacklist_entries.begin(); iter != blacklist_entries.end(); ++iter)
 		{
 			if(blacklist_entries[iter->first]["entry_type"].asString() == "0")
 			{
@@ -276,7 +276,7 @@ void LLFloaterBlacklist::saveToDisk()
 	std::string file_name = gDirUtilp->getExpandedFilename(LL_PATH_USER_SETTINGS, "blacklist_sg1.xml");
 	llofstream export_file(file_name);
 	LLSD data;
-	for(std::map<LLUUID,LLSD>::iterator iter = blacklist_entries.begin(); iter != blacklist_entries.end(); ++iter)
+	for(auto iter = blacklist_entries.begin(); iter != blacklist_entries.end(); ++iter)
 	{
 		data[iter->first.asString()] = iter->second;
 	}
@@ -300,7 +300,7 @@ void LLFloaterBlacklist::onClickSave_continued(AIFilePicker* filepicker)
 		std::string file_name = filepicker->getFilename();
 		llofstream export_file(file_name);
 		LLSD data;
-		for(std::map<LLUUID,LLSD>::iterator iter = blacklist_entries.begin(); iter != blacklist_entries.end(); ++iter)
+		for(auto iter = blacklist_entries.begin(); iter != blacklist_entries.end(); ++iter)
 		{
 			data[iter->first.asString()] = iter->second;
 		}
@@ -340,14 +340,13 @@ void LLFloaterBlacklist::onClickLoad_continued(AIFilePicker* filepicker)
 
 void LLFloaterBlacklist::onClickRerender(void* user_data)
 {
-	std::map<LLUUID,LLSD> blacklist_new;
-	for(std::map<LLUUID,LLSD>::iterator itr = blacklist_entries.begin(); itr != blacklist_entries.end(); ++itr)
+	for(auto itr = blacklist_entries.begin(); itr != blacklist_entries.end();)
 	{
-		if(blacklist_entries[itr->first]["entry_type"].asString() == "6") continue;
-		blacklist_new[itr->first] = blacklist_entries[itr->first];
-		blacklist_new[itr->second] = blacklist_entries[itr->second];
+		if (blacklist_entries[itr->first]["entry_type"].asString() == "6")
+			itr = blacklist_entries.erase(itr);
+		else
+			++itr;
 	}
-	blacklist_entries = blacklist_new;
 	saveToDisk();
 	LLFloaterBlacklist* instance = LLFloaterBlacklist::getInstance();
 	if(instance)

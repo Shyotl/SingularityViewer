@@ -17,7 +17,7 @@
       <check_box bottom_delta="-20" control_name="AlchemyConnectToNeighbors" follows="top" height="16" label="Connect to neighboring regions" name="connect_to_neighbors"/>
       <check_box bottom_delta="-20" follows="top" label="Auto-minimize region restart notice" name="region_restart_minimized" control_name="LiruRegionRestartMinimized" tool_tip="Useful for sim owners and people who need to pack up before leaving"/>
       <text bottom_delta="-16" follows="top" name="UISndRestartText">Sound played when regions will restart:</text>
-      <line_editor bottom_delta="-6" left_delta="222" follows="top" width="209" height="16" name="UISndRestart" tool_tip="Empty for no sound to play"/>
+      <line_editor bottom_delta="-6" left_delta="222" follows="top" width="216" height="16" name="UISndRestart" tool_tip="Empty for no sound to play"/>
       <spinner bottom_delta="-20" left_delta="-222" decimal_digits="3" follows="top" height="16" increment="0.05" label="Inactive Transparency" tool_tip="When a floater loses focus, this controls how much its opacity changes." label_width="120" max_val="5" min_val="0" name="Inactive Transparency" width="200" control_name="InactiveFloaterTransparency"/>
       <spinner bottom_delta="0" left_delta="220" decimal_digits="3" follows="top" height="16" increment="0.05" label="Active Transparency" tool_tip="When a floater is in focus, this controls how much its opacity changes." label_width="110" max_val="5" min_val="0" name="Active Transparency" width="190" control_name="ActiveFloaterTransparency"/>
     </panel>

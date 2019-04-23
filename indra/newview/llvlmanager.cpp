@@ -70,7 +70,7 @@ void LLVLManager::addLayerData(LLVLData *vl_datap, const S32 mesg_size)
 	{
 		mLandBits += mesg_size * 8;
 	}
-	else if (WATER_LAYER_CODE == vl_datap->mType || WHITECORE_CLOUD_LAYER_CODE == vl_datap->mType)
+	else if (WATER_LAYER_CODE == vl_datap->mType || WHITECORE_WATER_LAYER_CODE == vl_datap->mType)
 	{
 		mWaterBits += mesg_size * 8;
 	}

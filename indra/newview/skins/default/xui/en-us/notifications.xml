@@ -1587,6 +1587,19 @@ Unable to download file
   </notification>
 
   <notification
+  name="MediaFileDownloadUnsupported"
+  label=""
+  type="alert">
+    <unique/>
+    <tag>confirm</tag>
+    You have requested a file download, which is not supported within [SECOND_LIFE].
+    <usetemplate
+     ignoretext="Warn about unsupported file downloads"
+     name="okignore"
+     yestext="OK"/>
+  </notification>
+  
+  <notification
    icon="alertmodal.tga"
    name="CannotWriteFile"
    type="alertmodal">

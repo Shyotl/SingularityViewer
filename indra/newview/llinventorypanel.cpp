@@ -1118,7 +1118,7 @@ void LLInventoryPanel::setSelection(const LLUUID& obj_id, BOOL take_keyboard_foc
 	setSelectionByID(obj_id, take_keyboard_focus);
 }
 
-void LLInventoryPanel::setSelectCallback(const boost::function<void (const std::deque<LLFolderViewItem*>& items, BOOL user_action)>& cb) 
+void LLInventoryPanel::setSelectCallback(const std::function<void (const std::deque<LLFolderViewItem*>& items, BOOL user_action)>& cb) 
 { 
 	if (mFolderRoot.get())
 	{
@@ -1365,15 +1365,13 @@ bool LLInventoryPanel::isSelectionRemovable()
 	bool can_delete = false;
 	if (mFolderRoot.get())
 	{
-		std::set<LLUUID> selection_set = mFolderRoot.get()->getSelectionList();
+		auto selection_set = mFolderRoot.get()->getSelectionList();
 		if (!selection_set.empty()) 
 		{
 			can_delete = true;
-			for (std::set<LLUUID>::iterator iter = selection_set.begin();
-				 iter != selection_set.end();
-				 ++iter)
+			for (const auto& id : selection_set)
 			{
-				LLFolderViewItem *item = getItemByID(*iter);
+				LLFolderViewItem *item = getItemByID(id);
 				const LLFolderViewEventListener* listener =item->getListener();
 				if (!listener)
 				{

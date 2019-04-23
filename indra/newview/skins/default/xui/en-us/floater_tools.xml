@@ -189,8 +189,8 @@
 	    font="SansSerifSmall" height="15" initial_value="true" label="Use Grid"
 	    left_delta="0" mouse_opaque="true" name="checkbox snap to grid" width="134" />
 	<button bottom_delta="0" follows="left|top" font="SansSerifSmall" halign="center"
-		valign="center" height="18" label="Options..." label_selected="Options..."
-		left_delta="64" mouse_opaque="true" name="Options..." scale_image="TRUE" width="75" >
+		valign="center" height="18" label="Options"
+		left_delta="68" mouse_opaque="true" name="Options..." scale_image="TRUE" width="68" >
 	 	<button.commit_callback
 	     		function="BuildTool.gridOptions"/>
 	</button>
@@ -1170,12 +1170,20 @@
 			     mouse_opaque="true" name="edit_object" v_pad="0" width="252">
 				Edit object features:
 			</text>
-			<check_box bottom_delta="-26" follows="left|top" font="SansSerifSmall" height="16"
+            <check_box
+             height="15"
+             label="Animated Mesh"
+             left="10"
+             name="Animated Mesh Checkbox Ctrl"
+             tool_tip="Allows rigged mesh objects to be animated independently"
+             bottom_delta="-26"
+             width="121" />
+			<check_box bottom_delta="-20" follows="left|top" font="SansSerifSmall" height="16"
 			     initial_value="false" label="Flexible Path" left="10" mouse_opaque="true"
 			     name="Flexible1D Checkbox Ctrl"
 			     tool_tip="Allows object to flex about the Z axis. (Client-side only)"
 			     width="121" />
-			<spinner bottom_delta="-20" decimal_digits="0" follows="left|top" height="16"
+			<spinner bottom_delta="-21" decimal_digits="0" follows="left|top" height="16"
 			     increment="1" initial_val="2" label="Softness" label_width="55" left="10"
 			     max_val="3" min_val="0" mouse_opaque="true" name="FlexNumSections"
 			     width="118" />

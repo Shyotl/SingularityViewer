@@ -328,21 +328,11 @@ void LLFloaterTopObjects::doToObjects(int action, bool all)
 	LLViewerRegion* region = gAgent.getRegion();
 	if (!region) return;
 
-	LLCtrlListInterface *list = getChild<LLUICtrl>("objects_list")->getListInterface();
+	const auto list = getChild<LLScrollListCtrl>("objects_list");
 	if (!list || list->getItemCount() == 0) return;
 
-	uuid_vec_t::iterator id_itor;
-
 	bool start_message = true;
-
-	for (id_itor = mObjectListIDs.begin(); id_itor != mObjectListIDs.end(); ++id_itor)
-	{
-		LLUUID task_id = *id_itor;
-		if (!all && !list->isSelected(task_id))
-		{
-			// Selected only
-			continue;
-		}
+	auto func = [&](const LLUUID& task_id){
 		if (start_message)
 		{
 			if (action == ACTION_RETURN)
@@ -359,10 +349,9 @@ void LLFloaterTopObjects::doToObjects(int action, bool all)
 			msg->nextBlockFast(_PREHASH_ParcelData);
 			msg->addS32Fast(_PREHASH_LocalID, -1); // Whole region
 			msg->addS32Fast(_PREHASH_ReturnType, RT_NONE);
+			msg->nextBlockFast(_PREHASH_TaskIDs);
 			start_message = false;
 		}
-
-		msg->nextBlockFast(_PREHASH_TaskIDs);
 		msg->addUUIDFast(_PREHASH_TaskID, task_id);
 
 		if (msg->isSendFullFast(_PREHASH_TaskIDs))
@@ -370,7 +359,10 @@ void LLFloaterTopObjects::doToObjects(int action, bool all)
 			msg->sendReliable(region->getHost());
 			start_message = true;
 		}
-	}
+	};
+
+	if (all) for (const auto& id : mObjectListIDs) func(id);
+	else for (const auto& item : list->getAllSelected()) func(item->getUUID());
 
 	if (!start_message)
 	{

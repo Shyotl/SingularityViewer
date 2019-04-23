@@ -225,7 +225,7 @@ std::string currentOsName()
 	return "Windows";
 #elif LL_DARWIN
 	return "Mac";
-#elif LL_SDL
+#elif LL_SDL || LL_MESA_HEADLESS
 	return "Linux";
 #else
 	return "";
@@ -426,7 +426,7 @@ LLFontGL *LLFontRegistry::createFont(const LLFontDescriptor& desc)
 	LLFontFreetype::font_vector_t fontlist;
 	LLFontGL *result = NULL;
 
-	// Snarf all fonts we can into fontlistp.  First will get pulled
+	// Snarf all fonts we can into fontlist.  First will get pulled
 	// off the list and become the "head" font, set to non-fallback.
 	// Rest will consitute the fallback list.
 	BOOL is_first_found = TRUE;
@@ -441,7 +441,7 @@ LLFontGL *LLFontRegistry::createFont(const LLFontDescriptor& desc)
 		++file_name_it)
 	{
 		LLFontGL *fontp = new LLFontGL;
-		std::string font_path = local_path + *file_name_it;
+		std::string font_path = gDirUtilp->add(local_path, *file_name_it);
 		// *HACK: Fallback fonts don't render, so we can use that to suppress
 		// creation of OpenGL textures for test apps. JC
 		BOOL is_fallback = !is_first_found || !mCreateGLTextures;
@@ -449,12 +449,12 @@ LLFontGL *LLFontRegistry::createFont(const LLFontDescriptor& desc)
 		if (!fontp->loadFace(font_path, extra_scale * point_size,
 							 LLFontGL::sVertDPI, LLFontGL::sHorizDPI, 2, is_fallback))
 		{
-			font_path = sys_path + *file_name_it;
+			font_path = gDirUtilp->add(sys_path, *file_name_it);
 
 			if (!fontp->loadFace(font_path, extra_scale * point_size,
 								 LLFontGL::sVertDPI, LLFontGL::sHorizDPI, 2, is_fallback))
 			{
-				LL_INFOS_ONCE("LLFontRegistry") << "Couldn't load font " << *file_name_it << LL_ENDL;
+				LL_INFOS_ONCE("LLFontRegistry") << "Couldn't load font " << *file_name_it << " from path " << font_path << LL_ENDL;
 				delete fontp;
 				fontp = NULL;
 			}
@@ -491,6 +491,7 @@ LLFontGL *LLFontRegistry::createFont(const LLFontDescriptor& desc)
 	{
 		LL_WARNS() << "createFont failed in some way" << LL_ENDL;
 	}
+
 	mFontMap[norm_desc] = result;
 	return result;
 }
@@ -533,19 +534,19 @@ void LLFontRegistry::destroyGL()
 
 LLFontGL *LLFontRegistry::getFont(const LLFontDescriptor& orig_desc)
 {
-	LLFontDescriptor norm_desc = orig_desc.normalize();
+	LLFontDescriptor desc = orig_desc.normalize();
 
-	font_reg_map_t::iterator it = mFontMap.find(norm_desc);
+	font_reg_map_t::iterator it = mFontMap.find(desc);
 	if (it != mFontMap.end())
 		return it->second;
 	else
 	{
-		LLFontGL *fontp = createFont(orig_desc);
+		LLFontGL *fontp = createFont(desc);
 		if (!fontp)
 		{
-			LL_WARNS() << "getFont failed, name " << orig_desc.getName()
-					<<" style=[" << ((S32) orig_desc.getStyle()) << "]"
-					<< " size=[" << orig_desc.getSize() << "]" << LL_ENDL;
+			LL_WARNS() << "getFont failed, name " << desc.getName()
+					<<" style=[" << ((S32) desc.getStyle()) << "]"
+					<< " size=[" << desc.getSize() << "]" << LL_ENDL;
 		}
 		return fontp;
 	}

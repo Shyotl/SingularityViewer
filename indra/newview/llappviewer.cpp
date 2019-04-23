@@ -566,11 +566,25 @@ LLAppViewer::LLAppViewer() :
 		LL_ERRS() << "Oh no! An instance of LLAppViewer already exists! LLAppViewer is sort of like a singleton." << LL_ENDL;
 	}
 
-	mDumpPath ="";
+	mDumpPath.clear();
 
 	// Need to do this initialization before we do anything else, since anything
 	// that touches files should really go through the lldir API
-	gDirUtilp->initAppDirs("SecondLife");
+	{
+		std::string newview_path;
+		const auto& exe_dir = gDirUtilp->getExecutableDir();
+		auto build_dir_pos = exe_dir.rfind("build-");
+		if (build_dir_pos != std::string::npos)
+		{
+			// ...we're in a dev checkout
+			newview_path = gDirUtilp->add(gDirUtilp->add(exe_dir.substr(0, build_dir_pos), "indra"), "newview");
+			if (LLFile::isdir(newview_path))
+				LL_INFOS() << "Running in dev checkout with newview " << newview_path << LL_ENDL;
+			else newview_path.clear();
+		}
+
+		gDirUtilp->initAppDirs("SecondLife", newview_path);
+	}
 	sInstance = this;
 }
 
@@ -640,7 +654,8 @@ bool LLAppViewer::init()
 	
 	// initialize LLWearableType translation bridge.
 	// Memory will be cleaned up in ::cleanupClass()
-	LLWearableType::initClass(new LLUITranslationBridge());
+	LLTranslationBridge::ptr_t trans = std::make_shared<LLUITranslationBridge>();
+	LLWearableType::initClass(trans);
 
 	// <edit>
 	// We can call this early.
@@ -1729,9 +1744,6 @@ bool LLAppViewer::cleanup()
 	
 	removeDumpDir();   
 	writeDebugInfo();
-
-	if(!gDirUtilp->getLindenUserDir(true).empty())
-		LLViewerMedia::saveCookieFile();
 
 	// Stop the plugin read thread if it's running.
 	LLPluginProcessParent::setUseReadThread(false);

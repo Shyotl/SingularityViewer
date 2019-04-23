@@ -59,26 +59,29 @@ LLFloaterJoystick::LLFloaterJoystick(const LLSD& data)
 
 void LLFloaterJoystick::draw()
 {
+	// Singu TODO: Cache these children, or consider not doing this in the draw call
 	bool joystick_inited = LLViewerJoystick::getInstance()->isJoystickInitialized();
 	childSetEnabled("enable_joystick", joystick_inited);
-	childSetEnabled("joystick_type", joystick_inited);
+	auto type(getChild<LLView>("joystick_type"));
+	type->setEnabled(joystick_inited);
 	std::string desc = LLViewerJoystick::getInstance()->getDescription();
 	if (desc.empty()) desc = getString("NoDevice");
-	childSetText("joystick_type", desc);
+	type->setValue(desc);
 
 	LLViewerJoystick* joystick(LLViewerJoystick::getInstance());
-	for (U32 i = 0; i < 6; i++)
+	for (U32 i = 0; i < 6; ++i)
 	{
 		F32 value = joystick->getJoystickAxis(i);
 		mAxisStats[i]->addValue(value * gFrameIntervalSeconds);
-		
-		if (mAxisStatsBar[i]->mMinBar > value)
+		auto& bar = mAxisStatsBar[i];
+
+		if (bar->mMinBar > value)
 		{
-			mAxisStatsBar[i]->mMinBar = value;
+			bar->mMinBar = value;
 		}
-		if (mAxisStatsBar[i]->mMaxBar < value)
+		if (bar->mMaxBar < value)
 		{
-			mAxisStatsBar[i]->mMaxBar = value;
+			bar->mMaxBar = value;
 		}
 	}
 

@@ -193,13 +193,13 @@ const std::string& LLInventoryIcon::getIconName(LLInventoryType::EIconName idx)
 
 LLInventoryType::EIconName LLInventoryIcon::assignWearableIcon(U32 misc_flag)
 {
-	const LLWearableType::EType wearable_type = LLWearableType::EType(LLInventoryItemFlags::II_FLAGS_WEARABLES_MASK & misc_flag);
+	const LLWearableType::EType wearable_type = LLWearableType::EType(LLInventoryItemFlags::II_FLAGS_SUBTYPE_MASK & misc_flag);
 	return LLWearableType::getIconName(wearable_type);
 }
 
 LLInventoryType::EIconName LLInventoryIcon::assignSettingsIcon(U32 misc_flag)
 {
-	switch (misc_flag & LLInventoryItemFlags::II_FLAGS_WEARABLES_MASK)
+	switch (misc_flag & LLInventoryItemFlags::II_FLAGS_SUBTYPE_MASK)
 	{
 		case 0: return LLInventoryType::ICONNAME_SETTINGS_SKY;
 		case 1: return LLInventoryType::ICONNAME_SETTINGS_WATER;

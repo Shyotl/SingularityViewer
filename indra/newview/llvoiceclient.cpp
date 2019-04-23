@@ -309,7 +309,7 @@ const LLVoiceDeviceList& LLVoiceClient::getRenderDevices()
 //--------------------------------------------------
 // participants
 
-void LLVoiceClient::getParticipantList(std::set<LLUUID> &participants)
+void LLVoiceClient::getParticipantList(uuid_set_t &participants)
 {
 	if (mVoiceModule)
 	{
@@ -317,7 +317,7 @@ void LLVoiceClient::getParticipantList(std::set<LLUUID> &participants)
 	}
 	else
 	{
-		participants = std::set<LLUUID>();
+		participants = uuid_set_t();
 	}
 }
 

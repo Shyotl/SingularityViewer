@@ -117,7 +117,7 @@
       <check_box bottom_delta="-20" follows="top" label="Replace slurls and formatted links with labels" name="SinguReplaceLinks" control_name="SinguReplaceLinks" tool_tip="While you can right click to see where they really lead by copying them, this does allow links to be misleading at first glance."/>
       <text name="EmergencyTeleportDesc" left="14" bottom_delta="-12" follows="top">Drop a landmark below to autoteleport there in the last 20 seconds before region restarts</text>
       <drop_target control_name="EmergencyTeleportLandmark" bottom_delta="-8" left="15" height="17" name="emergency_teleport_landmark_drop" width="430"/>
-      <text name="EmergencyTeleportBackupDesc" halign="center" width="432" left="14" bottom_delta="-26" follows="top">Drop a backup landmark to autoteleport to below, should you already be at the above</text>
+      <text name="EmergencyTeleportBackupDesc" halign="center" width="432" left="14" bottom_delta="-26" follows="top">Drop a backup landmark to autoteleport to below, should you already be at above</text>
       <drop_target control_name="EmergencyTeleportLandmarkBackup" bottom_delta="-8" left="15" height="17" name="emergency_teleport_landmark_backup_drop" width="430"/>
     </panel>
 

@@ -220,26 +220,8 @@ void LLDrawPoolTerrain::render(S32 pass)
 	}
 
 	// Special-case for land ownership feedback
-	static const LLCachedControl<bool> show_parcel_owners("ShowParcelOwners",false);
-	if (show_parcel_owners)
 	{
-		if (mVertexShaderLevel > 1)
-		{ //use fullbright shader for highlighting
-			LLGLSLShader* old_shader = sShader;
-			sShader->unbind();
-			sShader = &gHighlightProgram;
-			sShader->bind();
-			gGL.diffuseColor4f(1,1,1,1);
-			LLGLEnable<GL_POLYGON_OFFSET_FILL> polyOffset;
-			gGL.setPolygonOffset(-1.0f, -1.0f);
-			renderOwnership();
-			sShader = old_shader;
-			sShader->bind();
-		}
-		else
-		{
-			renderOwnership();
-		}
+		hilightParcelOwners();
 	}
 }
 
@@ -267,7 +249,14 @@ void LLDrawPoolTerrain::renderDeferred(S32 pass)
 	{
 		return;
 	}
+
 	renderFullShader();
+
+	// Special-case for land ownership feedback
+	{
+		hilightParcelOwners();
+	}
+
 }
 
 void LLDrawPoolTerrain::beginShadowPass(S32 pass)
@@ -459,6 +448,29 @@ void LLDrawPoolTerrain::renderFullShader()
 	gGL.matrixMode(LLRender::MM_MODELVIEW);
 }
 
+void LLDrawPoolTerrain::hilightParcelOwners()
+{
+	static const LLCachedControl<bool> show_parcel_owners("ShowParcelOwners",false);
+	if (!show_parcel_owners) return;
+	if (mVertexShaderLevel > 1)
+	{ //use fullbright shader for highlighting
+		LLGLSLShader* old_shader = sShader;
+		sShader->unbind();
+		sShader = &gHighlightProgram;
+		sShader->bind();
+		gGL.diffuseColor4f(1,1,1,1);
+		LLGLEnable<GL_POLYGON_OFFSET_FILL> polyOffset;
+		gGL.setPolygonOffset(-1.0f, -1.0f);
+		renderOwnership();
+		sShader = old_shader;
+		sShader->bind();
+	}
+	else
+	{
+		renderOwnership();
+	}
+}
+
 void LLDrawPoolTerrain::renderFull4TU()
 {
 	// Hack! Get the region that this draw pool is rendering from!
@@ -493,6 +505,7 @@ void LLDrawPoolTerrain::renderFull4TU()
 	glEnable(GL_TEXTURE_GEN_T);
 	glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR);
 	glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR);
+
 	glTexGenfv(GL_S, GL_OBJECT_PLANE, tp0.mV);
 	glTexGenfv(GL_T, GL_OBJECT_PLANE, tp1.mV);
 
@@ -601,7 +614,6 @@ void LLDrawPoolTerrain::renderFull4TU()
 	gGL.matrixMode(LLRender::MM_TEXTURE);
 	gGL.loadIdentity();
 	gGL.translatef(-1.f, 0.f, 0.f);
-  
 	gGL.matrixMode(LLRender::MM_MODELVIEW);
 
 	// Set alpha texture and do lighting modulation

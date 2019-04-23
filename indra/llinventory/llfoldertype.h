@@ -97,6 +97,9 @@ public:
 		FT_MARKETPLACE_LISTINGS = 53,
 		FT_MARKETPLACE_STOCK = 54,
 		FT_MARKETPLACE_VERSION = 55,    // Note: We actually *never* create folders with that type. This is used for icon override only.
+
+        FT_SETTINGS = 56,
+
 		FT_SUITCASE = 100,
 
 		FT_COUNT,

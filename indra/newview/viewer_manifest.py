@@ -95,6 +95,7 @@ class ViewerManifest(LLManifest):
                 self.path("windlight")
 
                 # ... and the included spell checking dictionaries
+                pkgdir = os.path.join(self.args['build'], os.pardir, 'packages')
                 self.path("dictionaries")
 
                 # include the extracted packages information (see BuildPackagesInfo.cmake)
@@ -110,8 +111,16 @@ class ViewerManifest(LLManifest):
                 self.end_prefix("character")
 
             # Include our fonts
+            if self.prefix(src=os.path.join(pkgdir, "fonts"), dst="fonts"):
+                self.path("DejaVuSansCondensed*.ttf")
+                self.path("DejaVuSansMono.ttf")
+                self.path("DroidSans*.ttf")
+                self.path("NotoSansDisplay*.ttf")
+                self.path("SourceHanSans*.otf")
+                self.end_prefix()
+
+            # Include our font licenses
             if self.prefix(src="fonts"):
-                self.path("*.ttf")
                 self.path("*.txt")
                 self.end_prefix("fonts")
 
@@ -370,34 +379,28 @@ class WindowsManifest(ViewerManifest):
             self.end_prefix()
 
         # CEF runtime files - debug
-        if self.args['configuration'].lower() == 'debug':
-            if self.prefix(src=os.path.join(os.pardir, 'packages', 'bin', 'debug'), dst="llplugin"):
-                self.path("d3dcompiler_47.dll")
-                self.path("libcef.dll")
-                self.path("libEGL.dll")
-                self.path("libGLESv2.dll")
-                self.path("llceflib_host.exe")
-                self.path("natives_blob.bin")
-                self.path("snapshot_blob.bin")
-                self.path("widevinecdmadapter.dll")
-                self.path("wow_helper.exe")
-                self.end_prefix()
-        else:
         # CEF runtime files - not debug (release, relwithdebinfo etc.)
-            if self.prefix(src=os.path.join(os.pardir, 'packages', 'bin', 'release'), dst="llplugin"):
+        config = 'debug' if self.args['configuration'].lower() == 'debug' else 'release'
+        if self.prefix(src=os.path.join(pkgdir, 'bin', config), dst="llplugin"):
+                self.path("chrome_elf.dll")
+                self.path("d3dcompiler_43.dll")
                 self.path("d3dcompiler_47.dll")
                 self.path("libcef.dll")
                 self.path("libEGL.dll")
                 self.path("libGLESv2.dll")
-                self.path("llceflib_host.exe")
+                self.path("dullahan_host.exe")
                 self.path("natives_blob.bin")
                 self.path("snapshot_blob.bin")
-                self.path("widevinecdmadapter.dll")
-                self.path("wow_helper.exe")
+                self.path("v8_context_snapshot.bin")
                 self.end_prefix()
 
+        if self.prefix(src=os.path.join(pkgdir, 'bin', config, 'swiftshader'), dst=os.path.join("llplugin", 'swiftshader')):
+            self.path("libEGL.dll")
+            self.path("libGLESv2.dll")
+            self.end_prefix()
+
         # CEF files common to all configurations
-        if self.prefix(src=os.path.join(os.pardir, 'packages', 'resources'), dst="llplugin"):
+        if self.prefix(src=os.path.join(pkgdir, 'resources'), dst="llplugin"):
             self.path("cef.pak")
             self.path("cef_100_percent.pak")
             self.path("cef_200_percent.pak")
@@ -406,7 +409,7 @@ class WindowsManifest(ViewerManifest):
             self.path("icudtl.dat")
             self.end_prefix()
 
-        if self.prefix(src=os.path.join(os.pardir, 'packages', 'resources', 'locales'), dst=os.path.join('llplugin', 'locales')):
+        if self.prefix(src=os.path.join(pkgdir, 'resources', 'locales'), dst=os.path.join('llplugin', 'locales')):
             self.path("am.pak")
             self.path("ar.pak")
             self.path("bg.pak")
@@ -461,6 +464,7 @@ class WindowsManifest(ViewerManifest):
             self.path("zh-CN.pak")
             self.path("zh-TW.pak")
             self.end_prefix()
+
 
         if not self.is_packaging_viewer():
             self.package_file = "copied_deps"
@@ -772,13 +776,27 @@ class DarwinManifest(ViewerManifest):
                         except OSError as err:
                             print "Can't symlink %s -> %s: %s" % (src, dst, err)
 
-                # LLCefLib helper apps go inside AlchemyPlugin.app
+                # Dullahan helper apps go inside AlchemyPlugin.app
                 if self.prefix(src="", dst="AlchemyPlugin.app/Contents/Frameworks"):
-                    for helperappfile in ('LLCefLib Helper.app',
-                                          'LLCefLib Helper EH.app'):
-                        self.path2basename(relpkgdir, helperappfile)
+                    helperappfile = 'DullahanHelper.app'
+                    self.path2basename(relbinpkgdir, helperappfile)
 
                     pluginframeworkpath = self.dst_path_of('Chromium Embedded Framework.framework');
+                    # Putting a Frameworks directory under Contents/MacOS
+                    # isn't canonical, but the path baked into Dullahan
+                    # Helper.app/Contents/MacOS/DullahanHelper is:
+                    # @executable_path/Frameworks/Chromium Embedded Framework.framework/Chromium Embedded Framework
+                    # (notice, not @executable_path/../Frameworks/etc.)
+                    # So we'll create a symlink (below) from there back to the
+                    # Frameworks directory nested under SLPlugin.app.
+                    helperframeworkpath = \
+                        self.dst_path_of('DullahanHelper.app/Contents/MacOS/'
+                                         'Frameworks/Chromium Embedded Framework.framework')
+
+                    helperexecutablepath = self.dst_path_of('DullahanHelper.app/Contents/MacOS/DullahanHelper')
+                    self.run_command(['install_name_tool', '-change',
+                                     '@rpath/Frameworks/Chromium Embedded Framework.framework/Chromium Embedded Framework',
+                                     '@executable_path/Frameworks/Chromium Embedded Framework.framework/Chromium Embedded Framework', helperexecutablepath])
 
                     self.end_prefix()
 
@@ -805,19 +823,42 @@ class DarwinManifest(ViewerManifest):
                 # This code constructs a relative path from the
                 # target framework folder back to the location of the symlink.
                 # It needs to be relative so that the symlink still works when
-                # (as is normal) the user moves the app bunlde out of the DMG
+                # (as is normal) the user moves the app bundle out of the DMG
                 # and into the /Applications folder. Note we also call 'raise'
                 # to terminate the process if we get an error since without
                 # this symlink, Second Life web media can't possibly work.
                 # Real Framework folder:
-                #   Second Life.app/Contents/Frameworks/Chromium Embedded Framework.framework/
-                # Location of symlink and why it'ds relavie 
-                #   Second Life.app/Contents/Resources/AlchemyPlugin.app/Contents/Frameworks/Chromium Embedded Framework.framework/
-                frameworkpath = os.path.join(os.pardir, os.pardir, os.pardir, os.pardir, "Frameworks", "Chromium Embedded Framework.framework")
+                #   Alchemy.app/Contents/Frameworks/Chromium Embedded Framework.framework/
+                # Location of symlink and why it's relative 
+                #   Alchemy.app/Contents/Resources/AlchemyPlugin.app/Contents/Frameworks/Chromium Embedded Framework.framework/
+                # Real Frameworks folder, with the symlink inside the bundled SLPlugin.app (and why it's relative)
+                #   <top level>.app/Contents/Frameworks/Chromium Embedded Framework.framework/
+                #   <top level>.app/Contents/Resources/AlchemyPlugin.app/Contents/Frameworks/Chromium Embedded Framework.framework ->
+                # It might seem simpler just to create a symlink Frameworks to
+                # the parent of Chromimum Embedded Framework.framework. But
+                # that would create a symlink cycle, which breaks our
+                # packaging step. So make a symlink from Chromium Embedded
+                # Framework.framework to the directory of the same name, which
+                # is NOT an ancestor of the symlink.
+                frameworkpath = os.path.join(os.pardir, os.pardir, os.pardir, 
+                                             os.pardir, "Frameworks",
+                                             "Chromium Embedded Framework.framework")
                 try:
-                    symlinkf(frameworkpath, pluginframeworkpath)
+                    # from AlchemyPlugin.app/Contents/Frameworks/Chromium Embedded
+                    # Framework.framework back to
+                    # Alchemy.app/Contents/Frameworks/Chromium Embedded Framework.framework
+                    origin, target = pluginframeworkpath, frameworkpath
+                    self.symlinkf(target, origin)
+                    # from AlchemyPlugin.app/Contents/Frameworks/Dullahan
+                    # Helper.app/Contents/MacOS/Frameworks/Chromium Embedded
+                    # Framework.framework back to
+                    # AlchemyPlugin.app/Contents/Frameworks/Chromium Embedded Framework.framework
+                    self.cmakedirs(os.path.dirname(helperframeworkpath))
+                    origin = helperframeworkpath
+                    target = os.path.join(os.pardir, frameworkpath)
+                    self.symlinkf(target, origin)
                 except OSError as err:
-                    print "Can't symlink %s -> %s: %s" % (frameworkpath, pluginframeworkpath, err)
+                    print "Can't symlink %s -> %s: %s" % (origin, target, err)
                     raise
 
             self.end_prefix("Contents")
@@ -1029,9 +1070,10 @@ class LinuxManifest(ViewerManifest):
         # CEF files 
         if self.prefix(src=os.path.join(pkgdir, 'bin', 'release'), dst="bin"):
             self.path("chrome-sandbox")
-            self.path("llceflib_host")
+            self.path("dullahan_host")
             self.path("natives_blob.bin")
             self.path("snapshot_blob.bin")
+            self.path("v8_context_snapshot.bin")
             self.end_prefix()
 
         if self.prefix(src=os.path.join(pkgdir, 'resources'), dst="bin"):

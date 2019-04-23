@@ -57,6 +57,7 @@
 		<menu_item_check label="Altitud" name="Altitude"/>
 		<menu_item_check label="Actividad" name="Activity"/>
 		<menu_item_check label="Voz" name="Voice"/>
+		<menu_item_check label="Notas" name="Notes"/>
 		<menu_item_check label="Edad" name="Age"/>
 		<menu_item_check label="Tiempo" name="Time"/>
 		<menu_item_check label="Visor" name="Client"/>

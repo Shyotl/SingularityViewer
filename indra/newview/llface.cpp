@@ -868,7 +868,7 @@ BOOL LLFace::genVolumeBBoxes(const LLVolume &volume, S32 f,
 		{
 			LL_DEBUGS("RiggedBox") << "skipping face " << f << ", bad num vertices " 
 									<< face.mNumVertices << " " << face.mNumIndices << " " << face.mWeights << LL_ENDL;
-		return FALSE;
+			return FALSE;
 		}
 
 		//VECTORIZE THIS

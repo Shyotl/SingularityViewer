@@ -9,9 +9,7 @@
 #   LINUX   - Linux
 #   WINDOWS - Windows
 
-
 # Relative and absolute paths to subtrees.
-
 if(NOT DEFINED ${CMAKE_CURRENT_LIST_FILE}_INCLUDED)
 set(${CMAKE_CURRENT_LIST_FILE}_INCLUDED "YES")
 
@@ -24,13 +22,36 @@ set(LIBS_OPEN_PREFIX)
 set(SCRIPTS_PREFIX ../scripts)
 set(VIEWER_PREFIX)
 set(INTEGRATION_TESTS_PREFIX)
-set(LL_TESTS OFF CACHE BOOL "Build and run unit and integration tests (disable for build timing runs to reduce variation)")
+option(LL_TESTS "Build and run unit and integration tests (disable for build timing runs to reduce variation" OFF)
 
 # Compiler and toolchain options
+option(USESYSTEMLIBS "Use libraries from your system rather than Linden-supplied prebuilt libraries." OFF)
+option(STANDALONE "Use libraries from your system rather than Linden-supplied prebuilt libraries." OFF)
+if (USESYSTEMLIBS)
+    set(STANDALONE ON)
+elseif (STANDALONE)
+    set(USESYSTEMLIBS ON)
+endif (USESYSTEMLIBS)
+option(INCREMENTAL_LINK "Use incremental linking on win32 builds (enable for faster links on some machines)" OFF)
+option(USE_PRECOMPILED_HEADERS "Enable use of precompiled header directives where supported." ON)
+option(USE_LTO "Enable Whole Program Optimization and related folding and binary reduction routines" OFF)
+option(UNATTENDED "Disable use of uneeded tooling for automated builds" OFF)
+
+# Media Plugins
+option(ENABLE_MEDIA_PLUGINS "Turn off building media plugins if they are imported by third-party library mechanism" ON)
+option(LIBVLCPLUGIN "Turn off building support for libvlc plugin" ON)
+if (${CMAKE_SYSTEM_NAME} MATCHES "Linux" OR ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+  set(LIBVLCPLUGIN OFF)
+endif (${CMAKE_SYSTEM_NAME} MATCHES "Linux" OR ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+
+# Mallocs
 set(DISABLE_TCMALLOC OFF CACHE BOOL "Disable linkage of TCMalloc. (64bit builds automatically disable TCMalloc)")
 set(DISABLE_FATAL_WARNINGS TRUE CACHE BOOL "Set this to FALSE to enable fatal warnings.")
-option(INCREMENTAL_LINK "Use incremental linking or incremental LTCG for LTO on win32 builds (enable for faster links on some machines)" OFF)
-option(USE_LTO "Enable Whole Program Optimization and related folding and binary reduction routines" OFF)
+# Audio Engines
+option(FMODSTUDIO "Build with support for the FMOD Studio audio engine" OFF)
+
+# Window implementation
+option(LLWINDOW_SDL2 "Use SDL2 for window and input handling" OFF)
 
 # Proprietary Library Features
 option(NVAPI "Use nvapi driver interface library" OFF)
@@ -60,12 +81,13 @@ if (EXISTS ${CMAKE_SOURCE_DIR}/Server.cmake)
   set(INSTALL_PROPRIETARY ON CACHE BOOL "Install proprietary binaries")
 endif (EXISTS ${CMAKE_SOURCE_DIR}/Server.cmake)
 set(TEMPLATE_VERIFIER_OPTIONS "" CACHE STRING "Options for scripts/template_verifier.py")
-set(TEMPLATE_VERIFIER_MASTER_URL "http://bitbucket.org/lindenlab/master-message-template/raw/tip/message_template.msg" CACHE STRING "Location of the master message template")
+set(TEMPLATE_VERIFIER_MASTER_URL "https://forge.alchemyviewer.org/alchemy/tools/Master-Message-Template/raw/master/message_template.msg" CACHE STRING "Location of the master message template")
 
 if (NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING
       "Build type.  One of: Debug Release RelWithDebInfo" FORCE)
 endif (NOT CMAKE_BUILD_TYPE)
+
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
   set(WINDOWS ON BOOL FORCE)
@@ -142,63 +164,94 @@ endif (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
   set(DARWIN 1)
 
-  execute_process(
-    COMMAND sh -c "xcodebuild -version | grep Xcode  | cut -d ' ' -f2 | cut -d'.' -f1-2"
-    OUTPUT_VARIABLE XCODE_VERSION )
-  string(REGEX REPLACE "(\r?\n)+$" "" XCODE_VERSION "${XCODE_VERSION}")
+  if (XCODE_VERSION LESS 8.0.0)
+    message( FATAL_ERROR "Xcode 8.0.0 or greater is required." )
+  endif (XCODE_VERSION LESS 8.0.0)
+  message( "Building with " ${CMAKE_OSX_SYSROOT} )
+  set(CMAKE_OSX_DEPLOYMENT_TARGET 10.12)
 
-  # Hardcode SDK we build against until we can test and allow newer ones
-  # as autodetected in the code above
-  set(CMAKE_OSX_DEPLOYMENT_TARGET 10.6)
-  set(CMAKE_OSX_SYSROOT macosx10.6)
+  set(CMAKE_XCODE_ATTRIBUTE_GCC_VERSION "com.apple.compilers.llvm.clang.1_0")
+  set(CMAKE_XCODE_ATTRIBUTE_GCC_OPTIMIZATION_LEVEL 3)
+  set(CMAKE_XCODE_ATTRIBUTE_GCC_STRICT_ALIASING NO)
+  set(CMAKE_XCODE_ATTRIBUTE_GCC_FAST_MATH NO)
+  set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++")
+  set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LANGUAGE_STANDARD "c++14")
+  if (USE_AVX2)
+    set(CMAKE_XCODE_ATTRIBUTE_CLANG_X86_VECTOR_INSTRUCTIONS avx2)
+  elseif (USE_AVX)
+    set(CMAKE_XCODE_ATTRIBUTE_CLANG_X86_VECTOR_INSTRUCTIONS avx)
+  else ()
+  set(CMAKE_XCODE_ATTRIBUTE_CLANG_X86_VECTOR_INSTRUCTIONS sse4.1)
+  endif ()
 
-  # Support for Unix Makefiles generator
-  if (CMAKE_GENERATOR STREQUAL "Unix Makefiles")
-    execute_process(COMMAND xcodebuild -version -sdk "${CMAKE_OSX_SYSROOT}" Path | head -n 1 OUTPUT_VARIABLE CMAKE_OSX_SYSROOT)
-    string(REGEX REPLACE "(\r?\n)+$" "" CMAKE_OSX_SYSROOT "${CMAKE_OSX_SYSROOT}")
-  endif (CMAKE_GENERATOR STREQUAL "Unix Makefiles")
-      
-  # LLVM-GCC has been removed in Xcode5
-  if (XCODE_VERSION GREATER 4.9)
-    set(CMAKE_XCODE_ATTRIBUTE_GCC_VERSION "com.apple.compilers.llvm.clang.1_0")
-  else (XCODE_VERSION GREATER 4.9)
-    set(CMAKE_XCODE_ATTRIBUTE_GCC_VERSION "com.apple.compilers.llvmgcc42")
-  endif (XCODE_VERSION GREATER 4.9)
+  if (${CMAKE_BUILD_TYPE} STREQUAL "Release")
+    set(CMAKE_XCODE_ATTRIBUTE_DEBUG_INFORMATION_FORMAT dwarf-with-dsym)
+  else (${CMAKE_BUILD_TYPE} STREQUAL "Release")
+    set(CMAKE_XCODE_ATTRIBUTE_DEBUG_INFORMATION_FORMAT dwarf)
+  endif (${CMAKE_BUILD_TYPE} STREQUAL "Release")
 
-  set(CMAKE_XCODE_ATTRIBUTE_DEBUG_INFORMATION_FORMAT dwarf-with-dsym)
+  set(ADDRESS_SIZE 64)
+  if (NOT CMAKE_OSX_ARCHITECTURES)
+    if (ADDRESS_SIZE EQUAL 64)
+      set(CMAKE_OSX_ARCHITECTURES x86_64)
+    else (ADDRESS_SIZE EQUAL 64)
+      set(CMAKE_OSX_ARCHITECTURES i386)
+    endif (ADDRESS_SIZE EQUAL 64)
+  endif (NOT CMAKE_OSX_ARCHITECTURES)
 
-  message(STATUS "Xcode version: ${XCODE_VERSION}")
-  message(STATUS "OSX sysroot: ${CMAKE_OSX_SYSROOT}")
-  message(STATUS "OSX deployment target: ${CMAKE_OSX_DEPLOYMENT_TARGET}")
-  
-  # Build only for i386 by default, system default on MacOSX 10.6 is x86_64
-  set(CMAKE_OSX_ARCHITECTURES i386)
-  set(ARCH i386)
-  set(WORD_SIZE 32)
-  set(AUTOBUILD_PLATFORM_NAME "darwin")
-
+  if (ADDRESS_SIZE EQUAL 64)
+    set(ARCH x86_64)
+  else (ADDRESS_SIZE EQUAL 64)
+    set(ARCH i386)
+  endif (ADDRESS_SIZE EQUAL 64)
   set(LL_ARCH ${ARCH}_darwin)
   set(LL_ARCH_DIR universal-darwin)
+  set(AUTOBUILD_PLATFORM_NAME "darwin" CACHE STRING "Autobuild Platform Name")
 endif (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 
 # Default deploy grid
 set(GRID agni CACHE STRING "Target Grid")
 
-set(VIEWER_CHANNEL "Singularity Test" CACHE STRING "Viewer Channel Name")
+set(VIEWER_PRODUCT_NAME "Singularity" CACHE STRING "Viewer Base Name")
+string(TOLOWER ${VIEWER_PRODUCT_NAME} VIEWER_PRODUCT_NAME_LOWER)
 
-string(REPLACE " " "" VIEWER_CHANNEL_NOSPACE ${VIEWER_CHANNEL})
-set(VIEWER_CHANNEL_NOSPACE ${VIEWER_CHANNEL_NOSPACE} CACHE STRING "Prefix used for resulting artifacts.")
+set(VIEWER_CHANNEL_BASE "Test" CACHE STRING "Viewer Channel Name")
+set(VIEWER_CHANNEL "${VIEWER_PRODUCT_NAME} ${VIEWER_CHANNEL_BASE}")
+string(TOLOWER ${VIEWER_CHANNEL} VIEWER_CHANNEL_LOWER)
+string(REPLACE " " "" VIEWER_CHANNEL_ONEWORD ${VIEWER_CHANNEL})
+
+option(VIEWER_CHANNEL_GRK "Greek character(s) to represent the viewer channel for support purposes, override only for special branches" "")
+if (NOT VIEWER_CHANNEL_GRK)
+    if (VIEWER_CHANNEL_BASE MATCHES "Test")
+        set(VIEWER_CHANNEL_GRK "τ")
+    elseif (VIEWER_CHANNEL_BASE MATCHES "Alpha")
+        set(VIEWER_CHANNEL_GRK "α")
+    elseif (VIEWER_CHANNEL_BASE MATCHES "Beta")
+        set(VIEWER_CHANNEL_GRK "β")
+    endif ()
+endif (NOT VIEWER_CHANNEL_GRK)
+
+if(VIEWER_CHANNEL_LOWER MATCHES "^${VIEWER_PRODUCT_NAME_LOWER} release")
+  set(VIEWER_PACKAGE_ID "${VIEWER_PRODUCT_NAME}Release")
+  set(VIEWER_EXE_STRING "${VIEWER_PRODUCT_NAME}Viewer")
+  set(VIEWER_SHORTCUT_STRING "${VIEWER_PRODUCT_NAME} Viewer")
+else()
+  set(VIEWER_PACKAGE_ID ${VIEWER_CHANNEL_ONEWORD})
+  set(VIEWER_EXE_STRING ${VIEWER_CHANNEL_ONEWORD})
+  set(VIEWER_SHORTCUT_STRING ${VIEWER_CHANNEL})
+endif()
+
+set(VIEWER_CHANNEL_NOSPACE ${VIEWER_CHANNEL_ONEWORD} CACHE STRING "Prefix used for resulting artifacts.")
 
 set(VIEWER_BRANDING_ID "singularity" CACHE STRING "Viewer branding id")
 
-set(ENABLE_SIGNING OFF CACHE BOOL "Enable signing the viewer")
+set(VERSION_BUILD "0" CACHE STRING "Revision number passed in from the outside")
+
+option(ENABLE_SIGNING "Enable signing the viewer" OFF)
 set(SIGNING_IDENTITY "" CACHE STRING "Specifies the signing identity to use, if necessary.")
 
-set(VERSION_BUILD "0" CACHE STRING "Revision number passed in from the outside")
-set(STANDALONE OFF CACHE BOOL "Do not use Linden-supplied prebuilt libraries.")
-
-set(USE_PRECOMPILED_HEADERS ON CACHE BOOL "Enable use of precompiled header directives where supported.")
-
 source_group("CMake Rules" FILES CMakeLists.txt)
+
+mark_as_advanced(AUTOBUILD_PLATFORM_NAME)
 
 endif(NOT DEFINED ${CMAKE_CURRENT_LIST_FILE}_INCLUDED)

@@ -95,7 +95,7 @@ public:
 	virtual bool operator()(LLInventoryCategory* cat, LLInventoryItem* item);
 protected:
 	LLInventoryModel* mModel;
-	std::set<LLUUID> mCachedCatIDs;
+	uuid_set_t mCachedCatIDs;
 };
 
 bool LLCanCache::operator()(LLInventoryCategory* cat, LLInventoryItem* item)
@@ -420,7 +420,7 @@ void LLInventoryModel::unlockDirectDescendentArrays(const LLUUID& cat_id)
 void LLInventoryModel::consolidateForType(const LLUUID& main_id, LLFolderType::EType type)
 {
 	// Make a list of folders that are not "main_id" and are of "type"
-	std::vector<LLUUID> folder_ids;
+	uuid_vec_t folder_ids;
 	for (cat_map_t::iterator cit = mCategoryMap.begin(); cit != mCategoryMap.end(); ++cit)
 	{
 		LLViewerInventoryCategory* cat = cit->second;
@@ -431,7 +431,7 @@ void LLInventoryModel::consolidateForType(const LLUUID& main_id, LLFolderType::E
 	}
 
 	// Iterate through those folders
-	for (std::vector<LLUUID>::iterator folder_ids_it = folder_ids.begin(); folder_ids_it != folder_ids.end(); ++folder_ids_it)
+	for (auto folder_ids_it = folder_ids.begin(); folder_ids_it != folder_ids.end(); ++folder_ids_it)
 	{
 		LLUUID folder_id = (*folder_ids_it);
 
@@ -444,12 +444,12 @@ void LLInventoryModel::consolidateForType(const LLUUID& main_id, LLFolderType::E
 		// Note : we get the list of UUIDs and iterate on them instead of iterating directly on item_array_t
 		// elements. This is because moving elements modify the maps and, consequently, invalidate iterators on them.
 		// This "gather and iterate" method is verbose but resilient.
-		std::vector<LLUUID> list_uuids;
+		uuid_vec_t list_uuids;
 		for (item_array_t::const_iterator it = items->begin(); it != items->end(); ++it)
 		{
 			list_uuids.push_back((*it)->getUUID());
 		}
-		for (std::vector<LLUUID>::const_iterator it = list_uuids.begin(); it != list_uuids.end(); ++it)
+		for (auto it = list_uuids.begin(); it != list_uuids.end(); ++it)
 		{
 			LLViewerInventoryItem* item = getItem(*it);
 			changeItemParent(item, main_id, TRUE);
@@ -461,7 +461,7 @@ void LLInventoryModel::consolidateForType(const LLUUID& main_id, LLFolderType::E
 		{
 			list_uuids.push_back((*it)->getUUID());
 		}
-		for (std::vector<LLUUID>::const_iterator it = list_uuids.begin(); it != list_uuids.end(); ++it)
+		for (auto it = list_uuids.begin(); it != list_uuids.end(); ++it)
 		{
 			LLViewerInventoryCategory* cat = getCategory(*it);
 			changeCategoryParent(cat, main_id, TRUE);
@@ -2081,7 +2081,7 @@ bool LLInventoryModel::loadSkeleton(
 			// does not match, invalidate the version.
 			S32 count = categories.size();
 			cat_set_t::iterator not_cached = temp_cats.end();
-			std::set<LLUUID> cached_ids;
+			uuid_set_t cached_ids;
 			for(S32 i = 0; i < count; ++i)
 			{
 				LLViewerInventoryCategory* cat = categories[i];
@@ -2117,7 +2117,7 @@ bool LLInventoryModel::loadSkeleton(
 			}
 
 			// go ahead and add the cats returned during the download
-			std::set<LLUUID>::const_iterator not_cached_id = cached_ids.end();
+			auto not_cached_id = cached_ids.end();
 			cached_category_count = cached_ids.size();
 			for(cat_set_t::iterator it = temp_cats.begin(); it != temp_cats.end(); ++it)
 			{

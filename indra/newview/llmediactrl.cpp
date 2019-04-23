@@ -70,14 +70,14 @@ LLMediaCtrl::Params::Params()
 :	start_url("start_url"),
 	border_visible("border_visible", false),
 	decouple_texture_size("decouple_texture_size", false),
+	trusted_content("trusted_content", false),
+	focus_on_click("focus_on_click", true),
 	texture_width("texture_width", 1024),
 	texture_height("texture_height", 1024),
 	caret_color("caret_color"),
 	initial_mime_type("initial_mime_type"),
-	error_page_url("error_page_url"),
 	media_id("media_id"),
-	trusted_content("trusted_content", false),
-	focus_on_click("focus_on_click", true)
+	error_page_url("error_page_url")
 {
 }
 
@@ -85,24 +85,25 @@ LLMediaCtrl::LLMediaCtrl( const Params& p) :
 	LLPanel( p.name, p.rect, FALSE),
 	LLInstanceTracker<LLMediaCtrl, LLUUID>(LLUUID::generateNewID()),
 	mTextureDepthBytes( 4 ),
-	mBorder(NULL),
+	mBorder(nullptr),
 	mFrequentUpdates( true ),
 	mForceUpdate( false ),
-	mHomePageUrl( "" ),
+	mTrusted(p.trusted_content),
 	mAlwaysRefresh( false ),
-	mMediaSource( 0 ),
 	mTakeFocusOnClick( p.focus_on_click ),
-	mCurrentNavUrl( "about:blank" ),
 	mStretchToFill( true ),
 	mMaintainAspectRatio ( true ),
+	mClearCache(false),
+	mHoverTextChanged(false),
 	mDecoupleTextureSize ( false ),
+	mUpdateScrolls( false ),
+	mHomePageUrl( "" ),
+	mHomePageMimeType(p.initial_mime_type),
+	mCurrentNavUrl( "about:blank" ),
+	mErrorPageURL(p.error_page_url),
+	mMediaSource( nullptr ),
 	mTextureWidth ( 1024 ),
 	mTextureHeight ( 1024 ),
-	mClearCache(false),
-	mHomePageMimeType(p.initial_mime_type),
-	mErrorPageURL(p.error_page_url),
-	mTrusted(p.trusted_content),
-	mHoverTextChanged(false),
 	mContextMenu()
 {
 	{
@@ -140,10 +141,17 @@ LLMediaCtrl::LLMediaCtrl( const Params& p) :
 
 LLMediaCtrl::~LLMediaCtrl()
 {
+	auto menu = mContextMenu.get();
+	if (menu)
+	{
+		menu->die();
+		mContextMenu.markDead();
+	}
+
 	if (mMediaSource)
 	{
 		mMediaSource->remObserver( this );
-		mMediaSource = NULL;
+		mMediaSource = nullptr;
 	}
 }
 
@@ -157,7 +165,9 @@ void LLMediaCtrl::setBorderVisible( BOOL border_visible )
 		addChild( mBorder );
 	}
 	if(mBorder)
+	{
 		mBorder->setVisible(border_visible);
+	}
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -240,7 +250,7 @@ BOOL LLMediaCtrl::handleMouseUp( S32 x, S32 y, MASK mask )
 		mMediaSource->mouseUp(x, y, mask);
 	}
 	
-	gFocusMgr.setMouseCapture( NULL );
+	gFocusMgr.setMouseCapture(nullptr );
 
 	return TRUE;
 }
@@ -285,7 +295,7 @@ BOOL LLMediaCtrl::handleRightMouseUp( S32 x, S32 y, MASK mask )
 		}
 	}
 	
-	gFocusMgr.setMouseCapture( NULL );
+	gFocusMgr.setMouseCapture(nullptr );
 
 	return TRUE;
 }
@@ -309,12 +319,19 @@ BOOL LLMediaCtrl::handleRightMouseDown( S32 x, S32 y, MASK mask )
 		setFocus( TRUE );
 	}
 
-	LLMenuGL* menu = (LLMenuGL*)mContextMenu.get();
-	if (menu)
+	auto con_menu = (LLMenuGL*)mContextMenu.get();
+	if (con_menu)
 	{
-		menu->buildDrawLabels();
-		menu->updateParent(LLMenuGL::sMenuContainer);
-		LLMenuGL::showPopup(this,menu, x, y);
+		/* Singu Note: Share your toys!!
+		// hide/show debugging options
+		bool media_plugin_debugging_enabled = gSavedSettings.getBOOL("MediaPluginDebugging");
+		con_menu->setItemVisible("open_webinspector", media_plugin_debugging_enabled );
+		con_menu->setItemVisible("debug_separator", media_plugin_debugging_enabled );
+		*/
+
+		con_menu->buildDrawLabels();
+		con_menu->updateParent(LLMenuGL::sMenuContainer);
+		LLMenuGL::showPopup(this, con_menu, x, y);
 	}
 
 	return TRUE;
@@ -366,7 +383,7 @@ void LLMediaCtrl::onFocusLost()
 		if( LLEditMenuHandler::gEditMenuHandler == mMediaSource )
 		{
 			// Clear focus for edit menu items
-			LLEditMenuHandler::gEditMenuHandler = NULL;
+			LLEditMenuHandler::gEditMenuHandler = nullptr;
 		}
 	}
 
@@ -379,13 +396,21 @@ void LLMediaCtrl::onFocusLost()
 //
 BOOL LLMediaCtrl::postBuild ()
 {
-	LLMenuGL* menu = LLUICtrlFactory::getInstance()->buildMenu("menu_media_ctrl.xml",LLMenuGL::sMenuContainer);
+	/*LLUICtrl::CommitCallbackRegistry::ScopedRegistrar registar;
+	registar.add("Open.WebInspector", boost::bind(&LLMediaCtrl::onOpenWebInspector, this));
+	registar.add("Open.ViewSource", boost::bind(&LLMediaCtrl::onShowSource, this));
+
+	// stinson 05/05/2014 : use this as the parent of the context menu if the static menu
+	// container has yet to be created
+	LLView* menuParent = (gMenuHolder != nullptr) ? dynamic_cast<LLView*>(gMenuHolder) : dynamic_cast<LLView*>(this);
+	llassert(menuParent != NULL);*/
+	auto menu = LLUICtrlFactory::getInstance()->buildMenu("menu_media_ctrl.xml",LLMenuGL::sMenuContainer);
 	if(menu)
 	{
 		mContextMenu = menu->getHandle();
 	}
 
-	setVisibleCallback(boost::bind(&LLMediaCtrl::onVisibilityChange, this, _2));
+	setVisibleCallback(boost::bind(&LLMediaCtrl::onVisibilityChanged, this, _2));
 	return true;
 }
 
@@ -393,6 +418,12 @@ void LLMediaCtrl::onOpenWebInspector()
 {
 	if (mMediaSource && mMediaSource->hasMedia())
 		mMediaSource->getMediaPlugin()->showWebInspector( true );
+}
+
+void LLMediaCtrl::onShowSource()
+{
+	if (mMediaSource && mMediaSource->hasMedia())
+		mMediaSource->getMediaPlugin()->showPageSource();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -446,12 +477,9 @@ BOOL LLMediaCtrl::handleUnicodeCharHere(llwchar uni_char)
 {
 	BOOL result = FALSE;
 	
-	// only accept 'printable' characters, sigh...
-	if (uni_char >= 32 // discard 'control' characters
-	    && uni_char != 127) // SDL thinks this is 'delete' - yuck.
+	if (mMediaSource)
 	{
-		if (mMediaSource)
-			result = mMediaSource->handleUnicodeCharHere(uni_char);
+		result = mMediaSource->handleUnicodeCharHere(uni_char);
 	}
 
 	if ( ! result )
@@ -462,7 +490,7 @@ BOOL LLMediaCtrl::handleUnicodeCharHere(llwchar uni_char)
 
 ////////////////////////////////////////////////////////////////////////////////
 //
-void LLMediaCtrl::onVisibilityChange ( const LLSD& new_visibility )
+void LLMediaCtrl::onVisibilityChanged( const LLSD& new_visibility )
 {
 	// set state of frequent updates automatically if visibility changes
 	if ( new_visibility.asBoolean() )
@@ -516,6 +544,16 @@ void LLMediaCtrl::navigateForward()
 
 ////////////////////////////////////////////////////////////////////////////////
 //
+void LLMediaCtrl::navigateStop()
+{
+	if (mMediaSource && mMediaSource->hasMedia())
+	{
+		mMediaSource->getMediaPlugin()->browse_stop();
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//
 bool LLMediaCtrl::canNavigateBack()
 {
 	if (mMediaSource)
@@ -551,23 +589,7 @@ void LLMediaCtrl::clearCache()
 
 ////////////////////////////////////////////////////////////////////////////////
 //
-void LLMediaCtrl::set404RedirectUrl( std::string redirect_url )
-{
-	if(mMediaSource && mMediaSource->hasMedia())
-		mMediaSource->getMediaPlugin()->set_status_redirect( 404, redirect_url );
-}
-
-////////////////////////////////////////////////////////////////////////////////
-//
-void LLMediaCtrl::clr404RedirectUrl()
-{
-	if(mMediaSource && mMediaSource->hasMedia())
-		mMediaSource->getMediaPlugin()->set_status_redirect(404, "");
-}
-
-////////////////////////////////////////////////////////////////////////////////
-//
-void LLMediaCtrl::navigateTo( std::string url_in, std::string mime_type)
+void LLMediaCtrl::navigateTo( std::string url_in, std::string mime_type, bool clean_browser)
 {
 	// don't browse to anything that starts with secondlife:// or sl://
 	const std::string protocol1 = "secondlife://";
@@ -582,12 +604,9 @@ void LLMediaCtrl::navigateTo( std::string url_in, std::string mime_type)
 	
 	if (ensureMediaSourceExists())
 	{
-		if (mCurrentNavUrl != url_in)
-		{
-			mCurrentNavUrl = url_in;
-			mMediaSource->setSize(mTextureWidth, mTextureHeight);
-			mMediaSource->navigateTo(url_in, mime_type, mime_type.empty());
-		}
+		mCurrentNavUrl = url_in;
+		mMediaSource->setSize(mTextureWidth, mTextureHeight);
+		mMediaSource->navigateTo(url_in, mime_type, mime_type.empty(), false, clean_browser);
 	}
 }
 
@@ -609,7 +628,6 @@ void LLMediaCtrl::navigateToLocalPage( const std::string& subdir, const std::str
 		mMediaSource->setSize(mTextureWidth, mTextureHeight);
 		mMediaSource->navigateTo(LLWeb::escapeURL(expanded_filename), "text/html", false);
 	}
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -699,7 +717,13 @@ bool LLMediaCtrl::ensureMediaSourceExists()
 			mMediaSource->addObserver( this );
 			mMediaSource->setBackgroundColor( getBackgroundColor() );
 			mMediaSource->setTrustedBrowser(mTrusted);
-			mMediaSource->setPageZoomFactor( LLUI::getScaleFactor().mV[ VX ] );
+
+			F32 scale_factor = LLUI::getScaleFactor().mV[ VX ];
+			if (scale_factor != mMediaSource->getPageZoomFactor())
+			{
+				mMediaSource->setPageZoomFactor( scale_factor );
+				mUpdateScrolls = true;
+			}
 
 			if(mClearCache)
 			{
@@ -721,7 +745,11 @@ bool LLMediaCtrl::ensureMediaSourceExists()
 //
 void LLMediaCtrl::unloadMediaSource()
 {
-	mMediaSource = NULL;
+	if (mMediaSource)
+	{
+		mMediaSource->remObserver(this);
+		mMediaSource = nullptr;
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -735,10 +763,11 @@ LLPluginClassMedia* LLMediaCtrl::getMediaPlugin()
 //
 void LLMediaCtrl::draw()
 {
-	if ( gRestoreGL == 1 )
+	if ( gRestoreGL == 1 || mUpdateScrolls)
 	{
 		LLRect r = getRect();
 		reshape( r.getWidth(), r.getHeight(), FALSE );
+		mUpdateScrolls = false;
 		return;
 	}
 
@@ -760,8 +789,8 @@ void LLMediaCtrl::draw()
 
 	bool draw_media = false;
 	
-	LLPluginClassMedia* media_plugin = NULL;
-	LLViewerMediaTexture* media_texture = NULL;
+	LLPluginClassMedia* media_plugin = nullptr;
+	LLViewerMediaTexture* media_texture = nullptr;
 	
 	if(mMediaSource && mMediaSource->hasMedia())
 	{
@@ -784,7 +813,12 @@ void LLMediaCtrl::draw()
 	{
 		gGL.pushUIMatrix();
 		{
-			mMediaSource->setPageZoomFactor( LLUI::getScaleFactor().mV[ VX ] );
+			F32 scale_factor = LLUI::getScaleFactor().mV[ VX ];
+			if (scale_factor != mMediaSource->getPageZoomFactor())
+			{
+				mMediaSource->setPageZoomFactor( scale_factor );
+				mUpdateScrolls = true;
+			}
 
 			// scale texture to fit the space using texture coords
 			gGL.getTexUnit(0)->bind(media_texture);
@@ -793,52 +827,8 @@ void LLMediaCtrl::draw()
 			F32 max_u = ( F32 )media_plugin->getWidth() / ( F32 )media_plugin->getTextureWidth();
 			F32 max_v = ( F32 )media_plugin->getHeight() / ( F32 )media_plugin->getTextureHeight();
 
-			LLRect r = getRect();
-			S32 width, height;
-			S32 x_offset = 0;
-			S32 y_offset = 0;
-		
-			if(mStretchToFill)
-			{
-				if(mMaintainAspectRatio)
-				{
-					F32 media_aspect = (F32)(media_plugin->getWidth()) / (F32)(media_plugin->getHeight());
-					F32 view_aspect = (F32)(r.getWidth()) / (F32)(r.getHeight());
-					if(media_aspect > view_aspect)
-					{
-						// max width, adjusted height
-						width = r.getWidth();
-						height = llmin(llmax(ll_round(width / media_aspect), 0), r.getHeight());
-					}
-					else
-					{
-						// max height, adjusted width
-						height = r.getHeight();
-						width = llmin(llmax(ll_round(height * media_aspect), 0), r.getWidth());
-					}
-				}
-				else
-				{
-					width = r.getWidth();
-					height = r.getHeight();
-				}
-			}
-			else
-			{
-				width = llmin(media_plugin->getWidth(), r.getWidth());
-				height = llmin(media_plugin->getHeight(), r.getHeight());
-			}
-			
-			x_offset = (r.getWidth() - width) / 2;
-			y_offset = (r.getHeight() - height) / 2;		
-
-			/*if (mIgnoreUIScale)
-			{
-				x_offset = ll_round((F32)x_offset * LLUI::getScaleFactor().mV[VX]);
-				y_offset = ll_round((F32)y_offset * LLUI::getScaleFactor().mV[VY]);
-				width = ll_round((F32)width * LLUI::getScaleFactor().mV[VX]);
-				height = ll_round((F32)height * LLUI::getScaleFactor().mV[VY]);
-			}*/
+			S32 x_offset, y_offset, width, height;
+			calcOffsetsAndSize(&x_offset, &y_offset, &width, &height);
 
 			// draw the browser
 			gGL.setSceneBlendType(LLRender::BT_REPLACE);
@@ -895,6 +885,50 @@ void LLMediaCtrl::draw()
 	// Restore the previous values
 	setBackgroundVisible(background_visible);
 	setBackgroundOpaque(background_opaque);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//
+void LLMediaCtrl::calcOffsetsAndSize(S32 *x_offset, S32 *y_offset, S32 *width, S32 *height)
+{
+	const LLRect &r = getRect();
+	*x_offset = *y_offset = 0;
+
+	const auto& media_plugin = mMediaSource->getMediaPlugin();
+
+	if(mStretchToFill)
+	{
+		if(mMaintainAspectRatio)
+		{
+			F32 media_aspect = (F32)(media_plugin->getWidth()) / (F32)(media_plugin->getHeight());
+			F32 view_aspect = (F32)(r.getWidth()) / (F32)(r.getHeight());
+			if(media_aspect > view_aspect)
+			{
+				// max width, adjusted height
+				*width = r.getWidth();
+				*height = llmin(llmax(ll_round(*width / media_aspect), 0), r.getHeight());
+			}
+			else
+			{
+				// max height, adjusted width
+				*height = r.getHeight();
+				*width = llmin(llmax(ll_round(*height * media_aspect), 0), r.getWidth());
+			}
+		}
+		else
+		{
+			*width = r.getWidth();
+			*height = r.getHeight();
+		}
+	}
+	else
+	{
+		*width = llmin(media_plugin->getWidth(), r.getWidth());
+		*height = llmin(media_plugin->getHeight(), r.getHeight());
+	}
+	
+	*x_offset = (r.getWidth() - *width) / 2;
+	*y_offset = (r.getHeight() - *height) / 2;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1000,17 +1034,24 @@ void LLMediaCtrl::handleMediaEvent(LLPluginClassMedia* self, EMediaEvent event)
 
 		case MEDIA_EVENT_CLICK_LINK_HREF:
 		{
-			LL_DEBUGS("Media") <<  "Media event:  MEDIA_EVENT_CLICK_LINK_HREF, target is \"" << self->getClickTarget() << "\", uri is " << self->getClickURL() << LL_ENDL;
 			// retrieve the event parameters
 			std::string url = self->getClickURL();
 			std::string target = self->getClickTarget();
 			std::string uuid = self->getClickUUID();
+			LL_DEBUGS("Media") << "Media event:  MEDIA_EVENT_CLICK_LINK_HREF, target is \"" << target << "\", uri is " << url << LL_ENDL;
 
-			LLWeb::loadURL(url, target, std::string());
+			// try as slurl first
+			if (!LLURLDispatcher::dispatch(url, "clicked", nullptr, mTrusted))
+			{
+				LLWeb::loadURL(url, target, uuid);
+			}
 
-			//LLNotification::Params notify_params("PopupAttempt");
+			// CP: removing this code because we no longer support popups so this breaks the flow.
+			//     replaced with a bare call to LLWeb::LoadURL(...)
+			//LLNotification::Params notify_params;
+			//notify_params.name = "PopupAttempt";
 			//notify_params.payload = LLSD().with("target", target).with("url", url).with("uuid", uuid).with("media_id", mMediaTextureID);
-			//notify_params.functor(boost::bind(&LLMediaCtrl::onPopup, this, _1, _2));
+			//notify_params.functor.function = boost::bind(&LLMediaCtrl::onPopup, this, _1, _2);
 
 			//if (mTrusted)
 			//{
@@ -1098,7 +1139,24 @@ void LLMediaCtrl::handleMediaEvent(LLPluginClassMedia* self, EMediaEvent event)
 
 		case MEDIA_EVENT_DEBUG_MESSAGE:
 		{
-			LL_INFOS("media") << self->getDebugMessageText() << LL_ENDL; 
+			std::string level = self->getDebugMessageLevel();
+			if (level == "debug")
+			{
+				LL_DEBUGS("Media") << self->getDebugMessageText() << LL_ENDL;
+			}
+			else if (level == "info")
+			{
+				LL_INFOS("Media") << self->getDebugMessageText() << LL_ENDL;
+			}
+			else if (level == "warn")
+			{
+				LL_WARNS("Media") << self->getDebugMessageText() << LL_ENDL;
+			}
+			else if (level == "error")
+			{
+				LL_ERRS("Media") << self->getDebugMessageText() << LL_ENDL;
+			}
+
 		};
 		break;
 		
@@ -1119,7 +1177,7 @@ std::string LLMediaCtrl::getCurrentNavUrl()
 	return mCurrentNavUrl;
 }
 
-bool LLMediaCtrl::onPopup(const LLSD& notification, const LLSD& response)
+void LLMediaCtrl::onPopup(const LLSD& notification, const LLSD& response)
 {
 	if (response["open"])
 	{
@@ -1130,7 +1188,6 @@ bool LLMediaCtrl::onPopup(const LLSD& notification, const LLSD& response)
 		// Make sure the opening instance knows its window open request was denied, so it can clean things up.
 		LLViewerMedia::proxyWindowClosed(notification["payload"]["uuid"]);
 	}
-	return FALSE;
 }
 
 void LLMediaCtrl::showNotification(LLNotificationPtr notify)

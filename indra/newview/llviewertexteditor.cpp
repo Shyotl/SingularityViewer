@@ -441,7 +441,9 @@ void LLEmbeddedItems::bindEmbeddedChars( const LLFontGL* font ) const
 		  case LLAssetType::AT_BODYPART:		img_name = "inv_item_skin.tga";	break;
 		  case LLAssetType::AT_ANIMATION:		img_name = "inv_item_animation.tga";break;
 		  case LLAssetType::AT_GESTURE:			img_name = "inv_item_gesture.tga";	break;
-		  default: llassert(0); continue;
+			case LLAssetType::AT_MESH:      	img_name = "Inv_Mesh";	    break;
+            case LLAssetType::AT_SETTINGS:      img_name = "Inv_Settings"; break;
+			default:                        	img_name = "Inv_Invalid";  break; // use the Inv_Invalid icon for undefined object types (see MAINT-3981)
 		}
 
 		LLUIImagePtr image = LLUI::getUIImage(img_name);
@@ -1461,7 +1463,6 @@ LLView* LLViewerTextEditor::fromXML(LLXMLNodePtr node, LLView *parent, LLUICtrlF
 	BOOL parse_html = true;
 	node->getAttributeBOOL("allow_html", parse_html);
 	text_editor->setParseHTML(parse_html);
-	text_editor->setParseHighlights(TRUE);
 
 	BOOL commit_on_focus_lost = FALSE;
 	node->getAttributeBOOL("commit_on_focus_lost",commit_on_focus_lost);

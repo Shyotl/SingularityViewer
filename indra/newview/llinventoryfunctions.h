@@ -249,7 +249,7 @@ public:
 							LLInventoryItem* item);
 
 protected:
-	std::set<LLUUID> mSeen;
+	uuid_set_t mSeen;
 };
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -492,7 +492,7 @@ public:
 	void setApply(BOOL apply);
 	void clearOpenFolders() { mOpenFolders.clear(); }
 protected:
-	std::set<LLUUID> mOpenFolders;
+	uuid_set_t mOpenFolders;
 	BOOL mApply;
 };
 

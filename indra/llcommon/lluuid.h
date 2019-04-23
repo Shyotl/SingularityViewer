@@ -31,6 +31,7 @@
 #include <vector>
 #include <functional>
 #include <boost/functional/hash.hpp>
+#include <boost/unordered_set.hpp>
 #include "stdtypes.h"
 #include "llpreprocessor.h"
 
@@ -56,10 +57,10 @@ public:
 	LLUUID();
 	explicit LLUUID(const char *in_string); // Convert from string.
 	explicit LLUUID(const std::string& in_string); // Convert from string.
-	LLUUID(const LLUUID &in);
-	LLUUID &operator=(const LLUUID &rhs);
+	LLUUID(const LLUUID &in) = default;
+	LLUUID &operator=(const LLUUID &rhs) = default;
 
-	~LLUUID();
+	~LLUUID() = default;
 
 	//
 	// MANIPULATORS
@@ -192,24 +193,6 @@ inline BOOL LLUUID::isNull() const
 	return !memcmp(mData, null.mData, sizeof(mData)); // <alchemy/>
 }
 
-// Copy constructor
-inline LLUUID::LLUUID(const LLUUID& rhs)
-{
-	memcpy(mData, rhs.mData, sizeof(mData)); // <alchemy/>
-}
-
-inline LLUUID::~LLUUID()
-{
-}
-
-// Assignment
-inline LLUUID& LLUUID::operator=(const LLUUID& rhs)
-{
-	memcpy(mData, rhs.mData, sizeof(mData)); // <alchemy/>
-	return *this;
-}
-
-
 inline LLUUID::LLUUID(const char *in_string)
 {
 	if (!in_string || in_string[0] == 0)
@@ -288,8 +271,10 @@ inline U32 LLUUID::getCRC32() const
 	// </alchemy>
 }
 
+static_assert(std::is_trivially_copyable<LLUUID>{}, "LLUUID must be a trivially copyable type");
+
 typedef std::vector<LLUUID> uuid_vec_t;
-typedef std::set<LLUUID> uuid_set_t;
+typedef boost::unordered_set<LLUUID> uuid_set_t;
 
 // Helper structure for ordering lluuids in stl containers.  eg:
 // std::map<LLUUID, LLWidget*, lluuid_less> widget_map;

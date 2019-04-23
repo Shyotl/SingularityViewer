@@ -148,7 +148,7 @@ public:
 	const LLUUID& getID() const { return mRoleID; }
 
 	const uuid_vec_t& getRoleMembers() const { return mMemberIDs; }
-	S32 getMembersInRole(uuid_vec_t members, BOOL needs_sort = TRUE);
+	S32 getMembersInRole(uuid_vec_t& members, BOOL needs_sort = TRUE);
 	S32 getTotalMembersInRole() { return mMemberCount ? mMemberCount : mMemberIDs.size(); } //FIXME: Returns 0 for Everyone role when Member list isn't yet loaded, see MAINT-5225
 
 	LLRoleData getRoleData() const { return mRoleData; }
@@ -401,7 +401,7 @@ public:
 	static void sendGroupBanRequest(EBanRequestType request_type,
 									const LLUUID& group_id,
 									U32 ban_action = BAN_NO_ACTION,
-									const uuid_vec_t ban_list = uuid_vec_t());
+									const uuid_vec_t& ban_list = uuid_vec_t());
 
 	static void processGroupBanRequest(const LLSD& content);
 

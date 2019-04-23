@@ -26,23 +26,27 @@
 
 #include "linden_common.h"
 
-
-
 #include "llfontgl.h"
 
 // Linden library includes
+#include "llfasttimer.h"
 #include "llfontfreetype.h"
 #include "llfontbitmapcache.h"
 #include "llfontregistry.h"
 #include "llgl.h"
 #include "llrender.h"
-#include "lltexture.h"
-#include "v4color.h"
 #include "llstl.h"
-#include "llfasttimer.h"
+#include "v4color.h"
+#include "lltexture.h"
+#include "lldir.h"
 
 // Third party library includes
 #include <boost/tokenizer.hpp>
+
+#if LL_WINDOWS
+#include "llwin32headerslean.h"
+#include <shlobj.h>
+#endif
 
 const S32 BOLD_OFFSET = 1;
 
@@ -52,7 +56,7 @@ F32 LLFontGL::sHorizDPI = 96.f;
 F32 LLFontGL::sScaleX = 1.f;
 F32 LLFontGL::sScaleY = 1.f;
 BOOL LLFontGL::sDisplayFont = TRUE ;
-std::string LLFontGL::sAppDir;
+std::string LLFontGL::sFontDir;
 
 LLColor4U LLFontGL::sShadowColor(0, 0, 0, 255);
 LLFontRegistry* LLFontGL::sFontRegistry = NULL;
@@ -937,7 +941,7 @@ void LLFontGL::initClass(F32 screen_dpi, F32 x_scale, F32 y_scale, const std::st
 	sHorizDPI = (F32)llfloor(screen_dpi * x_scale);
 	sScaleX = x_scale;
 	sScaleY = y_scale;
-	sAppDir = app_dir;
+	sFontDir = app_dir;
 
 	// Font registry init
 	if (!sFontRegistry)
@@ -997,7 +1001,7 @@ void LLFontGL::destroyAllGL()
 // static
 U8 LLFontGL::getStyleFromString(const std::string &style)
 {
-	S32 ret = 0;
+	U8 ret = 0;
 	if (style.find("NORMAL") != style.npos)
 	{
 		ret |= NORMAL;
@@ -1115,6 +1119,7 @@ LLFontGL::VAlign LLFontGL::vAlignFromName(const std::string& name)
 	//else leave baseline
 	return gl_vfont_align;
 }
+
 //static
 LLFontGL* LLFontGL::getFontMonospace()
 {
@@ -1203,59 +1208,67 @@ LLFontGL* LLFontGL::getFontDefault()
 	return getFontSansSerif(); // Fallback to sans serif as default font
 }
 
+static std::string sSystemFontPath;
 
 // static 
 std::string LLFontGL::getFontPathSystem()
 {
-	std::string system_path;
+	if (!sSystemFontPath.empty()) return sSystemFontPath;
 
-	// Try to figure out where the system's font files are stored.
-	char *system_root = NULL;
 #if LL_WINDOWS
-	system_root = getenv("SystemRoot");	/* Flawfinder: ignore */
-	if (!system_root)
+	wchar_t* pPath = nullptr;
+	if (SHGetKnownFolderPath(FOLDERID_Fonts, 0, nullptr, &pPath) == S_OK)
 	{
-		LL_WARNS() << "SystemRoot not found, attempting to load fonts from default path." << LL_ENDL;
-	}
-#endif
-
-	if (system_root)
-	{
-		system_path = llformat("%s/fonts/", system_root);
+		sSystemFontPath = ll_convert_wide_to_string(pPath, CP_UTF8) + gDirUtilp->getDirDelimiter();
+        LL_INFOS() << "from SHGetKnownFolderPath(): " << sSystemFontPath << LL_ENDL;
+		CoTaskMemFree(pPath);
+		pPath = nullptr;
 	}
 	else
 	{
-#if LL_WINDOWS
-		// HACK for windows 98/Me
-		system_path = "/WINDOWS/FONTS/";
+		// Try to figure out where the system's font files are stored.
+    	auto system_root = LLStringUtil::getenv("SystemRoot");
+    	if (! system_root.empty())
+    	{
+			sSystemFontPath = gDirUtilp->add(system_root, "fonts") + gDirUtilp->getDirDelimiter();
+        	LL_INFOS() << "from SystemRoot: " << sSystemFontPath << LL_ENDL;
+		}
+		else
+		{
+			LL_WARNS() << "SystemRoot not found, attempting to load fonts from default path." << LL_ENDL;
+			// HACK for windows 98/Me
+			sSystemFontPath = "/WINDOWS/FONTS/";
+		}
+	}
+
 #elif LL_DARWIN
 		// HACK for Mac OS X
-		system_path = "/System/Library/Fonts/";
+	sSystemFontPath = "/System/Library/Fonts/";
 #endif
-	}
-	return system_path;
+	return sSystemFontPath;
 }
 
+static std::string sLocalFontPath;
 
 // static 
 std::string LLFontGL::getFontPathLocal()
 {
-	std::string local_path;
+	if (!sLocalFontPath.empty()) return sLocalFontPath;
 
 	// Backup files if we can't load from system fonts directory.
 	// We could store this in an end-user writable directory to allow
 	// end users to switch fonts.
-	if (LLFontGL::sAppDir.length())
+	if (!LLFontGL::sFontDir.empty())
 	{
 		// use specified application dir to look for fonts
-		local_path = LLFontGL::sAppDir + "/fonts/";
+		sLocalFontPath = gDirUtilp->add(LLFontGL::sFontDir, "fonts") + gDirUtilp->getDirDelimiter();
 	}
 	else
 	{
 		// assume working directory is executable directory
-		local_path = "./fonts/";
+		sLocalFontPath = "./fonts/";
 	}
-	return local_path;
+	return sLocalFontPath;
 }
 
 LLFontGL::LLFontGL(const LLFontGL &source)

@@ -2,7 +2,7 @@
 <floater bottom="-495" can_close="true" can_drag_on_left="false" can_minimize="false"
      can_resize="false" can_tear_off="true" enabled="true" height="408"
      left="457" min_height="408" min_width="160" mouse_opaque="true"
-     name="Inventory Finder" title="inventory_recent_items" width="160">
+     name="Inventory Finder" title="inventory_recent_items" width="168">
 	<icon bottom="370" color="1 1 1 1" enabled="true" follows="left|top" height="16"
 	     image_name="inv_item_animation.tga" left="8" mouse_opaque="true"
 	     name="icon_animation" width="16" />
@@ -77,7 +77,7 @@
 	     halign="center" height="20" label="None" label_selected="None" left="8"
 	     mouse_opaque="true" name="None" scale_image="true" width="100" />
     <text bottom_delta="-16" left="3" follows="left|top" name="links">Links: </text>
-    <radio_group bottom_delta="-6" left_delta="27" follows="left|top" height="16" draw_border="false" name="radio_links">
+    <radio_group bottom_delta="-6" left_delta="30" follows="left|top" height="16" draw_border="false" name="radio_links">
       <radio_item bottom_delta="-8" name="Any" value="0">Any</radio_item>
       <radio_item bottom_delta="0" left_delta="19" name="Only" value="2">Only</radio_item>
       <radio_item bottom_delta="0" left_delta="21" name="None" value="1">None</radio_item> 

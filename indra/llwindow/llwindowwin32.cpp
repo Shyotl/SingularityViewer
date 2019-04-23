@@ -3350,34 +3350,9 @@ S32 OSMessageBoxWin32(const std::string& text, const std::string& caption, U32 t
 	return retval;
 }
 
-void LLWindowWin32::ShellEx(const std::string& command)
-{
-	LLWString url_wstring = utf8str_to_wstring( "\"" + command + "\"" );
-	llutf16string url_utf16 = wstring_to_utf16str( url_wstring );
-
-	SHELLEXECUTEINFO sei = { sizeof( sei ) };
-	sei.fMask = SEE_MASK_FLAG_DDEWAIT;
-	sei.nShow = SW_SHOWNORMAL;
-	sei.lpVerb = L"open";
-	sei.lpFile = url_utf16.c_str();
-	ShellExecuteEx( &sei );
-}
-
-
 void LLWindowWin32::spawnWebBrowser(const std::string& escaped_url, bool async)
 {
-	bool found = false;
-	S32 i;
-	for (i = 0; i < gURLProtocolWhitelistCount; i++)
-	{
-		if (escaped_url.find(gURLProtocolWhitelist[i]) == 0)
-		{
-			found = true;
-			break;
-		}
-	}
-
-	if (!found)
+	if (!isWhitelistedProtocol(escaped_url))
 	{
 		LL_WARNS("Window") << "spawn_web_browser() called for url with protocol not on whitelist: " << escaped_url << LL_ENDL;
 		return;
@@ -3389,25 +3364,8 @@ void LLWindowWin32::spawnWebBrowser(const std::string& escaped_url, bool async)
 	// reliablly on Vista.
 
 	// this is madness.. no, this is..
-	LLWString url_wstring = utf8str_to_wstring( escaped_url );
-	llutf16string url_utf16 = wstring_to_utf16str( url_wstring );
-
 	// let the OS decide what to use to open the URL
-	SHELLEXECUTEINFO sei = { sizeof( sei ) };
-	// NOTE: this assumes that SL will stick around long enough to complete the DDE message exchange
-	// necessary for ShellExecuteEx to complete
-	if (async)
-	{
-		sei.fMask = SEE_MASK_ASYNCOK;
-	}
-	else
-	{
-		sei.fMask = SEE_MASK_FLAG_DDEWAIT;
-	}
-	sei.nShow = SW_SHOWNORMAL;
-	sei.lpVerb = L"open";
-	sei.lpFile = url_utf16.c_str();
-	ShellExecuteEx( &sei );
+	ShellEx(escaped_url);
 }
 
 void LLWindowWin32::setTitle(const std::string &title)

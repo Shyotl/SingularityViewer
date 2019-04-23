@@ -7418,8 +7418,7 @@ S32 LLObjectSelection::getSelectedObjectRenderCost()
 {
        S32 cost = 0;
        LLVOVolume::texture_cost_t textures;
-       typedef std::set<LLUUID> uuid_list_t;
-       uuid_list_t computed_objects;
+       uuid_set_t computed_objects;
 
 	   typedef std::list<LLPointer<LLViewerObject> > child_list_t;
 	   typedef const child_list_t const_child_list_t;

@@ -371,7 +371,7 @@ void LLFloaterInspect::refresh()
 // <edit>
 void LLFloaterInspect::inventoryChanged(LLViewerObject* viewer_object, LLInventoryObject::object_list_t* inv, S32, void*)
 {
-	std::vector<LLUUID>::iterator iter = std::find(mQueue.begin(),mQueue.end(),viewer_object->getID());
+	auto iter = std::find(mQueue.begin(),mQueue.end(),viewer_object->getID());
 	if (viewer_object && inv && iter != mQueue.end())
 	{
 		U32 scripts = 0;

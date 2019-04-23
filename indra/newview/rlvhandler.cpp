@@ -1035,7 +1035,7 @@ LLColor3 RlvHandler::camDrawColor() const
 				case LLAssetType::AT_CLOTHING:
 					{
 						// NOTE: without its asset we don't know what type the wearable is so we need to look at the item's flags instead
-						LLWearableType::EType wtType = (LLWearableType::EType)(pItem->getFlags() & LLInventoryItem::II_FLAGS_WEARABLES_MASK);
+						LLWearableType::EType wtType = (LLWearableType::EType)(pItem->getFlags() & LLInventoryItem::II_FLAGS_SUBTYPE_MASK);
 						LLViewerInventoryCategory* pFolder;
 						if ( (!isWearable(wtType)) ||
 							 ( (gAgent.getWearable(wtType)) && (!isRemovable(wtType)) ) || 

@@ -200,7 +200,7 @@ void LLMotionController::purgeExcessMotions()
 	}
 	//</singu>
 
-	std::set<LLUUID> motions_to_kill;
+	uuid_set_t motions_to_kill;
 
 	if (1)	// Singu: leave indentation alone...
 	{
@@ -220,7 +220,7 @@ void LLMotionController::purgeExcessMotions()
 	}
 	
 	// clean up all inactive, loaded motions
-	for (std::set<LLUUID>::iterator motion_it = motions_to_kill.begin();
+	for (auto motion_it = motions_to_kill.begin();
 		motion_it != motions_to_kill.end();
 		++motion_it)
 	{

@@ -305,7 +305,7 @@ void LLAttachmentsMgr::linkRecentlyArrivedAttachments()
                             << " recently arrived items" << LL_ENDL;
 
         uuid_vec_t ids_to_link;
-        for (std::set<LLUUID>::iterator it = mRecentlyArrivedAttachments.begin();
+        for (auto it = mRecentlyArrivedAttachments.begin();
              it != mRecentlyArrivedAttachments.end(); ++it)
         {
             if (isAgentAvatarValid() &&
@@ -344,7 +344,7 @@ void LLAttachmentsMgr::linkRecentlyArrivedAttachments()
 }
 
 // [SL:KB] - Patch: Appearance-SyncAttach | Checked: 2010-09-18 (Catznip-2.2)
-bool LLAttachmentsMgr::getPendingAttachments(std::set<LLUUID>& ids) const
+bool LLAttachmentsMgr::getPendingAttachments(uuid_set_t& ids) const
 {
 	ids.clear();
 

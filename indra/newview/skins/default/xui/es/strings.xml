@@ -3079,6 +3079,65 @@ Where tag = tag string to match.  Removes bot's matching the tag.
 	<string name="AvatarSetNotBusy">No Ocupado</string>
 	<string name="AvatarSetBusy">Ocupado</string>
 
+	<!-- Wearable Types -->
+	<string name="shape">Forma</string>
+	<string name="skin">Piel</string>
+	<string name="hair">Pelo</string>
+	<string name="eyes">Ojos</string>
+	<string name="shirt">Camisa</string>
+	<string name="pants">Pantalones</string>
+	<string name="shoes">Zapatos</string>
+	<string name="socks">Medias</string>
+	<string name="jacket">Chaqueta</string>
+	<string name="gloves">Guantes</string>
+	<string name="undershirt">Camiseta</string>
+	<string name="underpants">Ropa Interior</string>
+	<string name="skirt">Falda</string>
+	<string name="alpha">Alfa</string>
+	<string name="tattoo">Tatuaje</string>
+  <string name="physics">Física</string>
+  <string name="invalid">inválido</string>
+  <string name="unknown">desconocido</string>
+  <string name="none">ninguno</string>
+
+  <!-- Not Worn Wearable Types -->
+	<string name="shirt_not_worn">Camisa no puesta</string>
+	<string name="pants_not_worn">Pantalones no puestos</string>
+	<string name="shoes_not_worn">Zapatos no puestos</string>
+	<string name="socks_not_worn">Medias no puestas</string>
+	<string name="jacket_not_worn">Chaqueta no puesta</string>
+	<string name="gloves_not_worn">Guantes no puestos</string>
+	<string name="undershirt_not_worn">Camiseta no puesta</string>
+	<string name="underpants_not_worn">Ropa Interior no puesta</string>
+	<string name="skirt_not_worn">Falda no puesta</string>
+	<string name="alpha_not_worn">Alfa no puesta</string>
+	<string name="tattoo_not_worn">Tatuaje no puesto</string>
+  <string name="physics_not_worn">Física no puesta</string>
+	<string name="invalid_not_worn">inválido</string>
+
+	<!-- Create new wearable of the specified type -->
+	<string name="create_new_shape">Create new shape</string>
+	<string name="create_new_skin">Create new skin</string>
+	<string name="create_new_hair">Create new hair</string>
+	<string name="create_new_eyes">Create new eyes</string>
+	<string name="create_new_shirt">Create new shirt</string>
+	<string name="create_new_pants">Create new pants</string>
+	<string name="create_new_shoes">Create new shoes</string>
+	<string name="create_new_socks">Create new socks</string>
+	<string name="create_new_jacket">Create new jacket</string>
+	<string name="create_new_gloves">Create new gloves</string>
+	<string name="create_new_undershirt">Create new undershirt</string>
+	<string name="create_new_underpants">Create new underpants</string>
+	<string name="create_new_skirt">Create new skirt</string>
+	<string name="create_new_alpha">Create new alpha</string>
+	<string name="create_new_tattoo">Create new tattoo</string>
+  <string name="create_new_physics">Create new physics</string>
+	<string name="create_new_invalid">invalid</string>
+
+  <!-- Wearable List-->
+  <string name="NewWearable">Nuevo [WEARABLE_ITEM]</string>
+
+
 	<!-- LLGroupNotify -->
 	<!-- used in the construction of a Group Notice blue dialog box, buttons, tooltip etc. Seems to be no longer utilized by code in Viewer 2.0 -->
 	<string name="next">Siguiente</string>
@@ -3115,24 +3174,16 @@ Where tag = tag string to match.  Removes bot's matching the tag.
 	<string name="MarketplaceURL_LearnMore">https://marketplace.[MARKETPLACE_DOMAIN_NAME]/learn_more</string>
 	<string name="InventoryOutboxNotMerchantTitle">Cualquiera puede vender ítems en el Mercado.</string>
 	<string name="InventoryOutboxNotMerchantTooltip"></string>
-	<string name="InventoryOutboxNotMerchant">Si quieres convertirte en un comerciante, tendrás que</string>
-    <string name="InventoryOutboxNotMerchantSubs">crear una tienda en el Mercado.</string>
-	<string name="InventoryOutboxNotMerchant2">.</string>	 
+	<string name="InventoryOutboxNotMerchant">Si quieres convertirte en un comerciante, tendrás que [[MARKETPLACE_CREATE_STORE_URL] crear una tienda en el Mercado].</string>
 	<string name="InventoryOutboxNoItemsTitle">Tu Buzón de Salida está vacío.</string>
 	<string name="InventoryOutboxNoItemsTooltip"></string>
-	<string name="InventoryOutboxNoItems">Arrastra carpetas a esta zona y pulsa "Enviar al Mercado" para listarlos y ponerlos en venta</string>
-    <string name="InventoryOutboxNoItemsSubs">Mercado.</string>
-	<string name="InventoryOutboxNoItems2">.</string>
+	<string name="InventoryOutboxNoItems">Arrastra carpetas a esta zona y pulsa "Enviar al Mercado" para listarlos y ponerlos en venta en el [[MARKETPLACE_DASHBOARD_URL] mercado]</string>
 	<string name="InventoryOutboxInitializingTitle">Inicializando el Mercado en Línea.</string>
 	<string name="InventoryOutboxInitializingTooltip"></string>
-	<string name="InventoryOutboxInitializing">Estamos accediendo a tu cuenta en</string>
-	<string name="InventoryOutboxInitializingSubs">Tienda en el Mercado en Línea</string>
-	<string name="InventoryOutboxInitializing2">.</string>
+	<string name="InventoryOutboxInitializing">Estamos accediendo a tu cuenta en la [[MARKETPLACE_CREATE_STORE_URL] Tienda del Mercado].</string>
 	<string name="InventoryOutboxErrorTitle">Errores del Mercado en Línea.</string>
 	<string name="InventoryOutboxErrorTooltip"></string>
-	<string name="InventoryOutboxError">La</string>
-	<string name="InventoryOutboxErrorSubs">Tienda de Mercado en Línea</string>
-	<string name="InventoryOutboxError2">está devolviendo errores.</string>
+	<string name="InventoryOutboxError">La [[MARKETPLACE_CREATE_STORE_URL] Tienda en el Mercado] está retornando errores</string>
 	<string name="InventoryMarketplaceError">
 		Se ha producido un error al abrir Artículos del Mercado.
 Si sigues recibiendo el mismo mensaje, solicita ayuda al personal de asistencia de Second Life en http://support.secondlife.com
@@ -3295,7 +3346,7 @@ Si sigues recibiendo el mismo mensaje, solicita ayuda al personal de asistencia 
 	<string name="AcctTypeResident">Residente</string>
 	<string name="AcctTypeTrial">Prueba</string>
 	<string name="AcctTypeCharterMember">Miembro Fundador</string>
-	<string name="AcctTypeEmployee">Empleado de Linden Lab</string>
+	<string name="AcctTypeEmployee">Empleado de [GRID_OWNER]</string>
 	<string name="PaymentInfoUsed">Información de Pago utilizada</string>
 	<string name="PaymentInfoOnFile">Información de Pago en Archivo</string>
 	<string name="NoPaymentInfoOnFile">Sin Información de Pago</string>
@@ -3509,10 +3560,10 @@ Se espera .wav, .tga, .bmp, .jpg, .jpeg, o .bvh
 	<string name="accel-mac-control">Ctrl-</string>
 	<string name="accel-mac-command">Cmd-</string>
 	<string name="accel-mac-option">Opt-</string>
-	<string name="accel-mac-shift">Mayús</string>
+	<string name="accel-mac-shift">Mayús-</string>
 	<string name="accel-win-control">Ctrl-</string>
 	<string name="accel-win-alt">Alt-</string>
-	<string name="accel-win-shift">Mayús</string>
+	<string name="accel-win-shift">Mayús-</string>
 	
 	<!-- Tab Containers -->
 	<string name="tab_tooltip_prev">[ALT]Flecha Izq. para pestaña previa</string>
@@ -4200,7 +4251,11 @@ Si continuas recibiendo este mensaje, contacta con [SUPPORT_SITE].
 	<string name="PowerUser5">Explotar Objetos - Convierte un objeto Físico en temporal y desenlaza sus partes.</string>
 	<string name="OnlineStatus">Conectado</string>
   <string name="OfflineStatus">Desconectado</string>
+	<string name="not_online_msg">El usuario no está conectado: el mensaje se almacenará para entregárselo más tarde.</string>
+	<string name="not_online_inventory">El usuario no está conectado: el inventario se ha guardado.</string>
 
+	<string name="ReceivedGift">'Has recibido un regalo! [USER] te ha enviado "[PRODUCT]", y dice "[MESSAGE]". Puedes encontrar tu regalo en la carpeta Received Items.</string>
+	<string name="ReceivedPurchase">Tu cimpara de [PRODUCT] ha sido enviada a tu carpeta Received Items.</string>
 
 	<!-- voice calls -->
 

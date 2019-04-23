@@ -50,6 +50,7 @@
 #include "llavatarnamecache.h"
 #include "llfloaterchat.h"
 #include "llfloaterchatterbox.h"
+#include "llgroupactions.h"
 #include "llimpanel.h"
 #include "llmutelist.h"
 #include "llspeakers.h"
@@ -616,7 +617,7 @@ LLUUID LLIMMgr::addSession(
 	LLFloaterIMPanel* floater = findFloaterBySession(session_id);
 	if(!floater)
 	{
-		std::vector<LLUUID> ids;
+		uuid_vec_t ids;
 		ids.push_back(other_participant_id);
 
 		floater = createFloater(session_id, other_participant_id, name, dialog, ids, true);
@@ -660,7 +661,7 @@ LLUUID LLIMMgr::addSession(
 	const std::string& name,
 	EInstantMessage dialog,
 	const LLUUID& other_participant_id,
-	const std::vector<LLUUID>& ids)
+	const uuid_vec_t& ids)
 {
 	if (0 == ids.size())
 	{
@@ -792,41 +793,17 @@ void LLIMMgr::inviteToSession(
 
 	if ( !mPendingInvitations.has(session_id.asString()) )
 	{
-		if (caller_name.empty())
-		{
-			gCacheName->get(caller_id, true,  // voice
-				boost::bind(&LLIMMgr::onInviteNameLookup, _1, _2, _3, payload));
-		}
-		else
-		{
-			LLSD args;
-			args["NAME"] = caller_name;
-			args["GROUP"] = session_name;
+		LLSD args;
+		args["NAME"] = LLAvatarActions::getSLURL(caller_id);
+		args["GROUP"] = LLGroupActions::getSLURL(session_id);
 
-			LLNotifications::instance().add(notify_box_type, 
-					     args, 
-						 payload,
-						 &inviteUserResponse);
+		LLNotifications::instance().add(notify_box_type,
+				args,
+				payload,
+				&inviteUserResponse);
 
-		}
 		mPendingInvitations[session_id.asString()] = LLSD();
 	}
-}
-
-//static
-void LLIMMgr::onInviteNameLookup(const LLUUID& id, const std::string& full_name, bool is_group, LLSD payload)
-{
-	payload["caller_name"] = full_name;
-	payload["session_name"] = full_name;
-
-	LLSD args;
-	args["NAME"] = full_name;
-
-	LLNotifications::instance().add(
-		payload["notify_box_type"].asString(),
-		args, 
-		payload,
-		&inviteUserResponse);
 }
 
 void LLIMMgr::setFloaterOpen(BOOL set_open)
@@ -1051,7 +1028,7 @@ LLFloaterIMPanel* LLIMMgr::createFloater(
 	const LLUUID& other_participant_id,
 	const std::string& session_label,
 	const EInstantMessage& dialog,
-	const std::vector<LLUUID>& ids,
+	const uuid_vec_t& ids,
 	bool user_initiated)
 {
 	if (session_id.isNull())
@@ -1111,7 +1088,7 @@ std::string LLIMMgr::getOfflineMessage(const LLUUID& id)
 
 void LLIMMgr::noteOfflineUsers(
 	LLFloaterIMPanel* floater,
-	const std::vector<LLUUID>& ids)
+	const uuid_vec_t& ids)
 {
 	if(ids.empty())
 	{
@@ -1136,7 +1113,7 @@ void LLIMMgr::noteOfflineUsers(
 }
 
 void LLIMMgr::noteMutedUsers(LLFloaterIMPanel* floater,
-								  const std::vector<LLUUID>& ids)
+								  const uuid_vec_t& ids)
 {
 	// Don't do this if we don't have a mute list.
 	LLMuteList *ml = LLMuteList::getInstance();

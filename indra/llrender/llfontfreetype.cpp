@@ -31,11 +31,8 @@
 
 // Freetype stuff
 #include <ft2build.h>
-
-// For some reason, this won't work if it's not wrapped in the ifdef
-#ifdef FT_FREETYPE_H
 #include FT_FREETYPE_H
-#endif
+
 
 #include "llerror.h"
 #include "llimage.h"
@@ -279,7 +276,7 @@ F32 LLFontFreetype::getXAdvance(const LLFontGlyphInfo* glyph) const
 
 F32 LLFontFreetype::getXKerning(llwchar char_left, llwchar char_right) const
 {
-	if (mFTFace == NULL)
+	if (mFTFace == nullptr)
 		return 0.0;
 
 	//llassert(!mIsFallback);
@@ -298,7 +295,7 @@ F32 LLFontFreetype::getXKerning(llwchar char_left, llwchar char_right) const
 
 F32 LLFontFreetype::getXKerning(const LLFontGlyphInfo* left_glyph_info, const LLFontGlyphInfo* right_glyph_info) const
 {
-	if (mFTFace == NULL)
+	if (mFTFace == nullptr)
 		return 0.0;
 
 	U32 left_glyph = left_glyph_info ? left_glyph_info->mGlyphIndex : 0;
@@ -487,20 +484,12 @@ void LLFontFreetype::renderGlyph(const U32 glyph_index) const
 	if (mFTFace == NULL)
 		return;
 
-	FT_Error error = FT_Load_Glyph(mFTFace, glyph_index, FT_LOAD_DEFAULT);
-#ifdef SHOW_ASSERT
-	if (error)
+	if (FT_Load_Glyph(mFTFace, glyph_index, FT_LOAD_RENDER | FT_LOAD_TARGET_LIGHT) != 0)
 	{
-		LL_ERRS() << "FT_Load_Glyph returned " << error << LL_ENDL;
+		// If glyph fails to load and/or render, render a fallback character
+		llassert_always(!FT_Load_Char(mFTFace, L'?', FT_LOAD_RENDER | FT_LOAD_TARGET_LIGHT));
 	}
-#endif
-	error = FT_Render_Glyph(mFTFace->glyph, gFontRenderMode);
-#ifdef SHOW_ASSERT
-	if (error)
-	{
-		LL_ERRS() << "FT_Render_Glyph returned " << error << LL_ENDL;
-	}
-#endif
+
 	mRenderGlyphCount++;
 }
 
@@ -568,6 +557,7 @@ U8 LLFontFreetype::getStyle() const
 {
 	return mStyle;
 }
+
 void LLFontFreetype::setSubImageLuminanceAlpha(const U32 x, const U32 y, const U32 bitmap_num, const U32 width, const U32 height, const U8 *data, S32 stride) const
 {
 	LLImageRaw *image_raw = mFontBitmapCachep->getImageRaw(bitmap_num);

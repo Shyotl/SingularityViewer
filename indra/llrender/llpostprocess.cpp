@@ -502,8 +502,8 @@ void LLPostProcess::destroyGL()
 
 /*static*/void LLPostProcess::cleanupClass()
 {
-	if(instanceExists())
-		getInstance()->destroyGL() ;
+	if (instanceExists())
+		deleteSingleton();
 }
 
 void LLPostProcess::copyFrameBuffer()

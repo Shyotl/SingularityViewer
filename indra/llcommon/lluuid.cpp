@@ -28,6 +28,7 @@
 // We can't use WIN32_LEAN_AND_MEAN here, needs lots of includes.
 #if LL_WINDOWS
 #include "llwin32headers.h"
+#include "nb30.h"
 #endif
 
 #include "lldefs.h"

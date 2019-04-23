@@ -50,7 +50,7 @@
 			<button label="Balizas" name="beacons_btn"/>
 		</layout_panel>
 		<layout_panel name="panel6">
-			<button label="Radar" name="radar_list_btn" tool_tip="Ver lista de avatares cercanos.(Ctrl-Shift-A)"/>
+			<button label="Radar" name="radar_list_btn" tool_tip="Ver lista de avatares cercanos.(Ctrl-Mayús-A)"/>
 		</layout_panel>
 		<layout_panel name="panelregiontracker">
 			<button label="Monitor Región" name="region_tracker_btn" tool_tip="Monitorear el estado de varias regiones"/>
@@ -182,7 +182,7 @@
 			<button label="Mapa" name="map_btn" tool_tip="Mapa del Mundo. (Ctrl-M)"/>
 		</layout_panel>
 		<layout_panel name="panel12">
-			<button label="MiniMapa" name="radar_btn" tool_tip="Mapa del área a tu alrededor. (Ctrl-Shift-M)"/>
+			<button label="MiniMapa" name="radar_btn" tool_tip="Mapa del área a tu alrededor. (Ctrl-Mayús-M)"/>
 		</layout_panel>
 		<!-- [RLVa:LF] -->
 		<layout_panel name="panelrlvrestrictions">

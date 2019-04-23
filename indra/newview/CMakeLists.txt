@@ -1164,6 +1164,7 @@ add_custom_target(generate_viewer_version ALL
                   )
 
 set_source_files_properties(
+   llimpanel.cpp
    llversioninfo.cpp
    PROPERTIES
    DEPENDS generate_viewer_version  # dummy dependency to force recompile every time

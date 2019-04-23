@@ -1233,7 +1233,7 @@ BOOL LLFavoritesBarCtrl::isClipboardPasteable() const
 		return FALSE;
 	}
 
-	std::vector<LLUUID> objects;
+	uuid_vec_t objects;
 	LLInventoryClipboard::instance().retrieve(objects);
 	S32 count = objects.size();
 	for(S32 i = 0; i < count; i++)
@@ -1262,7 +1262,7 @@ void LLFavoritesBarCtrl::pasteFromClipboard() const
 	if(model && isClipboardPasteable())
 	{
 		LLInventoryItem* item = NULL;
-		std::vector<LLUUID> objects;
+		uuid_vec_t objects;
 		LLInventoryClipboard::instance().retrieve(objects);
 		S32 count = objects.size();
 		LLUUID parent_id(mFavoriteFolderId);

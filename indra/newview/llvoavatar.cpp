@@ -5743,9 +5743,9 @@ U32 LLVOAvatar::renderImpostor(LLColor4U color, S32 diffuse_channel)
 	return 6;
 }
 
-bool LLVOAvatar::allTexturesCompletelyDownloaded(std::set<LLUUID>& ids) const
+bool LLVOAvatar::allTexturesCompletelyDownloaded(uuid_set_t& ids) const
 {
-	for (std::set<LLUUID>::const_iterator it = ids.begin(); it != ids.end(); ++it)
+	for (auto it = ids.begin(); it != ids.end(); ++it)
 	{
 		LLViewerFetchedTexture *imagep = gTextureList.findImage(*it);
 		if (imagep && imagep->getDiscardLevel()!=0)
@@ -5758,14 +5758,14 @@ bool LLVOAvatar::allTexturesCompletelyDownloaded(std::set<LLUUID>& ids) const
 
 bool LLVOAvatar::allLocalTexturesCompletelyDownloaded() const
 {
-	std::set<LLUUID> local_ids;
+	uuid_set_t local_ids;
 	collectLocalTextureUUIDs(local_ids);
 	return allTexturesCompletelyDownloaded(local_ids);
 }
 
 bool LLVOAvatar::allBakedTexturesCompletelyDownloaded() const
 {
-	std::set<LLUUID> baked_ids;
+	uuid_set_t baked_ids;
 	collectBakedTextureUUIDs(baked_ids);
 	return allTexturesCompletelyDownloaded(baked_ids);
 }
@@ -5777,9 +5777,9 @@ void LLVOAvatar::bakedTextureOriginCounts(S32 &sb_count, // server-bake, has ori
 {
 	sb_count = host_count = both_count = neither_count = 0;
 	
-	std::set<LLUUID> baked_ids;
+	uuid_set_t baked_ids;
 	collectBakedTextureUUIDs(baked_ids);
-	for (std::set<LLUUID>::const_iterator it = baked_ids.begin(); it != baked_ids.end(); ++it)
+	for (auto it = baked_ids.begin(); it != baked_ids.end(); ++it)
 	{
 		LLViewerFetchedTexture *imagep = gTextureList.findImage(*it);
 		bool has_url = false, has_host = false;
@@ -5802,9 +5802,9 @@ std::string LLVOAvatar::bakedTextureOriginInfo()
 {
 	std::string result;
 
-	std::set<LLUUID> baked_ids;
+	uuid_set_t baked_ids;
 	collectBakedTextureUUIDs(baked_ids);
-	for (std::set<LLUUID>::const_iterator it = baked_ids.begin(); it != baked_ids.end(); ++it)
+	for (auto it = baked_ids.begin(); it != baked_ids.end(); ++it)
 	{
 		LLViewerFetchedTexture *imagep = gTextureList.findImage(*it);
 		bool has_url = false, has_host = false;
@@ -5830,10 +5830,10 @@ std::string LLVOAvatar::bakedTextureOriginInfo()
 	return result;
 }
 
-S32Bytes LLVOAvatar::totalTextureMemForUUIDS(std::set<LLUUID>& ids)
+S32Bytes LLVOAvatar::totalTextureMemForUUIDS(uuid_set_t& ids)
 {
 	S32Bytes result(0);
-	for (std::set<LLUUID>::const_iterator it = ids.begin(); it != ids.end(); ++it)
+	for (auto it = ids.begin(); it != ids.end(); ++it)
 	{
 		LLViewerFetchedTexture *imagep = gTextureList.findImage(*it);
 		if (imagep)
@@ -5844,7 +5844,7 @@ S32Bytes LLVOAvatar::totalTextureMemForUUIDS(std::set<LLUUID>& ids)
 	return result;
 }
 	
-void LLVOAvatar::collectLocalTextureUUIDs(std::set<LLUUID>& ids) const
+void LLVOAvatar::collectLocalTextureUUIDs(uuid_set_t& ids) const
 {
 	for (U32 texture_index = 0; texture_index < getNumTEs(); texture_index++)
 	{
@@ -5870,7 +5870,7 @@ void LLVOAvatar::collectLocalTextureUUIDs(std::set<LLUUID>& ids) const
 	ids.erase(IMG_INVISIBLE);
 }
 
-void LLVOAvatar::collectBakedTextureUUIDs(std::set<LLUUID>& ids) const
+void LLVOAvatar::collectBakedTextureUUIDs(uuid_set_t& ids) const
 {
 	for (U32 texture_index = 0; texture_index < getNumTEs(); texture_index++)
 	{
@@ -5889,7 +5889,7 @@ void LLVOAvatar::collectBakedTextureUUIDs(std::set<LLUUID>& ids) const
 	ids.erase(IMG_INVISIBLE);
 }
 
-void LLVOAvatar::collectTextureUUIDs(std::set<LLUUID>& ids)
+void LLVOAvatar::collectTextureUUIDs(uuid_set_t& ids)
 {
 	collectLocalTextureUUIDs(ids);
 	collectBakedTextureUUIDs(ids);
@@ -5900,15 +5900,15 @@ void LLVOAvatar::releaseOldTextures()
 	S32Bytes current_texture_mem;
 	
 	// Any textures that we used to be using but are no longer using should no longer be flagged as "NO_DELETE"
-	std::set<LLUUID> baked_texture_ids;
+	uuid_set_t baked_texture_ids;
 	collectBakedTextureUUIDs(baked_texture_ids);
 	S32Bytes new_baked_mem = totalTextureMemForUUIDS(baked_texture_ids);
 
-	std::set<LLUUID> local_texture_ids;
+	uuid_set_t local_texture_ids;
 	collectLocalTextureUUIDs(local_texture_ids);
 	//S32 new_local_mem = totalTextureMemForUUIDS(local_texture_ids);
 
-	std::set<LLUUID> new_texture_ids;
+	uuid_set_t new_texture_ids;
 	new_texture_ids.insert(baked_texture_ids.begin(),baked_texture_ids.end());
 	new_texture_ids.insert(local_texture_ids.begin(),local_texture_ids.end());
 	S32Bytes new_total_mem = totalTextureMemForUUIDS(new_texture_ids);
@@ -5919,7 +5919,7 @@ void LLVOAvatar::releaseOldTextures()
 	{
 			LL_WARNS() << "extra local textures stored for non-self av" << LL_ENDL;
 	}
-	for (std::set<LLUUID>::iterator it = mTextureIDs.begin(); it != mTextureIDs.end(); ++it)
+	for (auto it = mTextureIDs.begin(); it != mTextureIDs.end(); ++it)
 	{
 		if (new_texture_ids.find(*it) == new_texture_ids.end())
 		{
@@ -6843,7 +6843,7 @@ void LLVOAvatar::updateAttachmentOverrides()
 {
     LL_DEBUGS("AnimatedObjects") << "updating" << LL_ENDL;
 
-    std::set<LLUUID> meshes_seen;
+    uuid_set_t meshes_seen;
     
     // Handle the case that we're updating the skeleton of an animated object.
     LLControlAvatar *control_av = asControlAvatar();
@@ -6888,8 +6888,8 @@ void LLVOAvatar::updateAttachmentOverrides()
 	// Remove meshes that are no longer present on the skeleton
 
 	// have to work with a copy because removeAttachmentOverrides() will change mActiveOverrideMeshes.
-    std::set<LLUUID> active_override_meshes = mActiveOverrideMeshes; 
-    for (std::set<LLUUID>::iterator it = active_override_meshes.begin(); it != active_override_meshes.end(); ++it)
+    uuid_set_t active_override_meshes = mActiveOverrideMeshes; 
+    for (auto it = active_override_meshes.begin(); it != active_override_meshes.end(); ++it)
     {
         if (meshes_seen.find(*it) == meshes_seen.end())
         {
@@ -6899,7 +6899,7 @@ void LLVOAvatar::updateAttachmentOverrides()
 }
 // addAttachmentPosOverridesForObject
 //-----------------------------------------------------------------------------
-void LLVOAvatar::addAttachmentOverridesForObject(LLViewerObject *vo, std::set<LLUUID>* meshes_seen, bool recursive)
+void LLVOAvatar::addAttachmentOverridesForObject(LLViewerObject *vo, uuid_set_t* meshes_seen, bool recursive)
 {
     if (vo->getAvatar() != this && vo->getAvatarAncestor() != this)
     {
@@ -10859,7 +10859,7 @@ void LLVOAvatar::calculateUpdateRenderComplexity()
 	max_attachment_complexity = llmax(max_attachment_complexity, DEFAULT_MAX_ATTACHMENT_COMPLEXITY);
 
 	// Diagnostic list of all textures on our avatar
-	static std::set<LLUUID> all_textures;
+	static uuid_set_t all_textures;
 
 	if (mVisualComplexityStale)
 	{

@@ -1714,7 +1714,7 @@ void purge_descendents_of(const LLUUID& id, LLPointer<LLInventoryCallback> cb)
 			LLInventoryModel::item_array_t* items;
 			// Get the list of direct descendants in tha categoy passed as argument
 			gInventory.getDirectDescendentsOf(id, categories, items);
-			std::vector<LLUUID> list_uuids;
+			uuid_vec_t list_uuids;
 			// Make a unique list with all the UUIDs of the direct descendants (items and categories are not treated differently)
 			// Note: we need to do that shallow copy as purging things will invalidate the categories or items lists
 			for (LLInventoryModel::cat_array_t::const_iterator it = categories->begin(); it != categories->end(); ++it)
@@ -1726,7 +1726,7 @@ void purge_descendents_of(const LLUUID& id, LLPointer<LLInventoryCallback> cb)
 				list_uuids.push_back((*it)->getUUID());
 			}
 			// Iterate through the list and only purge the UUIDs that are not on the clipboard
-			for (std::vector<LLUUID>::const_iterator it = list_uuids.begin(); it != list_uuids.end(); ++it)
+			for (auto it = list_uuids.begin(); it != list_uuids.end(); ++it)
 			{
 				if (!LLInventoryClipboard::instance().isOnClipboard(*it))
 				{
@@ -2259,7 +2259,7 @@ void LLViewerInventoryItem::setWearableType(LLWearableType::EType type)
 		LL_WARNS() << "Calling LLViewerInventoryItem::setWearableType for item that does not have an unknown wearable type!?" << LL_ENDL;
 		return;
 	}
-	mFlags = (mFlags & ~LLInventoryItemFlags::II_FLAGS_WEARABLES_MASK) | type;
+	mFlags = (mFlags & ~LLInventoryItemFlags::II_FLAGS_SUBTYPE_MASK) | type;
 }
 
 time_t LLViewerInventoryItem::getCreationDate() const

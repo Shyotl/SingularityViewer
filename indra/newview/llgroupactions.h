@@ -121,6 +121,11 @@ public:
 	 */
 	static bool isAvatarMemberOfGroup(const LLUUID& group_id, const LLUUID& avatar_id);
 
+	/**
+	 * @return slurl string from group ID
+	 */
+	static std::string getSLURL(const LLUUID& id);
+
 private:
 	static bool onJoinGroup(const LLSD& notification, const LLSD& response);
 	static bool onLeaveGroup(const LLSD& notification, const LLSD& response);

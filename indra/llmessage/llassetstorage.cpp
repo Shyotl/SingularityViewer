@@ -58,6 +58,42 @@ const LLUUID CATEGORIZE_LOST_AND_FOUND_ID(std::string("00000000-0000-0000-0000-0
 
 const U64 TOXIC_ASSET_LIFETIME = (120 * 1000000);		// microseconds
 
+namespace
+{
+    bool operator == (const LLAssetStorage::LLGetAssetCallback &lhs, const LLAssetStorage::LLGetAssetCallback &rhs)
+    {
+        auto fnPtrLhs = lhs.target<LLAssetStorage::LLGetAssetCallback>();
+        auto fnPtrRhs = rhs.target<LLAssetStorage::LLGetAssetCallback>();
+        if (fnPtrLhs && fnPtrRhs)
+            return (*fnPtrLhs == *fnPtrRhs);
+        else if (!fnPtrLhs && !fnPtrRhs)
+            return true;
+        return false;
+    }
+
+// Rider: This is the general case of the operator declared above. The code compares the callback 
+// passed into the LLAssetStorage functions to determine if there are duplicated requests for an 
+// asset.  Unfortunately std::function does not provide a direct way to compare two variables so 
+// we define the operator here. 
+// XCode is not very happy with the variadic temples in use below so we will just define the specific 
+// case of comparing two LLGetAssetCallback objects since that is all we really use.
+// 
+//     template<typename T, typename... U>
+//     bool operator == (const std::function<T(U...)> &a, const std::function <T(U...)> &b)
+//     {
+//         typedef T(fnType)(U...);
+// 
+//         auto fnPtrA = a.target<T(*)(U...)>();
+//         auto fnPtrB = b.target<T(*)(U...)>();
+//         if (fnPtrA && fnPtrB)
+//             return (*fnPtrA == *fnPtrB);
+//         else if (!fnPtrA && !fnPtrB)
+//             return true;
+//         return false;
+//     }
+
+}
+
 ///----------------------------------------------------------------------------
 /// LLAssetInfo
 ///----------------------------------------------------------------------------
@@ -150,13 +186,13 @@ void LLAssetInfo::setFromNameValue( const LLNameValue& nv )
 }
 
 ///----------------------------------------------------------------------------
-/// LLAssetRequest
+/// LLBaseDownloadRequest
 ///----------------------------------------------------------------------------
 
 LLBaseDownloadRequest::LLBaseDownloadRequest(const LLUUID &uuid, const LLAssetType::EType type)
     : mUUID(uuid),
       mType(type),
-      mDownCallback(NULL),
+      mDownCallback(),
       mUserData(NULL),
       mHost(),
       mIsTemp(FALSE),
@@ -173,11 +209,13 @@ LLBaseDownloadRequest::LLBaseDownloadRequest(const LLUUID &uuid, const LLAssetTy
 LLBaseDownloadRequest::~LLBaseDownloadRequest()
 {
 }
+
 // virtual
 LLBaseDownloadRequest* LLBaseDownloadRequest::getCopy()
 {
 	return new LLBaseDownloadRequest(*this);
 }
+
 
 ///----------------------------------------------------------------------------
 /// LLAssetRequest
@@ -185,7 +223,7 @@ LLBaseDownloadRequest* LLBaseDownloadRequest::getCopy()
 
 LLAssetRequest::LLAssetRequest(const LLUUID &uuid, const LLAssetType::EType type)
     :   LLBaseDownloadRequest(uuid, type),
-        mUpCallback( NULL ),
+        mUpCallback(),
         mInfoCallback( NULL ),
         mIsLocal(FALSE),
         mIsUserWaiting(FALSE),
@@ -273,6 +311,7 @@ LLBaseDownloadRequest* LLEstateAssetRequest::getCopy()
 	return new LLEstateAssetRequest(*this);
 }
 
+
 ///----------------------------------------------------------------------------
 /// LLAssetStorage
 ///----------------------------------------------------------------------------
@@ -291,13 +330,11 @@ LLAssetStorage::LLAssetStorage(LLMessageSystem *msg, LLXferManager *xfer, LLVFS 
 	_init(msg, xfer, vfs, static_vfs, upstream_host);
 }
 
-
 LLAssetStorage::LLAssetStorage(LLMessageSystem *msg, LLXferManager *xfer,
 							   LLVFS *vfs, LLVFS *static_vfs)
 {
 	_init(msg, xfer, vfs, static_vfs, LLHost::invalid);
 }
-
 
 void LLAssetStorage::_init(LLMessageSystem *msg,
 						   LLXferManager *xfer,
@@ -443,7 +480,7 @@ bool LLAssetStorage::findInStaticVFSAndInvokeCallback(const LLUUID& uuid, LLAsse
 // IW - uuid is passed by value to avoid side effects, please don't re-add &    
 void LLAssetStorage::getAssetData(const LLUUID uuid,
                                   LLAssetType::EType type, 
-                                  LLGetAssetCallback callback, 
+                                  LLAssetStorage::LLGetAssetCallback callback,
                                   void *user_data, 
                                   BOOL is_priority)
 {
@@ -1305,9 +1342,13 @@ BOOL is_priority)
 		 iter != mPendingDownloads.end();  )
 	{
 		LLAssetRequest* tmp = *iter++;
+
+        //void(*const* cbptr)(LLVFS *, const LLUUID &, LLAssetType::EType, void *, S32, LLExtStat) 
+        auto cbptr = tmp->mDownCallback.target<void(*)(LLVFS *, const LLUUID &, LLAssetType::EType, void *, S32, LLExtStat)>();
+
 		if (type == tmp->getType() && 
 			uuid == tmp->getUUID() &&
-			legacyGetDataCallback == tmp->mDownCallback &&
+            (cbptr && (*cbptr == legacyGetDataCallback)) &&
 			callback == ((LLLegacyAssetRequest *)tmp->mUserData)->mDownCallback &&
 			user_data == ((LLLegacyAssetRequest *)tmp->mUserData)->mUserData)
 		{

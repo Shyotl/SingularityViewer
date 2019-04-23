@@ -187,16 +187,16 @@ public:
 	void						updateLODRiggedAttachments( void );
 	void						updateSoftwareSkinnedVertices(const LLMeshSkinInfo* skin, const LLVector4a* weight, const LLVolumeFace& vol_face, LLVertexBuffer *buffer);
 	/*virtual*/ BOOL   	 	 	isActive() const; // Whether this object needs to do an idleUpdate.
-	S32Bytes					totalTextureMemForUUIDS(std::set<LLUUID>& ids);
-	bool 						allTexturesCompletelyDownloaded(std::set<LLUUID>& ids) const;
+	S32Bytes					totalTextureMemForUUIDS(uuid_set_t& ids);
+	bool 						allTexturesCompletelyDownloaded(uuid_set_t& ids) const;
 	bool 						allLocalTexturesCompletelyDownloaded() const;
 	bool 						allBakedTexturesCompletelyDownloaded() const;
 	void 						bakedTextureOriginCounts(S32 &sb_count, S32 &host_count,
 														 S32 &both_count, S32 &neither_count);
 	std::string 				bakedTextureOriginInfo();
-	void 						collectLocalTextureUUIDs(std::set<LLUUID>& ids) const;
-	void 						collectBakedTextureUUIDs(std::set<LLUUID>& ids) const;
-	void 						collectTextureUUIDs(std::set<LLUUID>& ids);
+	void 						collectLocalTextureUUIDs(uuid_set_t& ids) const;
+	void 						collectBakedTextureUUIDs(uuid_set_t& ids) const;
+	void 						collectTextureUUIDs(uuid_set_t& ids);
 	void						releaseOldTextures();
 	/*virtual*/ void   	 	 	updateTextures();
 	LLViewerFetchedTexture*		getBakedTextureImage(const U8 te, const LLUUID& uuid);
@@ -257,7 +257,7 @@ public:
 	virtual LLJoint*		getJoint(const std::string &name);
 	LLJoint*				getJoint(S32 num);
 	
-	void 					addAttachmentOverridesForObject(LLViewerObject *vo, std::set<LLUUID>* meshes_seen = NULL, bool recursive = true);
+	void 					addAttachmentOverridesForObject(LLViewerObject *vo, uuid_set_t* meshes_seen = NULL, bool recursive = true);
 	void					removeAttachmentOverridesForObject(const LLUUID& mesh_id);
 	void					removeAttachmentOverridesForObject(LLViewerObject *vo);
 	bool					jointIsRiggedTo(const LLJoint *joint) const;
@@ -275,7 +275,7 @@ public:
 	// This encodes mesh id and LOD, so we can see whether display is up-to-date.
 	std::map<LLUUID,S32>	mLastRiggingInfoKey;
 	
-    std::set<LLUUID>		mActiveOverrideMeshes;
+    uuid_set_t		mActiveOverrideMeshes;
     virtual void			onActiveOverrideMeshesChanged();
     
 	/*virtual*/ const LLUUID&	getID() const;
@@ -660,7 +660,7 @@ protected:
 
 	LLLoadedCallbackEntry::source_callback_list_t mCallbackTextureList ; 
 	BOOL mLoadedCallbacksPaused;
-	std::set<LLUUID>	mTextureIDs;
+	uuid_set_t	mTextureIDs;
 	//--------------------------------------------------------------------
 	// Local Textures
 	//--------------------------------------------------------------------

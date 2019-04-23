@@ -719,11 +719,11 @@ bool join_group_response(const LLSD& notification, const LLSD& response)
 	return false;
 }
 
-static void highlight_inventory_objects_in_panel(const std::vector<LLUUID>& items, LLInventoryPanel *inventory_panel)
+static void highlight_inventory_objects_in_panel(const uuid_vec_t& items, LLInventoryPanel *inventory_panel)
 {
 	if (NULL == inventory_panel) return;
 
-	for (std::vector<LLUUID>::const_iterator item_iter = items.begin();
+	for (auto item_iter = items.begin();
 		item_iter != items.end();
 		++item_iter)
 	{
@@ -881,7 +881,7 @@ private:
 	}
 
 	LLHandle<LLPanel> mActivePanel;
-	typedef std::set<LLUUID> selected_items_t;
+	typedef uuid_set_t selected_items_t;
 	selected_items_t mSelectedItems;
 
 	/**
@@ -951,18 +951,16 @@ void LLViewerInventoryMoveObserver::changed(U32 mask)
 
 	if((mask & (LLInventoryObserver::STRUCTURE)) != 0)
 	{
-		const std::set<LLUUID>& changed_items = gInventory.getChangedIDs();
+		const uuid_set_t& changed_items = gInventory.getChangedIDs();
 
-		std::set<LLUUID>::const_iterator id_it = changed_items.begin();
-		std::set<LLUUID>::const_iterator id_end = changed_items.end();
+		auto id_it = changed_items.begin();
+		auto id_end = changed_items.end();
 		for (;id_it != id_end; ++id_it)
 		{
 			if ((*id_it) == mObjectID)
 			{
 				active_panel->clearSelection();			
-				std::vector<LLUUID> items;
-				items.push_back(mObjectID);
-				highlight_inventory_objects_in_panel(items, active_panel);
+				highlight_inventory_objects_in_panel({mObjectID}, active_panel);
 				active_panel->getRootFolder()->scrollToShowSelection();
 				
 				gInventory.removeObserver(this);
@@ -2241,6 +2239,7 @@ void autoresponder_finish(bool show_autoresponded, const LLUUID& session_id, con
 	}
 }
 
+#include <boost/algorithm/string/predicate.hpp>
 const std::string NOT_ONLINE_MSG("User not online - message will be stored and delivered later.");
 const std::string NOT_ONLINE_INVENTORY("User not online - inventory has been saved.");
 void translate_if_needed(std::string& message)
@@ -2252,6 +2251,17 @@ void translate_if_needed(std::string& message)
 	else if (message == NOT_ONLINE_INVENTORY)
 	{
 		message = LLTrans::getString("not_online_inventory");
+	}
+	else if (boost::algorithm::ends_with(message, "Received Items folder."))
+	{
+		boost::smatch match;
+		const boost::regex gift_exp("^You've received a gift! (.*) has given you \\\"(.*)\\\", and says \\\"(.*)\\\"\\. You can find your gift in your Received Items folder\\.$");
+		bool gift = boost::regex_match(message, match, gift_exp);
+		if (gift || boost::regex_match(message, match, boost::regex("^Your purchase of (.*) has been delivered to your Received Items folder\\.$")))
+			message = LLTrans::getString(gift ? "ReceivedGift" : "ReceivedPurchase",
+				gift ? LLSD().with("USER", match[1].str()).with("PRODUCT", match[2].str()).with("MESSAGE", match[3].str())
+				: LLSD().with("PRODUCT", match[1].str()));
+		if (gSavedSettings.getBOOL("LiruReceivedItemsNotify")) LLNotificationsUtil::add("SystemMessage", LLSD().with("MESSAGE", message));
 	}
 }
 
@@ -2323,12 +2333,6 @@ void process_improved_im(LLMessageSystem *msg, void **user_data)
 		return;
 	// NaCl End
 
-	// Singu TODO: LLIMProcessing goes here
-	if (chat.mSourceType == CHAT_SOURCE_SYSTEM)
-	{ // Translate server message if required (MAINT-6109)
-		translate_if_needed(message);
-	}
-
 	// make sure that we don't have an empty or all-whitespace name
 	LLStringUtil::trim(name);
 	if (name.empty())
@@ -2366,6 +2370,12 @@ void process_improved_im(LLMessageSystem *msg, void **user_data)
 	{
 		LLSD args;
 		args["NAME"] = name;
+	}
+
+	// Singu TODO: LLIMProcessing goes here
+	if (chat.mSourceType == CHAT_SOURCE_SYSTEM)
+	{ // Translate server message if required (MAINT-6109)
+		translate_if_needed(message);
 	}
 
 	LLViewerObject *source = gObjectList.findObject(session_id); //Session ID is probably the wrong thing.
@@ -8004,9 +8014,7 @@ bool handle_lure_callback(const LLSD& notification, const LLSD& response)
 
 void handle_lure(const LLUUID& invitee)
 {
-	std::vector<LLUUID> ids;
-	ids.push_back(invitee);
-	handle_lure(ids);
+	handle_lure(uuid_vec_t{invitee});
 }
 
 // Prompt for a message to the invited user.

@@ -421,10 +421,7 @@ void wlfPanel_AdvSettings::updateTimeSlider()
 {
 	
 	F32 val = LLWLParamManager::getInstance()->mAnimator.getDayTime() - 0.25f;
-	if(val < 0.0)
-	{
-		val++;
-	}
+	if (val < 0.0) ++val;
 	mTimeSlider->setValue(val);
 }
 
@@ -437,8 +434,8 @@ void syncFromPreferenceSetting(LLSliderCtrl* sldrCtrl)
 
 	if (isAgentAvatarValid())
 	{
-		LLVector3 offset(0.0, 0.0, llclamp(value,MIN_HOVER_Z,MAX_HOVER_Z));
-		LL_INFOS("Avatar") << "setting hover from preference setting " << offset[2] << LL_ENDL;
+		const auto hover = llclamp(value,MIN_HOVER_Z,MAX_HOVER_Z);
+		LL_INFOS("Avatar") << "setting hover from preference setting " << hover << LL_ENDL;
 		gAgentAvatarp->setHoverIfRegionEnabled();
 	}
 }
@@ -446,9 +443,9 @@ void syncFromPreferenceSetting(LLSliderCtrl* sldrCtrl)
 void onHoverSliderMoved(const LLSD& val)
 {
 	F32 value = val.asFloat();
-	LLVector3 offset(0.0, 0.0, llclamp(value,MIN_HOVER_Z,MAX_HOVER_Z));
-	LL_INFOS("Avatar") << "setting hover from slider moved" << offset[2] << LL_ENDL;
-	gAgentAvatarp->setHoverIfRegionEnabled();
+	const auto hover = llclamp(value,MIN_HOVER_Z,MAX_HOVER_Z);
+	LL_DEBUGS("Avatar") << "setting hover from slider moved" << hover << LL_ENDL;
+	gAgentAvatarp->setHoverOffset(LLVector3(0.0, 0.0, hover), false);
 }
 
 bool sInwlfPanelUpdate = false;
@@ -461,8 +458,8 @@ void onHoverSliderFinalCommit(const LLSD& val)
 	F32 value = val.asFloat();
 	gSavedPerAccountSettings.setF32("AvatarHoverOffsetZ", value);
 
-	LLVector3 offset(0.0, 0.0, llclamp(value,MIN_HOVER_Z,MAX_HOVER_Z));
-	LL_INFOS("Avatar") << "setting hover from slider final commit " << offset[2] << LL_ENDL;
+	const auto hover = llclamp(value,MIN_HOVER_Z,MAX_HOVER_Z);
+	LL_INFOS("Avatar") << "setting hover from slider final commit " << hover << LL_ENDL;
 	gAgentAvatarp->setHoverIfRegionEnabled(); // will send update this time.
 	sInwlfPanelUpdate = false;
 }

@@ -82,7 +82,7 @@ private:
 	LLSafeHandle<LLObjectSelection> mObjectSelection;
 	// <edit>
 	std::map<LLUUID,std::pair<U32,U32> > mInventoryNums; //<scripts,total>
-	std::vector<LLUUID> mQueue;
+	uuid_vec_t mQueue;
 	// </edit>
 	std::map<LLUUID, boost::signals2::scoped_connection> mOwnerNameCacheConnection;
 	std::map<LLUUID, boost::signals2::scoped_connection> mLastOwnerNameCacheConnection; // <edit/>

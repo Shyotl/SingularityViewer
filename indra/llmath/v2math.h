@@ -49,6 +49,7 @@ class LLVector2
 		LLVector2(F32 x, F32 y);			      // Initializes LLVector2 to (x. y)
 		LLVector2(const F32 *vec);				  // Initializes LLVector2 to (vec[0]. vec[1])
         explicit LLVector2(const LLVector3 &vec); // Initializes LLVector2 to (vec[0]. vec[1])
+        explicit LLVector2(const LLSD &sd);
 		
 		// Clears LLVector2 to (0, 0).  DEPRECATED - prefer zeroVec.
 		void	clear();
@@ -61,7 +62,7 @@ class LLVector2
 		void	set(const F32 *vec);			// Sets LLVector2 to vec
 
 		LLSD	getValue() const;
-		void	setValue(LLSD& sd);
+		void	setValue(const LLSD& sd);
 
 		void	setVec(F32 x, F32 y);	        // deprecated
 		void	setVec(const LLVector2 &vec);	// deprecated
@@ -109,6 +110,7 @@ class LLVector2
 		friend std::ostream&	 operator<<(std::ostream& s, const LLVector2 &a);		// Stream a
 };
 
+static_assert(std::is_trivially_copyable<LLVector2>{}, "LLVector2 must be a trivially copyable type");
 
 // Non-member functions 
 
@@ -145,6 +147,10 @@ inline LLVector2::LLVector2(const LLVector3 &vec)
 	mV[VY] = vec.mV[VY];
 }
 
+inline LLVector2::LLVector2(const LLSD &sd)
+{
+    setValue(sd);
+}
 
 // Clear and Assignment Functions
 

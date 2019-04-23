@@ -1294,7 +1294,7 @@ public:
 		S32 you_index    = input["body"]["Index"][0]["You" ].asInteger();
 
 		std::vector<U32>& avatar_locs = region->mMapAvatars;
-		std::vector<LLUUID>& avatar_ids = region->mMapAvatarIDs;
+		uuid_vec_t& avatar_ids = region->mMapAvatarIDs;
 		std::list<LLUUID> map_avids(avatar_ids.begin(), avatar_ids.end());
 		avatar_locs.clear();
 		avatar_ids.clear();
@@ -1986,6 +1986,7 @@ void LLViewerRegionImpl::buildCapabilityNames(LLSD& capabilityNames)
 	capabilityNames.append("EnvironmentSettings");
 	capabilityNames.append("EstateChangeInfo");
 	capabilityNames.append("EventQueueGet");
+    capabilityNames.append("ExtEnvironment");
 	capabilityNames.append("FetchLib2");
 	capabilityNames.append("FetchLibDescendents2");
 	capabilityNames.append("FetchInventory2");

@@ -40,6 +40,7 @@
 #include "llpermissions.h"
 #include "lltimer.h"
 #include "v3math.h"
+#include "llsettingsdaycycle.h"
 
 // Grid out of which parcels taken is stepped every 4 meters.
 const F32 PARCEL_GRID_STEP_METERS	= 4.f;
@@ -104,6 +105,10 @@ const U32 RT_LIST	= 0x1 << 4;
 const U32 RT_SELL	= 0x1 << 5;
 
 const S32 INVALID_PARCEL_ID = -1;
+
+const S32 INVALID_PARCEL_ENVIRONMENT_VERSION = -2;
+// if Region settings are used, parcel env. version is -1
+const S32 UNSET_PARCEL_ENVIRONMENT_VERSION = -1;
 
 // Timeouts for parcels
 // default is 21 days * 24h/d * 60m/h * 60s/m *1000000 usec/s = 1814400000000
@@ -508,6 +513,13 @@ public:
 					{ return mRegionDenyAnonymousOverride; }
 	BOOL	getRegionDenyAgeUnverifiedOverride() const
 					{ return mRegionDenyAgeUnverifiedOverride; }
+    BOOL    getRegionAllowAccessOverride() const
+                    { return mRegionAllowAccessoverride; }
+    BOOL    getRegionAllowEnvironmentOverride() const
+                    { return mRegionAllowEnvironmentOverride; }
+    S32     getParcelEnvironmentVersion() const 
+                    { return mCurrentEnvironmentVersion; }
+
 
 	BOOL	getAllowGroupAVSounds()	const	{ return mAllowGroupAVSounds;	} 
 	BOOL	getAllowAnyAVSounds()	const	{ return mAllowAnyAVSounds;		}
@@ -593,6 +605,10 @@ public:
 	void	setRegionPushOverride(BOOL override) {mRegionPushOverride = override; }
 	void	setRegionDenyAnonymousOverride(BOOL override)	{ mRegionDenyAnonymousOverride = override; }
 	void	setRegionDenyAgeUnverifiedOverride(BOOL override)	{ mRegionDenyAgeUnverifiedOverride = override; }
+    void    setRegionAllowAccessOverride(BOOL override) { mRegionAllowAccessoverride = override; }
+    void    setRegionAllowEnvironmentOverride(BOOL override) { mRegionAllowEnvironmentOverride = override; }
+
+    void    setParcelEnvironmentVersion(S32 version) { mCurrentEnvironmentVersion = version; }
 
 	// Accessors for parcel sellWithObjects
 	void	setPreviousOwnerID(LLUUID prev_owner)	{ mPreviousOwnerID = prev_owner; }
@@ -602,7 +618,6 @@ public:
 	LLUUID	getPreviousOwnerID() const		{ return mPreviousOwnerID; }
 	BOOL	getPreviouslyGroupOwned() const	{ return mPreviouslyGroupOwned; }
 	BOOL	getSellWithObjects() const		{ return (mParcelFlags & PF_SELL_PARCEL_OBJECTS) ? TRUE : FALSE; }
-
 
 protected:
 	LLUUID mID;
@@ -674,9 +689,13 @@ protected:
 	BOOL				mRegionPushOverride;
 	BOOL				mRegionDenyAnonymousOverride;
 	BOOL				mRegionDenyAgeUnverifiedOverride;
+    BOOL                mRegionAllowAccessoverride;
+    BOOL                mRegionAllowEnvironmentOverride;
 	BOOL				mAllowGroupAVSounds;
 	BOOL				mAllowAnyAVSounds;
+    S32                 mCurrentEnvironmentVersion;
 	
+    bool                mIsDefaultDayCycle;
 	
 public:
 	// HACK, make private

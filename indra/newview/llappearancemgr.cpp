@@ -1307,7 +1307,7 @@ static void onWearableAssetFetch(LLViewerWearable* wearable, void* data)
 static void removeDuplicateItems(LLInventoryModel::item_array_t& items)
 {
 	LLInventoryModel::item_array_t new_items;
-	std::set<LLUUID> items_seen;
+	uuid_set_t items_seen;
 	std::deque<LLViewerInventoryItem*> tmp_list;
 	// Traverse from the front and keep the first of each item
 	// encountered, so we actually keep the *last* of each duplicate
@@ -1336,7 +1336,7 @@ static void removeDuplicateItems(LLInventoryModel::item_array_t& items)
 // [SL:KB] - Patch: Appearance-WearableDuplicateAssets | Checked: 2015-06-30 (Catznip-3.7)
 static void removeDuplicateWearableItemsByAssetID(LLInventoryModel::item_array_t& items)
 {
-	std::set<LLUUID> idsAsset;
+	uuid_set_t idsAsset;
 	items.erase(std::remove_if(items.begin(), items.end(), 
 		[&idsAsset](const LLViewerInventoryItem* pItem)
 		{
@@ -2602,7 +2602,7 @@ void LLAppearanceMgr::updateAppearanceFromCOF(bool enforce_item_restrictions,
 	if (isAgentAvatarValid())
 	{
 		// Include attachments which should be in COF but don't have their link created yet
-		std::set<LLUUID> pendingAttachments;
+		uuid_set_t pendingAttachments;
 		if (LLAttachmentsMgr::instance().getPendingAttachments(pendingAttachments))
 		{
 			for (const LLUUID& idAttachItem : pendingAttachments)
@@ -3806,7 +3806,7 @@ void RequestAgentUpdateAppearanceResponder::debugCOF(const LLSD& content)
 {
 	LL_INFOS("Avatar") << "AIS COF, version received: " << content["expected"].asInteger()
 					   << " ================================= " << LL_ENDL;
-	std::set<LLUUID> ais_items, local_items;
+	uuid_set_t ais_items, local_items;
 	const LLSD& cof_raw = content["cof_raw"];
 	for (LLSD::array_const_iterator it = cof_raw.beginArray();
 		 it != cof_raw.endArray(); ++it)
@@ -3858,7 +3858,7 @@ void RequestAgentUpdateAppearanceResponder::debugCOF(const LLSD& content)
 	}
 	LL_INFOS("Avatar") << " ================================= " << LL_ENDL;
 	S32 local_only = 0, ais_only = 0;
-	for (std::set<LLUUID>::iterator it = local_items.begin(); it != local_items.end(); ++it)
+	for (auto it = local_items.begin(); it != local_items.end(); ++it)
 	{
 		if (ais_items.find(*it) == ais_items.end())
 		{
@@ -3866,7 +3866,7 @@ void RequestAgentUpdateAppearanceResponder::debugCOF(const LLSD& content)
 			local_only++;
 		}
 	}
-	for (std::set<LLUUID>::iterator it = ais_items.begin(); it != ais_items.end(); ++it)
+	for (auto it = ais_items.begin(); it != ais_items.end(); ++it)
 	{
 		if (local_items.find(*it) == local_items.end())
 		{
@@ -4351,7 +4351,7 @@ private:
 	bool mFailed;
 	std::vector<LLPointer<LLCreateBase> > mPendingCopies;
 	std::vector<LLPointer<LLCreateBase> > mPendingLinks;
-	std::set<LLUUID> mWearItems;
+	uuid_set_t mWearItems;
 	std::vector<const LLCreateBase*> mActiveRequests;
 };
 
@@ -4661,10 +4661,10 @@ void LLAppearanceMgr::setAttachmentInvLinkEnable(bool val)
 	mAttachmentInvLinkEnabled = val;
 }
 
-void dumpAttachmentSet(const std::set<LLUUID>& atts, const std::string& msg)
+void dumpAttachmentSet(const uuid_set_t& atts, const std::string& msg)
 {
        LL_INFOS() << msg << LL_ENDL;
-       for (std::set<LLUUID>::const_iterator it = atts.begin();
+       for (auto it = atts.begin();
                it != atts.end();
                ++it)
        {

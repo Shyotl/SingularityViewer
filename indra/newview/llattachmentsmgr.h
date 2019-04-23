@@ -95,7 +95,7 @@ public:
 // [SL:KB] - Patch: Appearance-SyncAttach | Checked: 2010-09-18 (Catznip-2.1)
 public:
 	void clearPendingAttachmentLink(const LLUUID& idItem);
-	bool getPendingAttachments(std::set<LLUUID>& ids) const;
+	bool getPendingAttachments(uuid_set_t& ids) const;
 protected:
 	void onRegisterAttachmentComplete(const LLUUID& idAttachLink);
 	friend class LLRegisterAttachmentCallback;
@@ -136,12 +136,12 @@ private:
 	LLItemRequestTimes mDetachRequests;
 
     // Attachments that have arrived but have not been linked in the COF yet.
-    std::set<LLUUID> mRecentlyArrivedAttachments;
+    uuid_set_t mRecentlyArrivedAttachments;
     LLTimer mCOFLinkBatchTimer;
 
 // [SL:KB] - Patch: Appearance-SyncAttach | Checked: 2010-09-18 (Catznip-2.1)
 	// Attachments that have pending link creation
-	std::set<LLUUID> mPendingAttachLinks;
+	uuid_set_t mPendingAttachLinks;
 // [/SL:KB]
 
 //    // Attachments that are linked in the COF but may be invalid.

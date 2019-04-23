@@ -1137,7 +1137,7 @@ void LLViewerObjectList::fetchObjectCosts()
 				U32 object_index = 0;
 
 				for (
-					std::set<LLUUID>::iterator iter = mStaleObjectCost.begin();
+					auto iter = mStaleObjectCost.begin();
 					iter != mStaleObjectCost.end();
 					)
 				{
@@ -1195,7 +1195,7 @@ void LLViewerObjectList::fetchPhysicsFlags()
 				U32 object_index = 0;
 
 				for (
-					std::set<LLUUID>::iterator iter = mStalePhysicsFlags.begin();
+					auto iter = mStalePhysicsFlags.begin();
 					iter != mStalePhysicsFlags.end();
 					)
 				{

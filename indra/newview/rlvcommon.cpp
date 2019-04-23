@@ -459,7 +459,7 @@ bool RlvUtil::isNearbyAgent(const LLUUID& idAgent)
 	RLV_ASSERT(idAgent.notNull());
 	if ( (idAgent.notNull()) && (gAgent.getID() != idAgent) )
 	{
-		std::vector<LLUUID> idAgents;
+		uuid_vec_t idAgents;
 		LLWorld::getInstance()->getAvatars(&idAgents, NULL);
 
 		for (int idxAgent = 0, cntAgent = idAgents.size(); idxAgent < cntAgent; idxAgent++)

@@ -66,18 +66,17 @@ public:
 		F64Seconds timeout=LL_ASSET_STORAGE_TIMEOUT);
 
 protected:
-
 	// virtual
 	void _queueDataRequest(const LLUUID& uuid,
 						   LLAssetType::EType type,
-						   void (*callback) (LLVFS *vfs, const LLUUID&, LLAssetType::EType, void *, S32, LLExtStat),
+                           LLGetAssetCallback callback,
 						   void *user_data,
 						   BOOL duplicate,
 						   BOOL is_priority);
 
     void queueRequestUDP(const LLUUID& uuid,
                           LLAssetType::EType type,
-                          void (*callback) (LLVFS *vfs, const LLUUID&, LLAssetType::EType, void *, S32, LLExtStat),
+                          LLGetAssetCallback callback,
                           void *user_data,
                           BOOL duplicate,
                           BOOL is_priority);
@@ -87,7 +86,7 @@ protected:
     void assetRequestCoro(LLViewerAssetRequest *req,
                           const LLUUID uuid,
                           LLAssetType::EType atype,
-                          void (*callback) (LLVFS *vfs, const LLUUID&, LLAssetType::EType, void *, S32, LLExtStat),
+                          LLGetAssetCallback callback,
                           void *user_data);
 
     std::string getAssetURL(const std::string& cap_url, const LLUUID& uuid, LLAssetType::EType atype);

@@ -79,7 +79,7 @@ void LLFloaterBulkPermission::doApply()
 	class ModifiableGatherer : public LLSelectedNodeFunctor
 	{
 	public:
-		ModifiableGatherer(std::vector<LLUUID>& q) : mQueue(q) {}
+		ModifiableGatherer(uuid_vec_t& q) : mQueue(q) {}
 		virtual bool apply(LLSelectNode* node)
 		{
 			if( node->allowOperationOnNode(PERM_MODIFY, GP_OBJECT_MANIPULATE) )
@@ -89,7 +89,7 @@ void LLFloaterBulkPermission::doApply()
 			return true;
 		}
 	private:
-		std::vector<LLUUID>& mQueue;
+		uuid_vec_t& mQueue;
 	};
 	LLScrollListCtrl* list = getChild<LLScrollListCtrl>("queue output");
 	list->deleteAllItems();

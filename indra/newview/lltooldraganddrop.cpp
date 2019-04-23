@@ -271,7 +271,7 @@ void LLCategoryDropDescendentsObserver::done()
 	S32 count = items.size();
 	if(count)
 	{
-		std::set<LLUUID> unique_ids;
+		uuid_set_t unique_ids;
 		for(S32 i = 0; i < count; ++i)
 		{
 			unique_ids.insert(items.get(i)->getUUID());
@@ -472,7 +472,7 @@ void LLToolDragAndDrop::beginMultiDrag(
 		// find categories (i.e. inventory folders) in the cargo.
 		LLInventoryCategory* cat = NULL;
 		S32 count = llmin(cargo_ids.size(), types.size());
-		std::set<LLUUID> cat_ids;
+		uuid_set_t cat_ids;
 		for(S32 i = 0; i < count; ++i)
 		{
 			cat = gInventory.getCategory(cargo_ids[i]);

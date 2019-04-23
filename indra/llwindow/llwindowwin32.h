@@ -109,7 +109,6 @@ public:
 	/*virtual*/ void setLanguageTextInput( const LLCoordGL & pos );
 	/*virtual*/ void updateLanguageTextInputArea();
 	/*virtual*/ void interruptLanguageTextInput();
-	void ShellEx(const std::string& command);
 	/*virtual*/ void spawnWebBrowser(const std::string& escaped_url, bool async);
 
 	/*virtual*/ void setTitle(const std::string &title);

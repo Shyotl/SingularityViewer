@@ -109,7 +109,7 @@ void HippoGridInfo::setPlatform(const std::string& platform)
 	{
 		setPlatform(PLATFORM_WHITECORE);
 	} 
-	else if (tmp == "opensim") 
+	else if (tmp == "opensim" || tmp == "halcyon")
 	{
 		setPlatform(PLATFORM_OPENSIM);
 	} 

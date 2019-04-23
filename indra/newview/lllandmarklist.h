@@ -68,7 +68,7 @@ protected:
 	typedef std::map<LLUUID, LLLandmark*> landmark_list_t;
 	landmark_list_t mList;
 
-	typedef std::set<LLUUID> landmark_bad_list_t;
+	typedef uuid_set_t landmark_bad_list_t;
 	landmark_bad_list_t mBadList;
 	
 	typedef std::map<LLUUID,F32> landmark_requested_list_t;

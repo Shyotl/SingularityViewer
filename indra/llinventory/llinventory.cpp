@@ -1168,10 +1168,10 @@ bool LLInventoryItem::fromLLSD(const LLSD& sd, bool is_new)
 		static U32 WT_UNKNOWN = 16;		// LLWearableType::WT_UNKNOWN
 		static U32 WT_COUNT = 17;		// LLWearableType::WT_COUNT
 		// The last 8 bits of mFlags contain the wearable type.
-		static U32 II_FLAGS_WEARABLES_MASK = 0xff;	// LLInventoryItemFlags::II_FLAGS_WEARABLES_MASK
+		static U32 II_FLAGS_SUBTYPE_MASK = 0xff;	// LLInventoryItemFlags::II_FLAGS_SUBTYPE_MASK
 
 		// The wearable type is stored in the lower 8 bits of mFlags.
-		U32 wt = mFlags & II_FLAGS_WEARABLES_MASK;
+		U32 wt = mFlags & II_FLAGS_SUBTYPE_MASK;
 
 		// Because WT_UNKNOWN now has locally a special meaning, make sure we don't receive it from the server.
 		if (wt == WT_UNKNOWN)

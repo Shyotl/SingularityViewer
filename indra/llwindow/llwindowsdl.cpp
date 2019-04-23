@@ -2476,18 +2476,7 @@ void exec_cmd(const std::string& cmd, const std::string& arg)
 // Must begin with protocol identifier.
 void LLWindowSDL::spawnWebBrowser(const std::string& escaped_url, bool async)
 {
-	bool found = false;
-	S32 i;
-	for (i = 0; i < gURLProtocolWhitelistCount; i++)
-	{
-		if (escaped_url.find(gURLProtocolWhitelist[i]) != std::string::npos)
-		{
-			found = true;
-			break;
-		}
-	}
-
-	if (!found)
+	if (!isWhitelistedProtocol(escaped_url))
 	{
 		LL_WARNS() << "spawn_web_browser called for url with protocol not on whitelist: " << escaped_url << LL_ENDL;
 		return;

@@ -1400,8 +1400,8 @@ void LLAgentWearables::findAttachmentsAddRemoveInfo(LLInventoryModel::item_array
 
 	if (!isAgentAvatarValid()) return;
 
-	std::set<LLUUID> requested_item_ids;
-	std::set<LLUUID> current_item_ids;
+	uuid_set_t requested_item_ids;
+	uuid_set_t current_item_ids;
 	for (U32 i=0; i<obj_item_array.size(); i++)
 	{
 		const LLUUID & requested_id = obj_item_array[i].get()->getLinkedUUID();

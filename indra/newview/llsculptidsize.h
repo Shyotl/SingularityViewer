@@ -127,7 +127,7 @@ public:
 
 private:
 	container mSizeInfo;
-	typedef std::set<LLUUID> std_LLUUID;
+	typedef uuid_set_t std_LLUUID;
 	std_LLUUID mMarkAsUnloaded;
 };
 

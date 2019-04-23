@@ -525,7 +525,7 @@ public:
 	void            stopCurrentAnimations();
 	void			requestStopMotion(LLMotion* motion);
 	void			onAnimStop(const LLUUID& id);
-	void			sendAnimationRequests(const std::vector<LLUUID> &anim_ids, EAnimRequest request);
+	void			sendAnimationRequests(const uuid_vec_t &anim_ids, EAnimRequest request);
 	void			sendAnimationRequest(const LLUUID &anim_id, EAnimRequest request);
 	void			sendAnimationStateReset();
 	void			sendRevokePermissions(const LLUUID & target, U32 permissions);
@@ -936,7 +936,7 @@ public:
 	void 			friendsChanged();
 private:
 	LLFriendObserver* mFriendObserver;
-	std::set<LLUUID> mProxyForAgents;
+	uuid_set_t mProxyForAgents;
 
 /**                    Groups
  **                                                                            **

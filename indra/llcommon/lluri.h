@@ -32,7 +32,6 @@
 #include <string>
 
 class LLSD;
-class LLUUID;
 class LLApp;
 
 /** 

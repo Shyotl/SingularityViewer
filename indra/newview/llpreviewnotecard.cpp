@@ -613,7 +613,7 @@ void LLPreviewNotecard::onSaveComplete(const LLUUID& asset_uuid, void* user_data
 			}
 			else
 			{
-				LL_WARNS() << "Inventory item for script " << info->mItemUUID
+				LL_WARNS() << "Inventory item for notecard " << info->mItemUUID
 						<< " is no longer in agent inventory." << LL_ENDL;
 			}
 		}

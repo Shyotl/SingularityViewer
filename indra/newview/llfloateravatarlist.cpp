@@ -561,7 +561,7 @@ void LLFloaterAvatarList::updateAvatarList(const LLViewerRegion* region, bool fi
 
 	{
 		const std::vector<U32>& map_avs(region->mMapAvatars);
-		const std::vector<LLUUID>& map_avids(region->mMapAvatarIDs);
+		const uuid_vec_t& map_avids(region->mMapAvatarIDs);
 		const LLVector3d& mypos(gAgent.getPositionGlobal());
 		const LLVector3d& origin(region->getOriginGlobal());
 		const F32 max_range(radar_range_radius() * radar_range_radius());
@@ -636,7 +636,7 @@ void LLFloaterAvatarList::expireAvatarList(const std::list<LLUUID>& ids)
 {
 	if (!ids.empty())
 	{
-		std::vector<LLUUID> existing_avs;
+		uuid_vec_t existing_avs;
 		std::vector<LLViewerRegion*> neighbors;
 		gAgent.getRegion()->getNeighboringRegions(neighbors);
 		for (const LLViewerRegion* region : neighbors)

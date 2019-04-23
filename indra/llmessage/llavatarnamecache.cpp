@@ -64,7 +64,7 @@ namespace LLAvatarNameCache
 	std::string sNameLookupURL;
 
 	// Accumulated agent IDs for next query against service
-	typedef std::set<LLUUID> ask_queue_t;
+	typedef uuid_set_t ask_queue_t;
 	ask_queue_t sAskQueue;
 
 	// Agent IDs that have been requested, but with no reply.
@@ -175,14 +175,14 @@ class LLAvatarNameResponder : public LLHTTPClient::ResponderWithResult
 private:
 	// need to store agent ids that are part of this request in case of
 	// an error, so we can flag them as unavailable
-	std::vector<LLUUID> mAgentIDs;
+	uuid_vec_t mAgentIDs;
 
 	// Need the headers to look up Expires: and Retry-After:
 	/*virtual*/ bool needsHeaders() const { return true; }
 	/*virtual*/ char const* getName() const { return "LLAvatarNameResponder"; }
 
 public:
-	LLAvatarNameResponder(const std::vector<LLUUID>& agent_ids)
+	LLAvatarNameResponder(const uuid_vec_t& agent_ids)
 	:	mAgentIDs(agent_ids)
 	{ }
 
@@ -253,7 +253,7 @@ protected:
 		LL_WARNS("AvNameCache") << dumpResponse() << LL_ENDL;
 
 		// Add dummy records for any agent IDs in this request that we do not have cached already
-		std::vector<LLUUID>::const_iterator it = mAgentIDs.begin();
+		auto it = mAgentIDs.begin();
 		for ( ; it != mAgentIDs.end(); ++it)
 		{
 			const LLUUID& agent_id = *it;
@@ -327,7 +327,7 @@ void LLAvatarNameCache::requestNamesViaCapability()
 	std::string url;
 	url.reserve(NAME_URL_MAX);
 
-	std::vector<LLUUID> agent_ids;
+	uuid_vec_t agent_ids;
 	agent_ids.reserve(128);
 	
 	U32 ids = 0;

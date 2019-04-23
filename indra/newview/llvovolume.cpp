@@ -1331,9 +1331,7 @@ BOOL LLVOVolume::calcLOD()
 	if (distance < rampDist)
 	{
 		// Boost LOD when you're REALLY close
-		distance *= 1.0f/rampDist;
-		distance *= distance;
-		distance *= rampDist;
+		distance *= distance/rampDist;
 	}
 	
 	// DON'T Compensate for field of view changing on FOV zoom.
@@ -1435,7 +1433,8 @@ BOOL LLVOVolume::setDrawableParent(LLDrawable* parentp)
 
 void LLVOVolume::updateFaceFlags()
 {
-	for (S32 i = 0; i < getVolume()->getNumFaces(); i++)
+	// There's no guarantee that getVolume()->getNumFaces() == mDrawable->getNumFaces()
+	for (S32 i = 0; i < getVolume()->getNumFaces() && i < mDrawable->getNumFaces(); i++)
 	{
 		LLFace *face = mDrawable->getFace(i);
 		if (face)
@@ -1572,19 +1571,24 @@ BOOL LLVOVolume::genBBoxes(BOOL force_global)
 		}
     }
 	if (!any_valid_boxes) {
-	for (S32 i = 0; i < getVolume()->getNumVolumeFaces(); i++)
+// There's no guarantee that getVolume()->getNumFaces() == mDrawable->getNumFaces()
+	for (S32 i = 0;
+		 i < getVolume()->getNumVolumeFaces() && i < mDrawable->getNumFaces() && i < getNumTEs();
+		 i++)
 	{
 		LLFace *face = mDrawable->getFace(i);
 		if (!face)
 		{
 			continue;
 		}
-		res &= face->genVolumeBBoxes(*volume, i,
+		bool face_res = face->genVolumeBBoxes(*volume, i,
 										mRelativeXform,
 										(mVolumeImpl && mVolumeImpl->isVolumeGlobal()) || force_global);
+		// Singu note: Don't let one bad face to ruin the whole volume. &= bad. |= good.
+		res &= face_res;
 		
         // MAINT-8264 - ignore bboxes of ill-formed faces.
-        if (!res)
+        if (!face_res)
         {
             continue;
         }
@@ -4283,7 +4287,6 @@ LLVector3 LLVOVolume::volumeDirectionToAgent(const LLVector3& dir) const
 	return ret;
 }
 
-
 BOOL LLVOVolume::lineSegmentIntersect(const LLVector4a& start, const LLVector4a& end, S32 face, BOOL pick_transparent, BOOL pick_rigged, S32 *face_hitp,
 									  LLVector4a* intersection,LLVector2* tex_coord, LLVector4a* normal, LLVector4a* tangent)
 	
@@ -4317,7 +4320,7 @@ BOOL LLVOVolume::lineSegmentIntersect(const LLVector4a& start, const LLVector4a&
 			transform = false;
 		}
 		else
-		{ //cannot pick rigged attachments on other avatars or when not in build mode
+		{
 			return FALSE;
 		}
 	}

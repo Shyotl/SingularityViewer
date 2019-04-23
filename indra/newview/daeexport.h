@@ -77,7 +77,7 @@ public:
 	};
 
 	typedef std::vector<std::pair<LLViewerObject*,std::string> > obj_info_t;
-	typedef std::vector<LLUUID> id_list_t;
+	typedef uuid_vec_t id_list_t;
 	typedef std::vector<std::string> string_list_t;
 	typedef std::vector<S32> int_list_t;
 	typedef std::vector<MaterialInfo> material_list_t;

@@ -2195,6 +2195,12 @@ BOOL LLVolume::generate()
 			LLVector4a* end_profile = profile+sizeT;
 			LLVector4a offset = mPathp->mPath[s].mPos;
 
+            if (!offset.isFinite3())
+            { // MAINT-5660; don't know why this happens, does not affect Release builds
+                LL_WARNS() << "LLVolume using path with non-finite points. Resetting them to 0,0,0" << LL_ENDL;
+                offset.clear();
+            }
+
 			LLVector4a tmp;
 
 			// Run along the profile.
@@ -2202,7 +2208,6 @@ BOOL LLVolume::generate()
 			{
 				rot_mat.rotate(*profile++, tmp);
 				dst->setAdd(tmp,offset);
-				llassert(dst->isFinite3());
 				++dst;
 			}
 		}

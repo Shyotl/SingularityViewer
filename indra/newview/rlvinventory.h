@@ -150,7 +150,7 @@ protected:
 	/*virtual*/ void onDestinationCreated(const LLUUID& idFolder, const std::string& strName);
 
 protected:
-	typedef std::vector<LLUUID> folder_ref_t;
+	typedef uuid_vec_t folder_ref_t;
 	folder_ref_t m_Folders;
 	LLUUID       m_idTransaction;
 };

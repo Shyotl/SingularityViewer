@@ -865,14 +865,12 @@ void LLFolderView::clearSelection()
 	mSelectThisID.setNull();
 }
 
-std::set<LLUUID> LLFolderView::getSelectionList() const
+uuid_set_t LLFolderView::getSelectionList() const
 {
-	std::set<LLUUID> selection;
-	for (selected_items_t::const_iterator item_it = mSelectedItems.begin(); 
-		 item_it != mSelectedItems.end(); 
-		 ++item_it)
+	uuid_set_t selection;
+	for (const auto& item : mSelectedItems)
 	{
-		selection.insert((*item_it)->getListener()->getUUID());
+		selection.insert(item->getListener()->getUUID());
 	}
 	return selection;
 }
@@ -1048,9 +1046,9 @@ void LLFolderView::removeCutItems()
 		return;
 
 	// Get the list of clipboard item uuids and iterate through them
-	std::vector<LLUUID> objects;
+	uuid_vec_t objects;
 	LLInventoryClipboard::instance().retrieve(objects);
-	for (std::vector<LLUUID>::const_iterator iter = objects.begin();
+	for (auto iter = objects.begin();
 		 iter != objects.end();
 		 ++iter)
 	{
@@ -2118,8 +2116,7 @@ LLFolderViewItem* LLFolderView::getItemByID(const LLUUID& id)
 		return this;
 	}
 
-	std::map<LLUUID, LLFolderViewItem*>::iterator map_it;
-	map_it = mItemMap.find(id);
+	auto map_it = mItemMap.find(id);
 	if (map_it != mItemMap.end())
 	{
 		return map_it->second;

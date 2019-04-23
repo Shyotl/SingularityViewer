@@ -105,4 +105,6 @@ protected:
 
 } LL_ALIGN_POSTFIX(16);
 
+static_assert(std::is_trivially_copyable<LLQuaternion2>{}, "LLQuaternion2 must be a trivially copyable type");
+
 #endif

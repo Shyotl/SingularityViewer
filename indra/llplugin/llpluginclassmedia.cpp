@@ -62,6 +62,7 @@ bool LLPluginClassMedia::init_impl(void)
 	return true;
 }
 
+
 void LLPluginClassMedia::reset_impl(void)
 {
 	mTextureParamsReceived = false;
@@ -91,16 +92,22 @@ void LLPluginClassMedia::reset_impl(void)
 	mMediaHeight = 0;
 	mDirtyRect = LLRect::null;	
 	mAutoScaleMedia = false;
-	mRequestedVolume = 1.0f;
+	mRequestedVolume = 0.0f;
+	mPriority = PRIORITY_NORMAL;
 	mLowPrioritySizeLimit = LOW_PRIORITY_TEXTURE_SIZE_DEFAULT;
 	mAllowDownsample = false;
 	mPadding = 0;
 	mLastMouseX = 0;
 	mLastMouseY = 0;
 	mStatus = LLPluginClassMediaOwner::MEDIA_NONE;
+	mSleepTime = 1.0f / 100.0f;
+	mCanUndo = false;
+	mCanRedo = false;
 	mCanCut = false;
 	mCanCopy = false;
 	mCanPaste = false;
+	mCanDoDelete = false;
+	mCanSelectAll = false;
 	mMediaName.clear();
 	mMediaDescription.clear();
 	mBackgroundColor = LLColor4(1.0f, 1.0f, 1.0f, 1.0f);
@@ -119,6 +126,10 @@ void LLPluginClassMedia::reset_impl(void)
 	mClickUUID.clear();
 	mStatusCode = 0;
 
+	mClickEnforceTarget = false;
+
+	mZoomFactor = 1.0;
+
 	// media_time class
 	mCurrentTime = 0.0f;
 	mDuration = 0.0f;
@@ -128,7 +139,12 @@ void LLPluginClassMedia::reset_impl(void)
 
 void LLPluginClassMedia::idle_impl(void)
 {
-	if((mMediaWidth == -1) || (!mTextureParamsReceived) || (mPlugin == NULL) || (mPlugin->isBlocked()) || (mOwner == NULL))
+	if(mPlugin)
+	{
+		mPlugin->idle();
+	}
+
+	if((mMediaWidth == -1) || (!mTextureParamsReceived) || (mPlugin == nullptr) || (mPlugin->isBlocked()) || (mOwner == nullptr))
 	{
 		// Can't process a size change at this time
 	}
@@ -189,7 +205,14 @@ void LLPluginClassMedia::idle_impl(void)
 				void *addr = mPlugin->getSharedMemoryAddress(mTextureSharedMemoryName);
 
 				// clear texture memory to avoid random screen visual fuzz from uninitialized texture data
-				memset( addr, 0x00, newsize );
+				if (addr)
+				{
+					memset( addr, 0x00, newsize );
+				}
+				else
+				{
+					LL_WARNS("Plugin") << "Failed to get previously created shared memory address: " << mTextureSharedMemoryName << " size: " << mTextureSharedMemorySize << LL_ENDL;
+				}
 
 				// We could do this to force an update, but textureValid() will still be returning false until the first roundtrip to the plugin,
 				// so it may not be worthwhile.
@@ -237,8 +260,8 @@ int LLPluginClassMedia::getTextureHeight() const
 
 unsigned char* LLPluginClassMedia::getBitsData()
 {
-	unsigned char *result = NULL;
-	if((mPlugin != NULL) && !mTextureSharedMemoryName.empty())
+	unsigned char *result = nullptr;
+	if((mPlugin != nullptr) && !mTextureSharedMemoryName.empty())
 	{
 		result = (unsigned char*)mPlugin->getSharedMemoryAddress(mTextureSharedMemoryName);
 	}
@@ -335,7 +358,7 @@ bool LLPluginClassMedia::textureValid(void)
 		mMediaHeight <= 0 ||
 		mRequestedMediaWidth != mMediaWidth ||
 		mRequestedMediaHeight != mMediaHeight ||
-		getBitsData() == NULL
+		getBitsData() == nullptr
 	)
 		return false;
 
@@ -346,7 +369,7 @@ bool LLPluginClassMedia::getDirty(LLRect *dirty_rect)
 {
 	bool result = !mDirtyRect.isEmpty();
 
-	if(dirty_rect != NULL)
+	if(dirty_rect != nullptr)
 	{
 		*dirty_rect = mDirtyRect;
 	}
@@ -678,15 +701,22 @@ F64 LLPluginClassMedia::getCPUUsage()
 	return result;
 }
 
-void LLPluginClassMedia::sendPickFileResponse(const std::string &file)
+void LLPluginClassMedia::sendPickFileResponse(const std::vector<std::string> files)
 {
 	LLPluginMessage message(LLPLUGIN_MESSAGE_CLASS_MEDIA, "pick_file_response");
-	message.setValue("file", file);
 	if(mPlugin && mPlugin->isBlocked())
 	{
 		// If the plugin sent a blocking pick-file request, the response should unblock it.
 		message.setValueBoolean("blocking_response", true);
 	}
+
+	LLSD file_list = LLSD::emptyArray();
+	for (std::vector<std::string>::const_iterator in_iter = files.begin(); in_iter != files.end(); ++in_iter)
+	{
+		file_list.append(LLSD::String(*in_iter));
+	}
+	message.setValueLLSD("file_list", file_list);
+
 	sendMessage(message);
 }
 
@@ -701,6 +731,18 @@ void LLPluginClassMedia::sendAuthResponse(bool ok, const std::string &username, 
 		// If the plugin sent a blocking pick-file request, the response should unblock it.
 		message.setValueBoolean("blocking_response", true);
 	}
+	sendMessage(message);
+}
+
+void LLPluginClassMedia::undo()
+{
+	LLPluginMessage message(LLPLUGIN_MESSAGE_CLASS_MEDIA, "edit_undo");
+	sendMessage(message);
+}
+
+void LLPluginClassMedia::redo()
+{
+	LLPluginMessage message(LLPLUGIN_MESSAGE_CLASS_MEDIA, "edit_redo");
 	sendMessage(message);
 }
 
@@ -722,12 +764,33 @@ void LLPluginClassMedia::paste()
 	sendMessage(message);
 }
 
-void LLPluginClassMedia::setUserDataPath(const std::string &user_data_path_cache, const std::string &user_data_path_cookies, const std::string &user_data_path_logs)
+void LLPluginClassMedia::doDelete()
+{
+	LLPluginMessage message(LLPLUGIN_MESSAGE_CLASS_MEDIA, "edit_delete");
+	sendMessage(message);
+}
+
+void LLPluginClassMedia::selectAll()
+{
+	LLPluginMessage message(LLPLUGIN_MESSAGE_CLASS_MEDIA, "edit_select_all");
+	sendMessage(message);
+}
+
+void LLPluginClassMedia::showPageSource()
+{
+	LLPluginMessage message(LLPLUGIN_MESSAGE_CLASS_MEDIA, "edit_show_source");
+	sendMessage(message);
+}
+
+void LLPluginClassMedia::setUserDataPath(const std::string &user_data_path_cache,
+										const std::string &user_data_path_cookies,
+										 const std::string &user_data_path_cef_log)
 {
 	LLPluginMessage message(LLPLUGIN_MESSAGE_CLASS_MEDIA, "set_user_data_path");
 	message.setValue("cache_path", user_data_path_cache);
 	message.setValue("cookies_path", user_data_path_cookies);
-	message.setValue("logs_path", user_data_path_logs);
+	message.setValue("cef_log_file", user_data_path_cef_log);
+
 	sendMessage(message);
 }
 
@@ -825,7 +888,7 @@ void LLPluginClassMedia::receivePluginMessage(const LLPluginMessage &message)
 					mDirtyRect.unionWith(newDirtyRect);
 				}
 
-				LL_DEBUGS("PluginUpdated") << "adjusted incoming rect is: (" 
+				LL_DEBUGS("PluginUpdated") << "adjusted incoming rect is: ("
 					<< newDirtyRect.mLeft << ", "
 					<< newDirtyRect.mTop << ", "
 					<< newDirtyRect.mRight << ", "
@@ -926,7 +989,6 @@ void LLPluginClassMedia::receivePluginMessage(const LLPluginMessage &message)
 		{
 			S32 width = message.getValueS32("width");
 			S32 height = message.getValueS32("height");
-			std::string name = message.getValue("name");
 
 			// TODO: check that name matches?
 			mNaturalMediaWidth = width;
@@ -936,10 +998,7 @@ void LLPluginClassMedia::receivePluginMessage(const LLPluginMessage &message)
 		}
 		else if(message_name == "size_change_response")
 		{
-			std::string name = message.getValue("name");
-
 			// TODO: check that name matches?
-
 			mTextureWidth = message.getValueS32("texture_width");
 			mTextureHeight = message.getValueS32("texture_height");
 			mMediaWidth = message.getValueS32("width");
@@ -961,6 +1020,14 @@ void LLPluginClassMedia::receivePluginMessage(const LLPluginMessage &message)
 		}
 		else if(message_name == "edit_state")
 		{
+			if(message.hasValue("undo"))
+			{
+				mCanUndo = message.getValueBoolean("undo");
+			}
+			if(message.hasValue("redo"))
+			{
+				mCanRedo = message.getValueBoolean("redo");
+			}
 			if(message.hasValue("cut"))
 			{
 				mCanCut = message.getValueBoolean("cut");
@@ -973,14 +1040,25 @@ void LLPluginClassMedia::receivePluginMessage(const LLPluginMessage &message)
 			{
 				mCanPaste = message.getValueBoolean("paste");
 			}
+			if (message.hasValue("delete"))
+			{
+				mCanDoDelete = message.getValueBoolean("delete");
+			}
+			if (message.hasValue("select_all"))
+			{
+				mCanSelectAll = message.getValueBoolean("select_all");
+			}
 		}
 		else if(message_name == "name_text")
 		{
+			mHistoryBackAvailable = message.getValueBoolean("history_back_available");
+			mHistoryForwardAvailable = message.getValueBoolean("history_forward_available");
 			mMediaName = message.getValue("name");
 			mediaEvent(LLPluginClassMediaOwner::MEDIA_EVENT_NAME_CHANGED);
 		}
 		else if(message_name == "pick_file")
 		{
+			mIsMultipleFilePick = message.getValueBoolean("multiple_files");
 			mediaEvent(LLPluginClassMediaOwner::MEDIA_EVENT_PICK_FILE_REQUEST);
 		}
 		else if(message_name == "auth_request")
@@ -1042,7 +1120,12 @@ void LLPluginClassMedia::receivePluginMessage(const LLPluginMessage &message)
 		{
 			mClickURL = message.getValue("uri");
 			mClickTarget = message.getValue("target");
-			mClickUUID = message.getValue("uuid");
+
+			// need a link to have a UUID that identifies it to a system further
+			// upstream - plugin could make it but we have access to LLUUID here
+			// so why don't we use it
+			mClickUUID = LLUUID::generateNewID().asString();
+
 			mediaEvent(LLPluginClassMediaOwner::MEDIA_EVENT_CLICK_LINK_HREF);
 		}
 		else if(message_name == "click_nofollow")
@@ -1056,13 +1139,6 @@ void LLPluginClassMedia::receivePluginMessage(const LLPluginMessage &message)
 		{
 			mStatusCode = message.getValueS32("status_code");
 			mediaEvent(LLPluginClassMediaOwner::MEDIA_EVENT_NAVIGATE_ERROR_PAGE);
-		}
-		else if(message_name == "cookie_set")
-		{
-			if(mOwner)
-			{
-				mOwner->handleCookieSet(this, message.getValue("cookie"));
-			}
 		}
 		else if(message_name == "close_request")
 		{
@@ -1102,7 +1178,7 @@ void LLPluginClassMedia::receivePluginMessage(const LLPluginMessage &message)
 //		}
 //		else
 		{
-			LL_WARNS("Plugin") << "Unknown " << message_class << " class message: " << message_name << LL_ENDL;
+			LL_WARNS("Plugin") << "Unknown " << message_name << " class message: " << message_name << LL_ENDL;
 		}
 	}
 
@@ -1145,7 +1221,7 @@ void LLPluginClassMedia::focus(bool focused)
 	sendMessage(message);
 }
 
-void LLPluginClassMedia::set_page_zoom_factor( double factor )
+void LLPluginClassMedia::set_page_zoom_factor( F64 factor )
 {
 	LLPluginMessage message(LLPLUGIN_MESSAGE_CLASS_MEDIA_BROWSER, "set_page_zoom_factor");
 
@@ -1165,27 +1241,23 @@ void LLPluginClassMedia::clear_cookies()
 	sendMessage(message);
 }
 
-void LLPluginClassMedia::set_cookies(const std::string &cookies)
+void LLPluginClassMedia::cookies_enabled(bool enable)
 {
-	LLPluginMessage message(LLPLUGIN_MESSAGE_CLASS_MEDIA_BROWSER, "set_cookies");
-	message.setValue("cookies", cookies);
-	sendMessage(message);
-}
-
-void LLPluginClassMedia::enable_cookies(bool enable)
-{
-	LLPluginMessage message(LLPLUGIN_MESSAGE_CLASS_MEDIA_BROWSER, "enable_cookies");
+	LLPluginMessage message(LLPLUGIN_MESSAGE_CLASS_MEDIA_BROWSER, "cookies_enabled");
 	message.setValueBoolean("enable", enable);
 	sendMessage(message);
 }
 
-void LLPluginClassMedia::proxy_setup(bool enable, const std::string &host, int port)
+void LLPluginClassMedia::proxy_setup(bool enable, int type, const std::string &host, int port, const std::string &user, const std::string &pass)
 {
 	LLPluginMessage message(LLPLUGIN_MESSAGE_CLASS_MEDIA_BROWSER, "proxy_setup");
 
 	message.setValueBoolean("enable", enable);
+	message.setValueS32("proxy_type", type);
 	message.setValue("host", host);
 	message.setValueS32("port", port);
+	message.setValue("username", user);
+	message.setValue("password", pass);
 
 	sendMessage(message);
 }
@@ -1214,16 +1286,6 @@ void LLPluginClassMedia::browse_forward()
 void LLPluginClassMedia::browse_back()
 {
 	LLPluginMessage message(LLPLUGIN_MESSAGE_CLASS_MEDIA_BROWSER, "browse_back");
-	sendMessage(message);
-}
-
-void LLPluginClassMedia::set_status_redirect(int code, const std::string &url)
-{
-	LLPluginMessage message(LLPLUGIN_MESSAGE_CLASS_MEDIA_BROWSER, "set_status_redirect");
-
-	message.setValueS32("code", code);
-	message.setValue("url", url);
-
 	sendMessage(message);
 }
 
@@ -1274,6 +1336,12 @@ void LLPluginClassMedia::addCertificateFilePath(const std::string& path)
 	LLPluginMessage message(LLPLUGIN_MESSAGE_CLASS_MEDIA_BROWSER, "add_certificate_file_path");
 	message.setValue("path", path);
 	sendMessage(message);
+}
+
+void LLPluginClassMedia::setOverrideClickTarget(const std::string &target)
+{
+	mClickEnforceTarget = true;
+	mOverrideClickTarget = target;
 }
 
 void LLPluginClassMedia::crashPlugin()

@@ -2383,9 +2383,10 @@ void LLMeshRepository::notifyLoadedMeshes()
 			mUploadErrorQ.pop();
 		}
 
+		static LLCachedControl<bool> sh_throttle_mesh_thread_requests("SHThrottleMeshThreadRequests", false);
 		S32 push_count = LLMeshRepoThread::sMaxConcurrentRequests*2-(LLMeshRepoThread::sActiveHeaderRequests+LLMeshRepoThread::sActiveLODRequests);
 
-		push_count = llmin(push_count, (S32)mPendingRequests.size());
+		push_count = sh_throttle_mesh_thread_requests ? llmin(push_count, (S32)mPendingRequests.size()) : mPendingRequests.size();
 
 		if (push_count > 0)
 		{
@@ -2475,7 +2476,7 @@ void LLMeshRepository::notifySkinInfoReceived(LLMeshSkinInfo& info)
 	skin_load_map::iterator iter = mLoadingSkins.find(info.mMeshID);
 	if (iter != mLoadingSkins.end())
 	{
-		for (std::set<LLUUID>::iterator obj_id = iter->second.begin(); obj_id != iter->second.end(); ++obj_id)
+		for (auto obj_id = iter->second.begin(); obj_id != iter->second.end(); ++obj_id)
 		{
 			LLVOVolume* vobj = (LLVOVolume*) gObjectList.findObject(*obj_id);
 			if (vobj)
@@ -2615,7 +2616,7 @@ void LLMeshRepository::fetchPhysicsShape(const LLUUID& mesh_id)
 		if (!decomp || decomp->mPhysicsShapeMesh.empty())
 		{
 			//add volume to list of loading meshes
-			std::set<LLUUID>::iterator iter = mLoadingPhysicsShapes.find(mesh_id);
+			auto iter = mLoadingPhysicsShapes.find(mesh_id);
 			if (iter == mLoadingPhysicsShapes.end())
 			{	//no request pending for this skin info
 				mLoadingPhysicsShapes.insert(mesh_id);
@@ -2643,7 +2644,7 @@ LLModel::Decomposition* LLMeshRepository::getDecomposition(const LLUUID& mesh_id
 		if (!ret || ret->mBaseHullMesh.empty())
 		{
 			//add volume to list of loading meshes
-			std::set<LLUUID>::iterator iter = mLoadingDecompositions.find(mesh_id);
+			auto iter = mLoadingDecompositions.find(mesh_id);
 			if (iter == mLoadingDecompositions.end())
 			{	//no request pending for this skin info
 				mLoadingDecompositions.insert(mesh_id);

@@ -139,6 +139,7 @@ public:
 	static LLColor4U blue;
 };
 
+static_assert(std::is_trivially_copyable<LLColor4U>{}, "LLColor4U must be a trivially copyable type");
 
 // Non-member functions 
 F32		distVec(const LLColor4U &a, const LLColor4U &b);			// Returns distance between a and b

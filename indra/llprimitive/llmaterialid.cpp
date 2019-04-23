@@ -56,15 +56,6 @@ LLMaterialID::LLMaterialID(const void* pMemory)
 	set(pMemory);
 }
 
-LLMaterialID::LLMaterialID(const LLMaterialID& pOtherMaterialID)
-{
-	copyFromOtherMaterialID(pOtherMaterialID);
-}
-
-LLMaterialID::~LLMaterialID()
-{
-}
-
 bool LLMaterialID::operator == (const LLMaterialID& pOtherMaterialID) const
 {
 	return (compareToOtherMaterialID(pOtherMaterialID) == 0);
@@ -95,12 +86,6 @@ bool LLMaterialID::operator >= (const LLMaterialID& pOtherMaterialID) const
 	return (compareToOtherMaterialID(pOtherMaterialID) >= 0);
 }
 
-LLMaterialID& LLMaterialID::operator = (const LLMaterialID& pOtherMaterialID)
-{
-	copyFromOtherMaterialID(pOtherMaterialID);
-	return (*this);
-}
-
 bool LLMaterialID::isNull() const
 {
 	return (compareToOtherMaterialID(LLMaterialID::null) == 0);
@@ -116,12 +101,12 @@ void LLMaterialID::set(const void* pMemory)
 	llassert(pMemory != NULL);
 
 	// assumes that the required size of memory is available
-	memcpy(mID, pMemory, MATERIAL_ID_SIZE * sizeof(U8));
+	memcpy(mID, pMemory, sizeof(mID));
 }
 
 void LLMaterialID::clear()
 {
-	memset(mID, 0, MATERIAL_ID_SIZE * sizeof(U8));
+	memset(mID, 0, sizeof(mID));
 }
 
 LLSD LLMaterialID::asLLSD() const
@@ -156,16 +141,10 @@ std::ostream& operator<<(std::ostream& s, const LLMaterialID &material_id)
 	return s;
 }
 
-
 void LLMaterialID::parseFromBinary (const LLSD::Binary& pMaterialID)
 {
 	llassert(pMaterialID.size() == (MATERIAL_ID_SIZE * sizeof(U8)));
 	memcpy(mID, &pMaterialID[0], MATERIAL_ID_SIZE * sizeof(U8));
-}
-
-void LLMaterialID::copyFromOtherMaterialID(const LLMaterialID& pOtherMaterialID)
-{
-	memcpy(mID, pOtherMaterialID.get(), MATERIAL_ID_SIZE * sizeof(U8));
 }
 
 int LLMaterialID::compareToOtherMaterialID(const LLMaterialID& pOtherMaterialID) const

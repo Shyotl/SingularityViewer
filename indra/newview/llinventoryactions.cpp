@@ -107,11 +107,8 @@ bool get_selection_object_uuids(LLFolderView *root, uuid_vec_t& ids)
 {
 	uuid_vec_t results;
 	//S32 no_object = 0;
-	std::set<LLUUID> selectedItems = root->getSelectionList();
-	for(std::set<LLUUID>::iterator it = selectedItems.begin(); it != selectedItems.end(); ++it)
+	for(const auto& id : root->getSelectionList())
 	{
-		const LLUUID& id(*it);
-
 		if(id.notNull())
 		{
 			results.push_back(id);
@@ -134,12 +131,12 @@ bool LLInventoryAction::doToSelected(LLFolderView* root, std::string action, BOO
 	if (!root)
 		return true;
 
-	std::set<LLUUID> selected_items = root->getSelectionList();
+	auto selected_items = root->getSelectionList();
 
 	// Prompt the user and check for authorization for some marketplace active listing edits
 	if (user_confirm && (("delete" == action) || ("cut" == action) || ("rename" == action) || ("properties" == action) || ("task_properties" == action) || ("open" == action)))
 	{
-		std::set<LLUUID>::iterator set_iter = std::find_if(selected_items.begin(), selected_items.end(), boost::bind(&depth_nesting_in_marketplace, _1) >= 0);
+		auto set_iter = std::find_if(selected_items.begin(), selected_items.end(), boost::bind(&depth_nesting_in_marketplace, _1) >= 0);
 		if (set_iter != selected_items.end())
 		{
 			if ("open" == action)
@@ -177,7 +174,7 @@ bool LLInventoryAction::doToSelected(LLFolderView* root, std::string action, BOO
 	// Copying to the marketplace needs confirmation if nocopy items are involved
 	if (("copy_to_marketplace_listings" == action))
 	{
-		std::set<LLUUID>::iterator set_iter = selected_items.begin();
+		auto set_iter = selected_items.begin();
 		if (contains_nocopy_items(*set_iter))
 		{
 			LLNotificationsUtil::add("ConfirmCopyToMarketplace", LLSD(), LLSD(), boost::bind(&LLInventoryAction::callback_copySelected, _1, _2, root, action));
@@ -233,8 +230,6 @@ bool LLInventoryAction::doToSelected(LLFolderView* root, std::string action, BOO
 		LLFloater::setFloaterHost(multi_floaterp);
 	}
 
-	std::set<LLUUID>::iterator set_iter;
-
 
 	// This rather warty piece of code is to allow items to be removed
 	// from the avatar in a batch, eliminating redundant
@@ -250,9 +245,9 @@ bool LLInventoryAction::doToSelected(LLFolderView* root, std::string action, BOO
 	}
 	else
 	{
-		for (set_iter = selected_items.begin(); set_iter != selected_items.end(); ++set_iter)
+		for (const auto& id : selected_items)
 		{
-			LLFolderViewItem* folder_item = root->getItemByID(*set_iter);
+			LLFolderViewItem* folder_item = root->getItemByID(id);
 			if(!folder_item) continue;
 			LLInvFVBridge* bridge = (LLInvFVBridge*)folder_item->getListener();
 			if(!bridge) continue;
@@ -286,10 +281,9 @@ void LLInventoryAction::buildMarketplaceFolders(LLFolderView* root)
 		return;
 	}
 
-	std::set<LLUUID> selected_items = root->getSelectionList();
-	for (std::set<LLUUID>::const_iterator set_iter = selected_items.begin(); set_iter != selected_items.end(); ++set_iter)
+	for (const auto& item : root->getSelectionList())
 	{
-		const LLInventoryObject* obj(gInventory.getObject(*set_iter));
+		const LLInventoryObject* obj(gInventory.getObject(item));
 		if (!obj) continue;
 		if (gInventory.isObjectDescendentOf(obj->getParentUUID(), marketplacelistings_id))
 		{
@@ -522,22 +516,19 @@ struct LLBeginIMSession : public inventory_panel_listener_t
 		LLInventoryPanel *panel = mPtr;
 		LLInventoryModel* model = panel->getModel();
 		if(!model) return true;
-		std::set<LLUUID> selected_items = panel->getRootFolder()->getSelectionList();
 
 		std::string name;
 		static int session_num = 1;
 
-		std::vector<LLUUID> members;
+		uuid_vec_t members;
 		EInstantMessage type = IM_SESSION_CONFERENCE_START;
 
 // [RLVa:KB] - Checked: 2013-05-08 (RLVa-1.4.9)
 		bool fRlvCanStartIM = true;
 // [/RLVa:KB]
 
-		for (std::set<LLUUID>::const_iterator iter = selected_items.begin(); iter != selected_items.end(); iter++)
+		for (const auto& item : panel->getRootFolder()->getSelectionList())
 		{
-
-			LLUUID item = *iter;
 			LLFolderViewItem* folder_item = panel->getRootFolder()->getItemByID(item);
 			
 			if(folder_item) 
@@ -644,7 +635,7 @@ struct LLAttachObject : public inventory_panel_listener_t
 		LLFolderView* folder = panel->getRootFolder();
 		if(!folder) return true;
 
-		std::set<LLUUID> selected_items = folder->getSelectionList();
+		auto selected_items = folder->getSelectionList();
 		LLUUID id = *selected_items.begin();
 
 		std::string joint_name = userdata.asString();
