@@ -473,7 +473,7 @@ protected:
 	S8  mIsFetching;				// Fetch request is active
 	bool mCanUseHTTP ;              //This texture can be fetched through http if true.
 
-	FTType mFTType; // What category of image is this - map tile, server bake, etc?
+	const FTType mFTType; // What category of image is this - map tile, server bake, etc?
 	mutable S8 mIsMissingAsset;		// True if we know that there is no image asset with this image id in the database.		
 
 	typedef std::list<LLLoadedCallbackEntry*> callback_list_t;

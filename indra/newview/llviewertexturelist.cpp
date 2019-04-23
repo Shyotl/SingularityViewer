@@ -617,12 +617,12 @@ void LLViewerTextureList::addImageToList(LLViewerFetchedTexture *image)
 	}
 	else
 	{
-	if((mImageList.insert(image)).second != true) 
-	{
-			LL_WARNS() << "Error happens when insert image " << image->getID()  << " into mImageList!" << LL_ENDL ;
+		if((mImageList.insert(image)).second != true) 
+		{
+				LL_WARNS() << "Error happens when insert image " << image->getID()  << " into mImageList!" << LL_ENDL ;
+		}
+		image->setInImageList(TRUE) ;
 	}
-	image->setInImageList(TRUE) ;
-}
 }
 
 void LLViewerTextureList::removeImageFromList(LLViewerFetchedTexture *image)

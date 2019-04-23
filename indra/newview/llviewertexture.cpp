@@ -996,10 +996,9 @@ const std::string& fttype_to_string(const FTType& fttype)
 
 LLViewerFetchedTexture::LLViewerFetchedTexture(const LLUUID& id, FTType f_type, const LLHost& host, BOOL usemipmaps)
 	: LLViewerTexture(id, usemipmaps, f_type == FTT_DEFAULT || f_type == FTT_MAP_TILE),
-	mTargetHost(host)
+	mTargetHost(host), mFTType(f_type)
 {
 	init(TRUE);
-	mFTType = f_type;
 	if (mFTType == FTT_HOST_BAKE)
 	{
 		LL_WARNS() << "Unsupported fetch type " << mFTType << LL_ENDL;
@@ -1009,19 +1008,18 @@ LLViewerFetchedTexture::LLViewerFetchedTexture(const LLUUID& id, FTType f_type, 
 }
 	
 LLViewerFetchedTexture::LLViewerFetchedTexture(const LLImageRaw* raw, FTType f_type, BOOL usemipmaps)
-	: LLViewerTexture(raw, usemipmaps, f_type == FTT_DEFAULT || f_type == FTT_MAP_TILE)
+	: LLViewerTexture(raw, usemipmaps, f_type == FTT_DEFAULT || f_type == FTT_MAP_TILE),
+	mFTType(f_type)
 {
 	init(TRUE);
-	mFTType = f_type;
 	mGLTexturep->setNeedsAlphaAndPickMask(TRUE);
 }
 	
 LLViewerFetchedTexture::LLViewerFetchedTexture(const std::string& url, FTType f_type, const LLUUID& id, BOOL usemipmaps)
 	: LLViewerTexture(id, usemipmaps, f_type == FTT_DEFAULT || f_type == FTT_MAP_TILE),
-	mUrl(url)
+	mUrl(url), mFTType(f_type)
 {
 	init(TRUE);
-	mFTType = f_type;
 	generateGLTexture();
 	mGLTexturep->setNeedsAlphaAndPickMask(TRUE);
 }
@@ -1089,7 +1087,6 @@ void LLViewerFetchedTexture::init(bool firstinit)
 	mKeptSavedRawImageTime = 0.f;
 	mLastCallBackActiveTime = 0.f;
 	mForceCallbackFetch = FALSE;
-	mFTType = FTT_UNKNOWN;
 }
 
 LLViewerFetchedTexture::~LLViewerFetchedTexture()
