@@ -5580,7 +5580,48 @@ void process_health_message(LLMessageSystem *mesgsys, void **user_data)
 
 
 void process_sim_stats(LLMessageSystem *msg, void **user_data)
-{	
+{
+	static LLHost sLastHost;
+	if (msg->getSender() != sLastHost)
+	{
+		sLastHost = msg->getSender();
+		LLViewerStats::getInstance()->mSimTimeDilation.reset();
+		LLViewerStats::getInstance()->mSimFPS.reset();
+		LLViewerStats::getInstance()->mSimPhysicsFPS.reset();
+		LLViewerStats::getInstance()->mSimAgentUPS.reset();
+		LLViewerStats::getInstance()->mSimFrameMsec.reset();
+		LLViewerStats::getInstance()->mSimNetMsec.reset();
+		LLViewerStats::getInstance()->mSimSimOtherMsec.reset();
+		LLViewerStats::getInstance()->mSimSimPhysicsMsec.reset();
+		LLViewerStats::getInstance()->mSimAgentMsec.reset();
+		LLViewerStats::getInstance()->mSimImagesMsec.reset();
+		LLViewerStats::getInstance()->mSimScriptMsec.reset();
+		LLViewerStats::getInstance()->mSimObjects.reset();
+		LLViewerStats::getInstance()->mSimActiveObjects.reset();
+		LLViewerStats::getInstance()->mSimMainAgents.reset();
+		LLViewerStats::getInstance()->mSimChildAgents.reset();
+		LLViewerStats::getInstance()->mSimActiveScripts.reset();
+		LLViewerStats::getInstance()->mSimScriptEPS.reset();
+		LLViewerStats::getInstance()->mSimInPPS.reset();
+		LLViewerStats::getInstance()->mSimOutPPS.reset();
+		LLViewerStats::getInstance()->mSimPendingDownloads.reset();
+		LLViewerStats::getInstance()->mSimPendingUploads.reset();
+		LLViewerStats::getInstance()->mSimPendingLocalUploads.reset();
+		LLViewerStats::getInstance()->mSimTotalUnackedBytes.reset();
+		LLViewerStats::getInstance()->mPhysicsPinnedTasks.reset();
+		LLViewerStats::getInstance()->mPhysicsLODTasks.reset();
+		LLViewerStats::getInstance()->mSimSimPhysicsStepMsec.reset();
+		LLViewerStats::getInstance()->mSimSimPhysicsShapeUpdateMsec.reset();
+		LLViewerStats::getInstance()->mSimSimPhysicsOtherMsec.reset();
+		LLViewerStats::getInstance()->mPhysicsMemoryAllocated.reset();
+		LLViewerStats::getInstance()->mSimSpareMsec.reset();
+		LLViewerStats::getInstance()->mSimSleepMsec.reset();
+		LLViewerStats::getInstance()->mSimPumpIOMsec.reset();
+		LLViewerStats::getInstance()->mSimPctScriptsRun.reset();
+		LLViewerStats::getInstance()->mSimSimAIStepMsec.reset();
+		LLViewerStats::getInstance()->mSimSimSkippedSilhouetteSteps.reset();
+		LLViewerStats::getInstance()->mSimSimPctSteppedCharacters.reset();
+	}
 	S32 count = msg->getNumberOfBlocks("Stat");
 	for (S32 i = 0; i < count; ++i)
 	{
