@@ -463,7 +463,7 @@ void LLViewerTexLayerSetBuffer::doUpload()
 			// Read back the file and validate.
 			BOOL valid = FALSE;
 			LLPointer<LLImageJ2C> integrity_test = new LLImageJ2C;
-			S64 file_size = 0;
+			S64Bytes file_size(0);
 			U8* data = LLVFile::readFile(gVFS, LLImageBase::getPrivatePool(), asset_id, LLAssetType::AT_TEXTURE, &file_size);
 			if (data)
 			{

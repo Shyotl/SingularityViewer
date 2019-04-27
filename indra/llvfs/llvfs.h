@@ -59,15 +59,15 @@ class LLVFSBlock
 public:
 	LLVFSBlock();
 
-	LLVFSBlock(U64 loc, S64 size);
+	LLVFSBlock(U64Bytes loc, S64Bytes size);
 
 	static bool locationSortPredicate(
 		const LLVFSBlock* lhs,
 		const LLVFSBlock* rhs);
 
 public:
-	U64 mLocation;
-	S64	mLength;		// allocated block size
+	U64Bytes mLocation;
+	S64Bytes	mLength;		// allocated block size
 };
 
 class LLVFSFileSpecifier
@@ -87,7 +87,7 @@ class LLVFSFileBlock : public LLVFSBlock, public LLVFSFileSpecifier
 {
 public:
 	LLVFSFileBlock();
-	LLVFSFileBlock(const LLUUID &file_id, LLAssetType::EType file_type, U64 loc = 0, S64 size = 0);
+	LLVFSFileBlock(const LLUUID &file_id, LLAssetType::EType file_type, U64Bytes loc = U64Bytes(0), S64Bytes size = S64Bytes(0));
 	void init();
 #ifdef LL_LITTLE_ENDIAN
 	inline void swizzleCopy(void *dst, void *src, int size);
@@ -97,11 +97,11 @@ public:
 	inline void swizzleCopy(void *dst, void *src, int size);
 #endif
 	void serialize(U8 *buffer);
-	void deserialize(U8 *buffer, const S64 index_loc);
+	void deserialize(U8 *buffer, const S64Bytes index_loc);
 	static BOOL insertLRU(LLVFSFileBlock* const& first,
 						  LLVFSFileBlock* const& second);
-	S64  mSize;
-	S64  mIndexLocation; // location of index entry
+	S64Bytes mSize;
+	S64Bytes mIndexLocation; // location of index entry
 	U32  mAccessTime;
 	BOOL mLocks[VFSLOCK_COUNT]; // number of outstanding locks of each type
 
@@ -117,7 +117,7 @@ private:
 	LLVFS(const std::string& index_filename, 
 			const std::string& data_filename, 
 			const BOOL read_only, 
-			const U64 presize,
+			const U64Bytes presize,
 			const BOOL remove_after_crash);
 public:
 	~LLVFS();
@@ -127,7 +127,7 @@ public:
 	static LLVFS * createLLVFS(const std::string& index_filename, 
 			const std::string& data_filename, 
 			const BOOL read_only, 
-			const U64 presize,
+			const U64Bytes presize,
 			const BOOL remove_after_crash);
 
 	BOOL isValid() const			{ return (VFSVALID_OK == mValid); }
@@ -135,19 +135,19 @@ public:
 
 	// ---------- The following fucntions lock/unlock mDataMutex ----------
 	BOOL getExists(const LLUUID &file_id, const LLAssetType::EType file_type);
-	S64	 getSize(const LLUUID &file_id, const LLAssetType::EType file_type);
+	S64Bytes	 getSize(const LLUUID &file_id, const LLAssetType::EType file_type);
 
-	BOOL checkAvailable(S64 max_size);
+	BOOL checkAvailable(S64Bytes max_size);
 	
-	S64  getMaxSize(const LLUUID &file_id, const LLAssetType::EType file_type);
-	BOOL setMaxSize(const LLUUID &file_id, const LLAssetType::EType file_type, S64 max_size);
+	S64Bytes  getMaxSize(const LLUUID &file_id, const LLAssetType::EType file_type);
+	BOOL setMaxSize(const LLUUID &file_id, const LLAssetType::EType file_type, S64Bytes max_size);
 
 	void renameFile(const LLUUID &file_id, const LLAssetType::EType file_type,
 		const LLUUID &new_id, const LLAssetType::EType &new_type);
 	void removeFile(const LLUUID &file_id, const LLAssetType::EType file_type);
 
-	S64 getData(const LLUUID &file_id, const LLAssetType::EType file_type, U8 *buffer, S64 location, S64 length);
-	S64 storeData(const LLUUID &file_id, const LLAssetType::EType file_type, const U8 *buffer, S64 location, S64 length);
+	S64Bytes getData(const LLUUID &file_id, const LLAssetType::EType file_type, U8 *buffer, S64Bytes location, S64Bytes length);
+	S64Bytes storeData(const LLUUID &file_id, const LLAssetType::EType file_type, const U8 *buffer, S64Bytes location, S64Bytes length);
 
 	void incLock(const LLUUID &file_id, const LLAssetType::EType file_type, EVFSLock lock);
 	void decLock(const LLUUID &file_id, const LLAssetType::EType file_type, EVFSLock lock);
@@ -176,16 +176,16 @@ protected:
 	void eraseBlock(LLVFSBlock *block);
 	void addFreeBlock(LLVFSBlock *block);
 	//void mergeFreeBlocks();
-	void useFreeSpace(LLVFSBlock *free_block, S64 length);
+	void useFreeSpace(LLVFSBlock *free_block, S64Bytes length);
 	void sync(LLVFSFileBlock *block, BOOL remove = FALSE);
-	void presizeDataFile(const U64 size);
+	void presizeDataFile(const U64Bytes size);
 
 	static LLFILE *openAndLock(const std::string& filename, const char* mode, BOOL read_lock);
 	static void unlockAndClose(FILE *fp);
 	
 	// Can initiate LRU-based file removal to make space.
 	// The immune file block will not be removed.
-	LLVFSBlock *findFreeBlock(S64 size, LLVFSFileBlock *immune = NULL);
+	LLVFSBlock *findFreeBlock(S64Bytes size, LLVFSFileBlock *immune = NULL);
 
 	// lock/unlock data mutex (mDataMutex)
 	void lockData() { mDataMutex->lock(); }
@@ -202,15 +202,15 @@ public:
 protected:
 	fileblock_map mFileBlocks;
 
-	typedef std::multimap<S64, LLVFSBlock*>	blocks_length_map_t;
+	typedef std::multimap<S64Bytes, LLVFSBlock*>	blocks_length_map_t;
 	blocks_length_map_t 	mFreeBlocksByLength;
-	typedef std::multimap<U64, LLVFSBlock*>	blocks_location_map_t;
+	typedef std::multimap<U64Bytes, LLVFSBlock*>	blocks_location_map_t;
 	blocks_location_map_t 	mFreeBlocksByLocation;
 
 	LLFILE *mDataFP;
 	LLFILE *mIndexFP;
 
-	std::deque<S64> mIndexHoles;
+	std::deque<S64Bytes> mIndexHoles;
 
 	std::string mIndexFilename;
 	std::string mDataFilename;

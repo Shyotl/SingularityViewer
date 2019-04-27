@@ -825,14 +825,22 @@ void LLFloaterAO::onNotecardLoadComplete(LLVFS *vfs,const LLUUID& asset_uuid,LLA
 {
 	if(status == LL_ERR_NOERR)
 	{
-		S64 size = vfs->getSize(asset_uuid, type);
-		U8* buffer = new U8[size];
-		vfs->getData(asset_uuid, type, buffer, 0, size);
-
 		if(type == LLAssetType::AT_NOTECARD)
 		{
+			LLVFile file(vfs, asset_uuid, type, LLVFile::READ);
+			S32 size = file.getSize();
+
+			char* buffer = new char[size];
+			if (buffer == NULL)
+			{
+				LL_ERRS() << "Memory Allocation Failed" << LL_ENDL;
+				return;
+			}
+
+			file.read((U8*)buffer, size);
+
 			LLViewerTextEditor* edit = new LLViewerTextEditor("",LLRect(0,0,0,0),S32_MAX,"");
-			if(edit->importBuffer((char*)buffer, (S32)size))
+			if(edit->importBuffer(buffer, (S32)size))
 			{
 				LL_INFOS() << "ao nc decode success" << LL_ENDL;
 				std::string card = edit->getText();
@@ -941,6 +949,7 @@ void LLFloaterAO::onNotecardLoadComplete(LLVFS *vfs,const LLUUID& asset_uuid,LLA
 			{
 				LL_INFOS() << "ao nc decode error" << LL_ENDL;
 			}
+			delete[] buffer;
 		}
 	}
 	else

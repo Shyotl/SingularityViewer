@@ -3268,17 +3268,63 @@ U32 LLAppViewer::getTextureCacheVersion()
 	//viewer texture cache version, change if the texture cache format changes.
 	static const U32 TEXTURE_CACHE_VERSION = 8;
 
-	return TEXTURE_CACHE_VERSION ;
+	return TEXTURE_CACHE_VERSION;
 }
 
 //static
-U32 LLAppViewer::getObjectCacheVersion() 
+U32 LLAppViewer::getObjectCacheVersion()
 {
 	// Viewer object cache version, change if object update
 	// format changes. JC
 	const U32 INDRA_OBJECT_CACHE_VERSION = 14;
 
 	return INDRA_OBJECT_CACHE_VERSION;
+}
+
+void copyStaticVFSIndex(const std::string& old_file, const std::string& new_file)
+{
+	LLFILE* in = LLFile::fopen(old_file, "rb");
+	LLFILE* out = LLFile::fopen(new_file, "wb");
+
+	LL_INFOS() << "Attempting to copy.." << LL_ENDL;
+
+	if (in && out)
+	{
+		LL_INFOS() << "Okay to copy.." << LL_ENDL;
+		S32 read = 0;
+		const S32 COPY_BUFFER_SIZE = 34;
+		U8 buffer[COPY_BUFFER_SIZE];
+		U8 buffer2[46];
+		while ((read = fread(buffer, 1, sizeof(buffer), in)) > 0)
+		{
+			U8* src = buffer;
+			U8* dst = buffer2;
+			((U64*)dst)[0] = ((U32*)src)[0];
+			src += 4;
+			dst += 8;
+			((U64*)dst)[0] = ((U32*)src)[0];
+			src += 4;
+			dst += 8;
+			memcpy(dst, src, 22);
+			src += 22;
+			dst += 22;
+			((U64*)dst)[0] = ((U32*)src)[0];
+			fwrite(buffer2, 1, 46, out);
+		}
+	}
+	else
+	{
+		if (!in)
+		{
+			LL_INFOS() << "Failed to open " << old_file << LL_ENDL;
+		}
+		if (!out)
+		{
+			LL_INFOS() << "Failed to open " << new_file << LL_ENDL;
+		}
+	}
+	if (in) fclose(in);
+	if (out) fclose(out);
 }
 
 bool LLAppViewer::initCache()
@@ -3346,16 +3392,15 @@ bool LLAppViewer::initCache()
 	
 	// Init the texture cache
 	// Allocate 75% of the cache size for textures
-	const U64 MB = 1024 * 1024;
-	const U64 MIN_CACHE_SIZE = 64ll * MB;
-	const U64 MAX_CACHE_SIZE = 20480ll * MB; // 20 GB
-	const U64 MAX_VFS_SIZE = 5120ll * MB; // 5 GB
+	const U64Bytes MIN_CACHE_SIZE = U32Megabytes(64);
+	const U64Bytes MAX_CACHE_SIZE = U32Gigabytes(20);
+	const U64Bytes MAX_VFS_SIZE = U32Gigabytes(5);
 
-	U64 cache_size = (U64)(gSavedSettings.getU32("CacheSize")) * MB;
+	U64Bytes cache_size = U32Megabytes(gSavedSettings.getU32("CacheSize"));
 	cache_size = llclamp(cache_size, MIN_CACHE_SIZE, MAX_CACHE_SIZE);
 
-	U64 texture_cache_size = ((cache_size * 3) / 4);
-	U64 vfs_size = cache_size - texture_cache_size;
+	U64Bytes texture_cache_size = ((cache_size * 3) / 4);
+	U64Bytes vfs_size = U64Bytes(cache_size) - U64Bytes(texture_cache_size);
 
 	if (vfs_size > MAX_VFS_SIZE)
 	{
@@ -3365,7 +3410,7 @@ bool LLAppViewer::initCache()
 		texture_cache_size = cache_size - MAX_VFS_SIZE;
 	}
 
-	U64 extra = LLAppViewer::getTextureCache()->initCache(LL_PATH_CACHE, texture_cache_size, texture_cache_mismatch);
+	U64Bytes extra(LLAppViewer::getTextureCache()->initCache(LL_PATH_CACHE, texture_cache_size, texture_cache_mismatch));
 	texture_cache_size -= extra;
 
 	LLVOCache::getInstance()->initCache(LL_PATH_CACHE, gSavedSettings.getU32("CacheNumberOfRegionsForObjects"), getObjectCacheVersion()) ;
@@ -3374,14 +3419,14 @@ bool LLAppViewer::initCache()
 	
 	// Init the VFS
 	vfs_size = llmin(vfs_size + extra, MAX_VFS_SIZE);
-	vfs_size = (vfs_size / MB) * MB; // make sure it is MB aligned
-	U64 old_vfs_size = U64(gSavedSettings.getU32("VFSOldSize")) * MB;
+	vfs_size = U32Megabytes(vfs_size + U32Bytes(1048575)); // make sure it is MB aligned
+	U32Megabytes old_vfs_size(gSavedSettings.getU32("VFSOldSize"));
 	bool resize_vfs = (vfs_size != old_vfs_size);
 	if (resize_vfs)
 	{
-		gSavedSettings.setU32("VFSOldSize", vfs_size / MB);
+		gSavedSettings.setU32("VFSOldSize", U32Megabytes(vfs_size));
 	}
-	LL_INFOS("AppCache") << "VFS CACHE SIZE: " << vfs_size / MB << " MB" << LL_ENDL;
+	LL_INFOS("AppCache") << "VFS CACHE SIZE: " << U32Megabytes(vfs_size) << LL_ENDL;
 	
 	// This has to happen BEFORE starting the vfs
 	// time_t	ltime;
@@ -3470,6 +3515,7 @@ bool LLAppViewer::initCache()
 
 	static_vfs_data_file = gDirUtilp->getExpandedFilename(LL_PATH_APP_SETTINGS, "static_data.db2");
 	static_vfs_index_file = gDirUtilp->getExpandedFilename(LL_PATH_APP_SETTINGS, "static_index.db2");
+	std::string new_static_vfs_index_file = gDirUtilp->getExpandedFilename(LL_PATH_CACHE, "static_index.db2");
 
 	if (resize_vfs)
 	{
@@ -3497,7 +3543,9 @@ bool LLAppViewer::initCache()
 		return false;
 	}
 
-	gStaticVFS = LLVFS::createLLVFS(static_vfs_index_file, static_vfs_data_file, true, 0, false);
+	copyStaticVFSIndex(static_vfs_index_file, new_static_vfs_index_file);
+
+	gStaticVFS = LLVFS::createLLVFS(new_static_vfs_index_file, static_vfs_data_file, true, U64Bytes(0), false);
 	if (!gStaticVFS)
 	{
 		return false;

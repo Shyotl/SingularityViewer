@@ -68,9 +68,9 @@ public:
 		Request(handle_t handle, U32 priority, U32 flags,
 				operation_t op, LLVFS* vfs,
 				const LLUUID &file_id, const LLAssetType::EType file_type,
-				U8* buffer, S64 offset, S64 numbytes);
+				U8* buffer, S64Bytes offset, S64Bytes numbytes);
 
-		S32 getBytesRead()
+		S64Bytes getBytesRead()
 		{
 			return mBytesRead;
 		}
@@ -105,9 +105,9 @@ public:
 		LLAssetType::EType mFileType;
 		
 		U8* mBuffer;	// dest for reads, source for writes, new UUID for rename
-		S64 mOffset;	// offset into file, -1 = append (WRITE only)
-		S64 mBytes;		// bytes to read from file, -1 = all (new mFileType for rename)
-		S64	mBytesRead;	// bytes read from file
+		S32Bytes mOffset;	// offset into file, -1 = append (WRITE only)
+		S32Bytes mBytes;		// bytes to read from file, -1 = all (new mFileType for rename)
+		S32Bytes mBytesRead;	// bytes read from file
 	};
 
 	//------------------------------------------------------------------------
@@ -121,17 +121,17 @@ public:
 
 	// Return a Request handle
 	handle_t read(LLVFS* vfs, const LLUUID &file_id, const LLAssetType::EType file_type,	/* Flawfinder: ignore */
-				  U8* buffer, S64 offset, S64 numbytes, U32 pri=PRIORITY_NORMAL, U32 flags = 0);
+				  U8* buffer, S64Bytes offset, S64Bytes numbytes, U32 pri=PRIORITY_NORMAL, U32 flags = 0);
 	handle_t write(LLVFS* vfs, const LLUUID &file_id, const LLAssetType::EType file_type,
-				   U8* buffer, S64 offset, S64 numbytes, U32 flags);
+				   U8* buffer, S64Bytes offset, S64Bytes numbytes, U32 flags);
 	// SJB: rename seems to have issues, especially when threaded
 // 	handle_t rename(LLVFS* vfs, const LLUUID &file_id, const LLAssetType::EType file_type,
 // 					const LLUUID &new_id, const LLAssetType::EType new_type, U32 flags);
 	// Return number of bytes read
-	S32 readImmediate(LLVFS* vfs, const LLUUID &file_id, const LLAssetType::EType file_type,
-					  U8* buffer, S64 offset, S64 numbytes);
-	S32 writeImmediate(LLVFS* vfs, const LLUUID &file_id, const LLAssetType::EType file_type,
-					   U8* buffer, S64 offset, S64 numbytes);
+	S64Bytes readImmediate(LLVFS* vfs, const LLUUID &file_id, const LLAssetType::EType file_type,
+					  U8* buffer, S64Bytes offset, S64Bytes numbytes);
+	S64Bytes writeImmediate(LLVFS* vfs, const LLUUID &file_id, const LLAssetType::EType file_type,
+					   U8* buffer, S64Bytes offset, S64Bytes numbytes);
 
 	/*virtual*/ bool processRequest(QueuedRequest* req);
 

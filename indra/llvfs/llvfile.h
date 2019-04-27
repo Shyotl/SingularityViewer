@@ -40,21 +40,22 @@ public:
 	LLVFile(LLVFS *vfs, const LLUUID &file_id, const LLAssetType::EType file_type, S32 mode = LLVFile::READ);
 	~LLVFile();
 
-	BOOL read(U8 *buffer, S64 bytes, BOOL async = FALSE, F32 priority = 128.f);	/* Flawfinder: ignore */
-	static U8* readFile(LLVFS *vfs, LLPrivateMemoryPool* poolp, const LLUUID &uuid, LLAssetType::EType type, S64* bytes_read = 0);
+	BOOL read(U8 *buffer, S64BytesImplicit bytes, BOOL async = FALSE, F32 priority = 128.f);	/* Flawfinder: ignore */
+	std::unique_ptr< std::vector<U8> > readVec(bool pad = true);
+	static U8* readFile(LLVFS *vfs, LLPrivateMemoryPool* poolp, const LLUUID &uuid, LLAssetType::EType type, S64Bytes* bytes_read = 0);
 	void setReadPriority(const F32 priority);
 	BOOL isReadComplete();
-	S64  getLastBytesRead();
+	S64Bytes  getLastBytesRead();
 	BOOL eof();
 
-	BOOL write(const U8 *buffer, S64 bytes);
-	static BOOL writeFile(const U8 *buffer, S64 bytes, LLVFS *vfs, const LLUUID &uuid, LLAssetType::EType type);
-	BOOL seek(S64 offset, S64 origin = -1);
-	S64  tell() const;
+	BOOL write(const U8 *buffer, S64BytesImplicit bytes);
+	static BOOL writeFile(const U8 *buffer, S64BytesImplicit bytes, LLVFS *vfs, const LLUUID &uuid, LLAssetType::EType type);
+	BOOL seek(S64BytesImplicit offset, S64BytesImplicit origin = S64Bytes(-1));
+	S64Bytes  tell() const;
 
-	S64 getSize();
-	S64 getMaxSize();
-	BOOL setMaxSize(S64 size);
+	S64Bytes getSize();
+	S64Bytes getMaxSize();
+	BOOL setMaxSize(S64BytesImplicit size);
 	BOOL rename(const LLUUID &new_id, const LLAssetType::EType new_type);
 	BOOL remove();
 
@@ -80,12 +81,12 @@ protected:
 	LLAssetType::EType mFileType;
 
 	LLUUID	mFileID;
-	S64		mPosition;
+	S64Bytes	mPosition;
 	S32		mMode;
 	LLVFS	*mVFS;
 	F32		mPriority;
 
-	S64		mBytesRead;
+	S64Bytes	mBytesRead;
 	LLVFSThread::handle_t mHandle;
 };
 

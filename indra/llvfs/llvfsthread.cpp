@@ -77,7 +77,7 @@ LLVFSThread::~LLVFSThread()
 //----------------------------------------------------------------------------
 
 LLVFSThread::handle_t LLVFSThread::read(LLVFS* vfs, const LLUUID &file_id, const LLAssetType::EType file_type,
-										U8* buffer, S64 offset, S64 numbytes, U32 priority, U32 flags)
+										U8* buffer, S64Bytes offset, S64Bytes numbytes, U32 priority, U32 flags)
 {
 	handle_t handle = generateHandle();
 
@@ -96,31 +96,24 @@ LLVFSThread::handle_t LLVFSThread::read(LLVFS* vfs, const LLUUID &file_id, const
 	return handle;
 }
 
-S32 LLVFSThread::readImmediate(LLVFS* vfs, const LLUUID &file_id, const LLAssetType::EType file_type,
-							   U8* buffer, S64 offset, S64 numbytes)
+S64Bytes LLVFSThread::readImmediate(LLVFS* vfs, const LLUUID &file_id, const LLAssetType::EType file_type,
+							   U8* buffer, S64Bytes offset, S64Bytes numbytes)
 {
-	handle_t handle = generateHandle();
-
-	Request* req = new Request(handle, PRIORITY_IMMEDIATE, 0, FILE_READ, vfs, file_id, file_type,
-							   buffer, offset, numbytes);
-	
-	S32 res = addRequest(req) ? 1 : 0;
-	if (res == 0)
-	{
-		LL_ERRS() << "LLVFSThread::read called after LLVFSThread::cleanupClass()" << LL_ENDL;
-		req->deleteRequest();
-	}
-	else
+	S64Bytes res(0);
+	if (handle_t handle = read(vfs, file_id, file_type, buffer, offset, numbytes, PRIORITY_IMMEDIATE, 0))
 	{
 		llverify(waitForResult(handle, false) == true);
-		res = req->getBytesRead();
+		Request* req = (Request*)getRequest(handle);
+		if (req)
+			res = req->getBytesRead();
 		completeRequest(handle);
 	}
 	return res;
+
 }
 
 LLVFSThread::handle_t LLVFSThread::write(LLVFS* vfs, const LLUUID &file_id, const LLAssetType::EType file_type,
-										 U8* buffer, S64 offset, S64 numbytes, U32 flags)
+										 U8* buffer, S64Bytes offset, S64Bytes numbytes, U32 flags)
 {
 	handle_t handle = generateHandle();
 
@@ -138,24 +131,16 @@ LLVFSThread::handle_t LLVFSThread::write(LLVFS* vfs, const LLUUID &file_id, cons
 	return handle;
 }
 
-S32 LLVFSThread::writeImmediate(LLVFS* vfs, const LLUUID &file_id, const LLAssetType::EType file_type,
-								 U8* buffer, S64 offset, S64 numbytes)
+S64Bytes LLVFSThread::writeImmediate(LLVFS* vfs, const LLUUID &file_id, const LLAssetType::EType file_type,
+								 U8* buffer, S64Bytes offset, S64Bytes numbytes)
 {
-	handle_t handle = generateHandle();
-
-	Request* req = new Request(handle, PRIORITY_IMMEDIATE, 0, FILE_WRITE, vfs, file_id, file_type,
-							   buffer, offset, numbytes);
-
-	S32 res = addRequest(req) ? 1 : 0;
-	if (res == 0)
-	{
-		LL_ERRS() << "LLVFSThread::read called after LLVFSThread::cleanupClass()" << LL_ENDL;
-		req->deleteRequest();
-	}
-	else
+	S64Bytes res(0);
+	if (handle_t handle = write(vfs, file_id, file_type, buffer, offset, numbytes, 0))
 	{
 		llverify(waitForResult(handle, false) == true);
-		res = req->getBytesRead();
+		Request* req = (Request*)getRequest(handle);
+		if (req)
+			res = req->getBytesRead();
 		completeRequest(handle);
 	}
 	return res;
@@ -188,7 +173,7 @@ S32 LLVFSThread::writeImmediate(LLVFS* vfs, const LLUUID &file_id, const LLAsset
 LLVFSThread::Request::Request(handle_t handle, U32 priority, U32 flags,
 							  operation_t op, LLVFS* vfs,
 							  const LLUUID &file_id, const LLAssetType::EType file_type,
-							  U8* buffer, S64 offset, S64 numbytes) :
+							  U8* buffer, S64Bytes offset, S64Bytes numbytes) :
 	QueuedRequest(handle, priority, flags),
 	mOperation(op),
 	mVFS(vfs),
@@ -210,7 +195,7 @@ LLVFSThread::Request::Request(handle_t handle, U32 priority, U32 flags,
 	}
 	if (mOperation == FILE_WRITE)
 	{
-		S64 blocksize =  mVFS->getMaxSize(mFileID, mFileType);
+		S64Bytes blocksize =  mVFS->getMaxSize(mFileID, mFileType);
 		if (blocksize < 0)
 		{
 			LL_WARNS() << "VFS write to temporary block (shouldn't happen)" << LL_ENDL;
@@ -284,7 +269,7 @@ bool LLVFSThread::Request::processRequest()
 	else if (mOperation ==  FILE_RENAME)
 	{
 		LLUUID* new_idp = (LLUUID*)mBuffer;
-		LLAssetType::EType new_type = (LLAssetType::EType)mBytes;
+		LLAssetType::EType new_type = (LLAssetType::EType)(S32)mBytes;
 		mVFS->renameFile(mFileID, mFileType, *new_idp, new_type);
 		mFileID = *new_idp;
 		complete = true;
