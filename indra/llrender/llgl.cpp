@@ -100,10 +100,73 @@ void APIENTRY gl_debug_callback(GLenum source,
 	}
 	else
 	{
-		LL_WARNS() << "----- GL WARNING -------" << LL_ENDL;
+		if (severity == GL_DEBUG_SEVERITY_MEDIUM_ARB)
+		{
+			LL_WARNS() << "----- GL WARNING MEDIUM --------" << LL_ENDL;
+		}
+		else if (severity == GL_DEBUG_SEVERITY_LOW_ARB)
+		{
+			LL_WARNS() << "----- GL WARNING LOW --------" << LL_ENDL;
+		}
+		else if (severity == 0x826b && id == 0x20071 && type == GL_DEBUG_TYPE_OTHER_ARB && source == GL_DEBUG_SOURCE_API_ARB)
+		{
+			// Silence nvidia buffer detail info.
+			return;
+		}
 	}
-	LL_WARNS() << "Source: " << std::hex << source << std::dec << LL_ENDL;
-	LL_WARNS() << "Type: " << std::hex << type << std::dec << LL_ENDL;
+
+	std::string sourcestr = "Unknown";
+	switch (source)
+	{
+	case GL_DEBUG_SOURCE_API_ARB:
+		sourcestr = "OpenGL";
+		break;
+	case GL_DEBUG_SOURCE_WINDOW_SYSTEM_ARB:
+		sourcestr = "Window manager";
+		break;
+	case GL_DEBUG_SOURCE_SHADER_COMPILER_ARB:
+		sourcestr = "Shader compiler";
+		break;
+	case GL_DEBUG_SOURCE_THIRD_PARTY_ARB:
+		sourcestr = "3rd party";
+		break;
+	case GL_DEBUG_SOURCE_APPLICATION_ARB:
+		sourcestr = "Application";
+		break;
+	case GL_DEBUG_SOURCE_OTHER_ARB:
+		sourcestr = "Other";
+		break;
+	default:
+		break;
+	}
+
+	std::string typestr = "Unknown";
+	switch (type)
+	{
+	case GL_DEBUG_TYPE_ERROR_ARB:
+		typestr = "Error";
+		break;
+	case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR_ARB:
+		typestr = "Deprecated behavior";
+		break;
+	case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR_ARB:
+		typestr = "Undefined behavior";
+		break;
+	case GL_DEBUG_TYPE_PORTABILITY_ARB:
+		typestr = "Portability";
+		break;
+	case GL_DEBUG_TYPE_PERFORMANCE_ARB:
+		typestr = "Performance";
+		break;
+	case GL_DEBUG_TYPE_OTHER_ARB:
+		typestr = "Other";
+		break;
+	default:
+		break;
+	}
+
+	LL_WARNS() << "Source: " << sourcestr << " (" << std::hex << source << std::dec << ")" << LL_ENDL;
+	LL_WARNS() << "Type: " << typestr << " (" << std::hex << type << std::dec << ")" << LL_ENDL;
 	LL_WARNS() << "ID: " << std::hex << id << std::dec<< LL_ENDL;
 	LL_WARNS() << "Severity: " << std::hex << severity << std::dec << LL_ENDL;
 	LL_WARNS() << "Message: " << message << LL_ENDL;

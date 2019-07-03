@@ -443,7 +443,7 @@ LLDXDevice *LLDXHardware::findDevice(const std::string &vendor, const std::strin
 }
 */
 
-BOOL LLDXHardware::getInfo(BOOL vram_only)
+BOOL LLDXHardware::getInfo(BOOL vram_only, S32Megabytes system_ram)
 {
 	LLTimer hw_timer;
 	BOOL ok = FALSE;
@@ -543,6 +543,11 @@ BOOL LLDXHardware::getInfo(BOOL vram_only)
 		  // Dump the string as an int into the structure
 		  char *stopstring;
 		  mVRAM = strtol(ram_str.c_str(), &stopstring, 10); 
+		  mVRAM -= ((S32)system_ram/2) + 1; // Ignore shared memory pool.
+		  if (mVRAM <= 0)
+		  {
+			  mVRAM = (S32)system_ram / 2; // Integrated graphics perhaps? Use half system ram.
+		  }
 		  LL_INFOS("AppInit") << "VRAM Detected: " << mVRAM << " DX9 string: " << ram_str << LL_ENDL;
 		}
 

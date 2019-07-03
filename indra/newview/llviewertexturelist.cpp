@@ -1285,6 +1285,7 @@ LLPointer<LLImageJ2C> LLViewerTextureList::convertToUploadFile(LLPointer<LLImage
 S32Megabytes LLViewerTextureList::getMinVideoRamSetting()
 {
 	S32Megabytes system_ram = gSysMemory.getPhysicalMemoryKB();
+	LL_INFOS() << system_ram << LL_ENDL;
 	//min texture mem sets to 64M if total physical mem is more than 1.5GB
 	return (system_ram > S32Megabytes(1500)) ? S32Megabytes(64) : gMinVideoRam ;
 }
@@ -1329,6 +1330,9 @@ S32Megabytes LLViewerTextureList::getMaxVideoRamSetting(bool get_recommended, fl
 	}
 
 	S32Megabytes system_ram = gSysMemory.getPhysicalMemoryKB(); // In MB
+	LL_INFOS() << "get_recommended: " << get_recommended << LL_ENDL;
+	LL_INFOS() << "system_ram: " << system_ram << LL_ENDL;
+	LL_INFOS() << "max_texmem: " << max_texmem << LL_ENDL;
 	if (get_recommended)
 		max_texmem = llmin(max_texmem, system_ram/2);
 	else
@@ -1342,58 +1346,42 @@ S32Megabytes LLViewerTextureList::getMaxVideoRamSetting(bool get_recommended, fl
 	return max_texmem;
 }
 
-const S32Megabytes VIDEO_CARD_FRAMEBUFFER_MEM(12);
+const S32Megabytes VIDEO_CARD_FRAMEBUFFER_MEM_MIN(12);
+const S32Megabytes VIDEO_CARD_FRAMEBUFFER_MEM_MAX(512);
 const S32Megabytes MIN_MEM_FOR_NON_TEXTURE(512);
 void LLViewerTextureList::updateMaxResidentTexMem(S32Megabytes mem)
 {
 	// Initialize the image pipeline VRAM settings
-	S32Megabytes cur_mem(gSavedSettings.getS32("TextureMemory"));
-	F32 mem_multiplier = gSavedSettings.getF32("RenderTextureMemoryMultiple");
-	S32Megabytes default_mem = getMaxVideoRamSetting(true, mem_multiplier); // recommended default
-	if (mem == (S32Bytes)0)
+	const S32Megabytes cur_mem(gSavedSettings.getS32("TextureMemory"));
+	const F32 mem_multiplier = gSavedSettings.getF32("RenderTextureMemoryMultiple");
+	const S32Megabytes default_mem = getMaxVideoRamSetting(true, mem_multiplier); // recommended default
+	const S32Megabytes max_mem = getMaxVideoRamSetting(false, mem_multiplier);
+	const S32Megabytes min_mem = getMinVideoRamSetting();
+
+	if (mem == 0)
 	{
 		mem = cur_mem > (S32Bytes)0 ? cur_mem : default_mem;
 	}
-	else if (mem < (S32Bytes)0)
+	else if (mem < 0)
 	{
 		mem = default_mem;
 	}
 
-	mem = llclamp(mem, getMinVideoRamSetting(), getMaxVideoRamSetting(false, mem_multiplier));
-	if (mem != cur_mem)
+	S32Megabytes reported_mem = llclamp(mem, min_mem, max_mem);
+	if (reported_mem != cur_mem)
 	{
-		gSavedSettings.setS32("TextureMemory", mem.value());
+		gSavedSettings.setS32("TextureMemory", reported_mem.value());
 		return; //listener will re-enter this function
 	}
 
-	// TODO: set available resident texture mem based on use by other subsystems
-	// currently max(12MB, VRAM/4) assumed...
-	
-	S32Megabytes vb_mem = mem;
-	S32Megabytes fb_mem = llmax(VIDEO_CARD_FRAMEBUFFER_MEM, vb_mem/4);
-	mMaxResidentTexMemInMegaBytes = (vb_mem - fb_mem) ; //in MB
-	
-	mMaxTotalTextureMemInMegaBytes = mMaxResidentTexMemInMegaBytes * 2;
-	if (mMaxResidentTexMemInMegaBytes > (S32Megabytes)640)
-	{
-		mMaxTotalTextureMemInMegaBytes -= (mMaxResidentTexMemInMegaBytes / 4);
-	}
+	S32Megabytes fb_mem = llmin(llmax(VIDEO_CARD_FRAMEBUFFER_MEM_MIN, mem / 4), VIDEO_CARD_FRAMEBUFFER_MEM_MAX); // 25% for framebuffers.
+	S32Megabytes misc_mem = llmax(MIN_MEM_FOR_NON_TEXTURE, mem / 5);  // 20% for misc.
 
-	//system mem
-	S32Megabytes system_ram = gSysMemory.getPhysicalMemoryKB();
+	mMaxTotalTextureMemInMegaBytes = llmin(mem - misc_mem, max_mem);
+	mMaxResidentTexMemInMegaBytes = llmin(mem - misc_mem - fb_mem, max_mem);
 
-	//minimum memory reserved for non-texture use.
-	//if system_raw >= 1GB, reserve at least 512MB for non-texture use;
-	//otherwise reserve half of the system_ram for non-texture use.
-	S32Megabytes min_non_texture_mem = llmin(system_ram / 2, MIN_MEM_FOR_NON_TEXTURE) ; 
-
-	if (mMaxTotalTextureMemInMegaBytes > system_ram - min_non_texture_mem)
-	{
-		mMaxTotalTextureMemInMegaBytes = system_ram - min_non_texture_mem ;
-	}
-	
-	LL_INFOS() << "Total Video Memory set to: " << vb_mem << " MB" << LL_ENDL;
-	LL_INFOS() << "Available Texture Memory set to: " << (vb_mem - fb_mem) << " MB" << LL_ENDL;
+	LL_INFOS() << "Available Texture Memory set to: " << mMaxResidentTexMemInMegaBytes << LL_ENDL;
+	LL_INFOS() << "Total Texture Memory set to: " << mMaxTotalTextureMemInMegaBytes << LL_ENDL;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

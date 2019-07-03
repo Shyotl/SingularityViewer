@@ -527,7 +527,10 @@ bool LLAppViewerWin32::initHardwareTest()
 
 		LL_DEBUGS("AppInit") << "Attempting to poll DirectX for hardware info" << LL_ENDL;
 		gDXHardware.setWriteDebugFunc(write_debug_dx);
-		BOOL probe_ok = gDXHardware.getInfo(vram_only);
+
+		S32Megabytes system_ram = gSysMemory.getPhysicalMemoryKB();
+
+		BOOL probe_ok = gDXHardware.getInfo(vram_only, system_ram);
 
 		if (!probe_ok
 			&& gSavedSettings.getWarning("AboutDirectX9"))
@@ -572,6 +575,7 @@ bool LLAppViewerWin32::initHardwareTest()
 	if (gGLManager.mVRAM == 0)
 	{
 		gGLManager.mVRAM = gDXHardware.getVRAM();
+		LL_WARNS("AppInit") << "gGLManager.mVRAM: " << gGLManager.mVRAM << LL_ENDL;
 	}
 
 	LL_INFOS("AppInit") << "Detected VRAM: " << gGLManager.mVRAM << LL_ENDL;
