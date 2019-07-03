@@ -700,7 +700,7 @@ void main()
 
 	col.rgb += light.rgb;
 
-	glare = min(glare, 1.0) * diffcol.a;
+	glare = min(glare, 1.0)/* * diffcol.a*/;
 	float al = max(diffcol.a,glare)*vertex_color.a;
 
 	//convert to gamma space for display on screen
